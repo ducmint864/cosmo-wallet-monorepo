@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model base_account {
+  base_acc_id     Int               @id @default(autoincrement())
+  email           String            @unique @db.VarChar
+  username        String            @unique @db.VarChar
+  password        String            @db.VarChar
+  mnemonic        String            @unique @db.VarChar
+  derived_account derived_account[]
+}
+
+model derived_account {
+  derived_acc_id Int           @id @default(autoincrement())
+  nickname       String?       @default("anonymous") @db.VarChar
+  address        String        @unique @db.VarChar
+  hd_path        String        @db.VarChar
+  base_acc_id    Int
+  balances       balances[]
+  base_account   base_account  @relation(fields: [base_acc_id], references: [base_acc_id], onDelete: NoAction, onUpdate: NoAction)
+  transaction    transaction[]
+}
+
+model balances {
+  denom           String          @db.VarChar
+  amount          Int?            @default(0)
+  derived_acc_id  Int
+  derived_account derived_account @relation(fields: [derived_acc_id], references: [derived_acc_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([derived_acc_id, denom])
+}
+
+model fee {
+  denom       String      @db.VarChar
+  amount      Int?        @default(0)
+  txid        Int
+  transaction transaction @relation(fields: [txid], references: [txid], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([txid, denom])
+}
+
+model transaction {
+  txid             Int             @id @default(autoincrement())
+  txhash           String          @unique @db.VarChar
+  timestamp        DateTime        @db.Timestamp(6)
+  sender_address   String          @db.VarChar
+  receiver_address String?         @db.VarChar
+  status           tx_status_enum? @default(pending)
+  type             tx_type_enum?   @default(token_transfer)
+  gas_limit        Int?
+  gas_used         Int?
+  gas_price        Int?
+  derived_acc_id   Int
+  fee              fee[]
+  derived_account  derived_account @relation(fields: [derived_acc_id], references: [derived_acc_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum tx_status_enum {
+  pending
+  succeed
+  failed
+}
+
+enum tx_type_enum {
+  token_transfer
+  nft_transfer
+  others
+}
