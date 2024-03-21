@@ -4,6 +4,7 @@ import { prisma } from '../database/prisma'
 import { errorHandler } from '../middlewares/errors/error-handler';
 import { baseAccountPayload } from '../helpers/jwt-helper';
 import { genToken, decodeAndVerifyToken } from '../helpers/jwt-helper';
+import config from '../config';
 import createError from 'http-errors';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
@@ -39,7 +40,7 @@ function genUsername(): string {
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        let { email: _email, username: _username, password: _password, mnemonic: _mnemonic } = req.body;
+        let { email: _email, username: _username, password: _password  } = req.body;
 
         if (!(_email && _password)) {
             throw createError(400, "Missing credentials information");
@@ -62,9 +63,15 @@ export async function register(req: Request, res: Response, next: NextFunction):
             prefix: 'thasa'
         });
 
+        /**
+         * 
+         * @done generate encryptionKey with pbkdf2 algo based on user's email and username
+         * @todo generate mnemonic, create a default derived_account for user on registration: 
+         */
+        const mnemonic = 'test test test test test test test test test test test test'; // mock
         const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, 1000, 32, 'sha512');
         const cipher = crypto.createCipheriv('aes-256-ecb', encryptionKey, null);
-        let encryptedMnemonic = cipher.update(_mnemonic, 'utf8', 'hex');
+        let encryptedMnemonic = cipher.update(mnemonic, 'utf8', 'hex');
         encryptedMnemonic += cipher.final('hex');
 
         const ba = await prisma.base_account.create({
@@ -75,9 +82,19 @@ export async function register(req: Request, res: Response, next: NextFunction):
                 mnemonic: encryptedMnemonic
             }
         });
+        
         if (!ba) {
             throw createError(500, 'Failed to create account');
         }
+        
+        const address = ;
+        const da = await prisma.derived_account.create({
+            data: {
+                address:,
+                hd_path: config.crypto.bip44.defaultHdPath,
+                base_acc_id: ba.base_acc_id
+            }
+        })
 
         res.status(201).json({
             message: 'Register successful',
