@@ -141,8 +141,8 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
             email: _email,
             username: _username
         }
-        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, '10m');
-        const refreshToken = genToken(payload, process.env.REFRESH_TOKEN_SECRET, '14d');
+        const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
+        const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
 
         res.cookie('access-token', accessToken, {
             httpOnly: true,
