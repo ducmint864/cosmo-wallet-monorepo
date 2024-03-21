@@ -2,63 +2,71 @@ import { NextFunction, Request, Response } from 'express';
 import { DirectSecp256k1HdWallet, DirectSecp256k1HdWalletOptions } from '@cosmjs/proto-signing';
 import { prisma } from '../database/prisma'
 import { errorHandler } from '../middlewares/errors/error-handler';
+import { baseAccountPayload } from '../helpers/jwt-helper';
+import { genToken, decodeAndVerifyToken } from '../helpers/jwt-helper';
 import createError from 'http-errors';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import 'dotenv/config';
 
-const secretAccessTok = process.env.ACCESS_TOKEN_SECRET;
-
-function validateEmail(email: string): void {
-    if (false) {
-        throw createError(400, 'Invalid email');
+function checkEmailFormat(email: string): void {
+    if (email) {
+        if (false) {
+            throw createError(400, 'Invalid email');
+        }
     }
 }
 
-function validateUsername(username: string): void {
-    if (false) {
-        throw createError(400, 'Invalid username');
+function checkUsernameFormat(username: string): void {
+    if (username) {
+        if (false) {
+            throw createError(400, 'Invalid username');
+        }
     }
 }
 
-function validatePassword(password: string): void {
-    if (false) {
-        throw createError(400, 'Invalid password');
-    };
+function checkPasswordFormat(password: string): void {
+    if (password) {
+        if (false) {
+            throw createError(400, 'Invalid password');
+        };
+    }
 }
 
 function genUsername(): string {
-    const userNum = prisma.base_account.count()
-    return `user${userNum}`;
+    return `${Math.random().toString(36)}`;
 }
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         let { email: _email, username: _username, password: _password } = req.body;
-        
-        // Basic validation
-        validateEmail(_email);
-        validatePassword(_password);
+
+        if (!(_email && _password)) {
+            throw createError(400, "Missing credentials information");
+        }
+
+        // Credential format validation
+        checkEmailFormat(_email);
+        checkPasswordFormat(_password);
         if (_username) {
-            validateUsername(_username)
+            checkUsernameFormat(_username)
         } else {
             _username = genUsername();
         }
-        
+
         // Password-hashing
         const hashedPassword = await bcrypt.hash(_password, 10);
-        
+
         // Encrypt mnemonic
         const wallet = DirectSecp256k1HdWallet.generate(24, {
             prefix: 'thasa'
         });
 
-        const encryptionKey = crypto.pbkdf2Sync(_password, _username, 100, 32, 'sha256');
-        const encryptedMnemonic = 'a';
+        const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, 1000, 32, 'sha512');
+        const encryptedMnemonic = 'adfasfdadskasdfhlkjahsdfkhasd8#1'; // mock
 
-        
-        const newAcc = await prisma.base_account.create({
+
+        const ba = await prisma.base_account.create({
             data: {
                 email: _email,
                 username: _username,
@@ -66,22 +74,9 @@ export async function register(req: Request, res: Response, next: NextFunction):
                 mnemonic: encryptedMnemonic
             }
         });
-        if (!newAcc) {
-            throw createError(500, 'Internal server error');
+        if (!ba) {
+            throw createError(500, 'Failed to create account');
         }
-
-        // Send access token to user
-        const duration = 600; // 10 minutes in seconds
-        const token = jwt.sign(
-            { username: newAcc.username },
-            secretAccessTok,
-            { expiresIn: duration }
-        );
-
-        res.cookie('jwt', token, {
-            httpOnly: true,
-            maxAge: duration * 1000 // duration in miliseconds
-        });
 
         res.status(201).json({
             message: 'Register successful',
@@ -92,5 +87,100 @@ export async function register(req: Request, res: Response, next: NextFunction):
 }
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        let { email: _email, username: _username, password: _password } = req.body;
+        if (!((_email || _username) && _password)) {
+            throw createError(400, "Missing credentials information");
+        }
 
+        // Quick validation
+        checkEmailFormat(_email);
+        checkUsernameFormat(_username);
+        checkPasswordFormat(_password);
+
+        // Validate login credentials
+        const ba = await prisma.base_account.findFirst({
+            where: {
+                OR: [
+                    { email: _email },
+                    { username: _username }
+                ]
+            }
+        });
+        if (!ba) {
+            throw createError(401, "Invalid credentials");
+        }
+
+        if (!(await bcrypt.compare(
+            _password,
+            ba.password
+        ))) {
+            throw createError(401, "Invalid login credentials");
+        }
+
+        // Send access token and refresh token
+        const payload = <baseAccountPayload>{
+            email: _email,
+            username: _username
+        }
+        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, '10m');
+        const refreshToken = genToken(payload, process.env.REFRESH_TOKEN_SECRET, '14d');
+
+        res.cookie('access-token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 10 * 60 * 1000 // 10 mins in milisecs
+        });
+
+        res.cookie('refresh-token', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
+        });
+        
+        res.status(200).json({
+            message: 'Login sucessful'
+        })
+
+    } catch (err) {
+        errorHandler(err, req, res, next);
+    }
+}
+
+
+// This function lets user send their refresh token then verify if the refresh token to get a new access token
+export async function retrieveNewToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+        // Extract the refresh token from the request
+        const refreshToken = req.body.refreshToken;
+
+        // Check if the refresh token is provided
+        if (!refreshToken) {
+            throw createError(400, "Missing refresh token");
+        }
+
+        // Verify the refresh token and extract the payload (e.g., email, username)
+        const payload: baseAccountPayload = decodeAndVerifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+
+        // Check if the refresh token is valid
+        if (!payload) {
+            throw createError(401, "Invalid refresh token");
+        }
+
+        // Generate a new access token using the payload
+        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, '10m');
+
+        // Send the new access token to the client
+        res.cookie('access-token', accessToken, {
+            httpOnly: true,
+            secure: true,
+            maxAge: 10 * 60 * 1000 // 10 mins in milliseconds
+        });
+
+        res.status(200).json({
+            message: 'New access token generated successfully'
+        });
+    } catch (err) {
+        errorHandler(err, req, res, next);
+    }
 }
