@@ -21,17 +21,18 @@ if (!process.env.DB_CONNECTION_STRING) {
 
 
 const port = 3000;
-const root = '/'
+const root = '/api'
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(root, (req: Request, res: Response) => {
-    res.send('Usage: /{api}');
-})
 
-app.use('/auth', authRouter);
+app.use(`${root}/auth`, authRouter);
+
+app.use(root, (req: Request, res: Response) => {
+    res.send('Usage: /api/{route}');
+})
 
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
