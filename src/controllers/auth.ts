@@ -39,7 +39,7 @@ function genUsername(): string {
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-        let { email: _email, username: _username, password: _password } = req.body;
+        let { email: _email, username: _username, password: _password, mnemonic: _mnemonic } = req.body;
 
         if (!(_email && _password)) {
             throw createError(400, "Missing credentials information");
@@ -63,8 +63,9 @@ export async function register(req: Request, res: Response, next: NextFunction):
         });
 
         const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, 1000, 32, 'sha512');
-        const encryptedMnemonic = 'adfasfdadskasdfhlkjahsdfkhasd8#1'; // mock
-
+        const cipher = crypto.createCipheriv('aes-256-ecb', encryptionKey, null);
+        let encryptedMnemonic = cipher.update(_mnemonic, 'utf8', 'hex');
+        encryptedMnemonic += cipher.final('hex');
 
         const ba = await prisma.base_account.create({
             data: {
