@@ -1,32 +1,34 @@
 import 'dotenv/config';
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import { NextFunction, Request, Response } from 'express';
+import { decodeAndVerifyToken } from '../helpers/jwt-helper';
+import { prisma } from '../database/prisma';
+import createError from 'http-errors';
+import config  from '../config';
 
-const jwtSecret = process.env.JWT_SECRET;
-
-export const userAuth = async (req: Request, res: Response, next: any): Promise<any> => {
-    const token = req.cookies.jwt;
+export const userAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    const token = req.cookies.accessToken;
     if (token) {
-
-        jwt.verify(token, jwtSecret, (err: any, decodedToken: any) => {
-            if (err) {
-                return res.status(401).json({
-                    message: 'Unauthorized jwt'
-                })
-            } else {
-                if (decodedToken.user_info.role !== 'Basic') {
-                    return res.status(401).json({
-                        message: 'Unauthorized jwt'
-                    })
+        const decoded = decodeAndVerifyToken(token, config.auth.accessToken.secret);
+        if (decoded instanceof Error) {
+            const err = createError(400, 'Unauthorized access token');
+            next(err);
+        } else {
+            if (!(prisma.base_account.findFirst({
+                where: {
+                    OR: [
+                        { email: decoded.email },
+                        { username: decoded.username }
+                    ]
                 }
-
-                next();
+            }))) {
+                throw createError(401, 'Unknown identity');
             }
-        });
+
+            next();
+        }
     } else {
-        return res.status(401).json({
-            message: 'jwt not provided'
-        })
+        const err = createError(400, 'Missing jwt');
+        next(err);
     }
 }
 

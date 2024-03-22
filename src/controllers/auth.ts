@@ -87,10 +87,10 @@ export async function register(req: Request, res: Response, next: NextFunction):
             throw createError(500, 'Failed to create account');
         }
         
-        const address = ;
+        const _address = 'thasa231412345152hj235125'; // mockr
         const da = await prisma.derived_account.create({
             data: {
-                address:,
+                address: _address,
                 hd_path: config.crypto.bip44.defaultHdPath,
                 base_acc_id: ba.base_acc_id
             }
@@ -144,13 +144,13 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
         const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
         const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
 
-        res.cookie('access-token', accessToken, {
+        res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: true,
             maxAge: 10 * 60 * 1000 // 10 mins in milisecs
         });
 
-        res.cookie('refresh-token', refreshToken, {
+        res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             secure: true,
             maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
@@ -166,11 +166,11 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 }
 
 
-// This function lets user send their refresh token then verify if the refresh token to get a new access token
+// This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
 export async function retrieveNewToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         // Extract the refresh token from the request
-        const refreshToken = req.body.refreshToken;
+        const refreshToken = req.cookies.refreshToken;
 
         // Check if the refresh token is provided
         if (!refreshToken) {
@@ -178,18 +178,18 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
         }
 
         // Verify the refresh token and extract the payload (e.g., email, username)
-        const payload: baseAccountPayload = decodeAndVerifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        const decoded = decodeAndVerifyToken(refreshToken, config.auth.refreshToken.secret);
 
         // Check if the refresh token is valid
-        if (!payload) {
+        if (decoded instanceof Error) {
             throw createError(401, "Invalid refresh token");
         }
 
         // Generate a new access token using the payload
-        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, config.auth.accessToken.duration);
+        const accessToken = genToken(decoded, config.auth.accessToken.secret, config.auth.accessToken.duration);
 
         // Send the new access token to the client
-        res.cookie('access-token', accessToken, {
+        res.cookie('accessToken', accessToken, {
             httpOnly: true,
             secure: true,
             maxAge: 10 * 60 * 1000 // 10 mins in milliseconds
@@ -203,6 +203,3 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
     }
 }
 
-export async function retrieveEncryptedMnemonic(): Promise<void> {
-    checkPasswordFormat()
-}

@@ -15,11 +15,11 @@ export function genToken(payload: baseAccountPayload, secret: string, duration: 
     return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): baseAccountPayload {
+export function decodeAndVerifyToken(token: string, secret: string): baseAccountPayload | Error{
     try {
         const decoded = jwt.verify(token, secret);
         return <baseAccountPayload>(decoded);
     } catch (err) {
-        throw createError(500, err);
+        return err;
     }
 }
