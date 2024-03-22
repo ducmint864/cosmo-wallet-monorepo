@@ -186,7 +186,7 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
         }
 
         // Generate a new access token using the payload
-        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, '10m');
+        const accessToken = genToken(payload, process.env.ACCESS_TOKEN_SECRET, config.auth.accessToken.duration);
 
         // Send the new access token to the client
         res.cookie('access-token', accessToken, {
