@@ -126,7 +126,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
             }
         });
         if (!ba) {
-            throw createError(401, "Invalid credentials");
+            throw createError(401, "Invalid login credentials");
         }
 
         if (!(await bcrypt.compare(
@@ -201,4 +201,8 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
     } catch (err) {
         errorHandler(err, req, res, next);
     }
+}
+
+export async function retrieveEncryptedMnemonic(): Promise<void> {
+    checkPasswordFormat()
 }
