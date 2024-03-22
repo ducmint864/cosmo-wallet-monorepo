@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth'
 import 'dotenv/config';
+import testRouter from './routes/test';
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -29,6 +30,7 @@ app.use(cookieParser());
 
 
 app.use(`${root}/auth`, authRouter);
+app.use(`${root}/test`, testRouter);
 
 app.use(root, (req: Request, res: Response) => {
     res.send('Usage: /api/{route}');
