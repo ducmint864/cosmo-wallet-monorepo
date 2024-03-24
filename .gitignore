@@ -9,6 +9,9 @@ build
 dist
 .rpt2_cache
 
+#package
+*-lock.json
+
 # misc
 .DS_Store
 .env

@@ -15,12 +15,16 @@ npm install --save thasa-register-page
 ```jsx
 import React, { Component } from 'react'
 
-import MyComponent from 'thasa-register-page'
+import Register from 'thasa-register-page'
 import 'thasa-register-page/dist/index.css'
 
 class Example extends Component {
+  function handleDone () {
+    //
+  }
+
   render() {
-    return <MyComponent />
+    return <Register handleDone={handleDone} />
   }
 }
 ```

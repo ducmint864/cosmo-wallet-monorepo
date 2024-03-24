@@ -1,10 +1,14 @@
 import React from 'react'
 
-import { ExampleComponent } from 'thasa-register-page'
+import { Register } from 'thasa-register-page'
 import 'thasa-register-page/dist/index.css'
 
+const handleDone = () => {
+  // alert('done')
+}
+
 const App = () => {
-  return <ExampleComponent text="Create React Library Example 😄" />
+  return <Register handleDone={handleDone} />
 }
 
 export default App
