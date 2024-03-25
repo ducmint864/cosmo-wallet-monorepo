@@ -1,0 +1,6 @@
+node_modules/
+build/
+test/
+*.map
+*.d.ts
+*.min.{js,css,json,map}
