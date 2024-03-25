@@ -3,7 +3,7 @@ import 'dotenv/config';
 const config = {
     crypto: {
         bip44: {
-            defaultHdPath: "m/44'/0/0'/0/0" // borrow that ofbitcoin for now
+            defaultHdPath: "m/44'/0'/0'/0/0" // borrow that of bitcoin for now
         }
     },
     auth: {
