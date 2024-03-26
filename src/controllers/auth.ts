@@ -4,6 +4,7 @@ import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
+import jwt  from 'jsonwebtoken';
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
@@ -185,8 +186,12 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 			throw createError(401, "Invalid refresh token");
 		}
 
+		const newPayload = {
+			email: decoded.email,
+			username: decoded.username,
+		}
 		// Generate a new access token using the payload
-		const accessToken = genToken(decoded, config.auth.accessToken.secret, config.auth.accessToken.duration);
+		const accessToken = genToken(newPayload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {

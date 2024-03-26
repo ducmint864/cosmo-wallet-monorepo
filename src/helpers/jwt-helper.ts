@@ -1,4 +1,4 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
 import "dotenv/config";
 
 export interface baseAccountPayload {
@@ -14,7 +14,7 @@ export function genToken(payload: baseAccountPayload, secret: string, duration: 
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): baseAccountPayload | Error{
+export function decodeAndVerifyToken(token: string, secret: string): JwtPayload | Error {
 	try {
 		const decoded = jwt.verify(token, secret);
 		return <baseAccountPayload>(decoded);
