@@ -24,7 +24,7 @@ export function makeHDPath(a: number): HdPath {
  * @param {*} acc_idx_derive idex of account to derive
  * @returns {{address:string, pubkey: Uint8Array}}
  */
-export async function deriveAcc(mnemonic: string, acc_idx_derive: number): Promise<{ address: string, pubKey: string}>{
+export async function getDerivedAccount(mnemonic: string, acc_idx_derive: number): Promise<{ address: string, pubKey: string}>{
 	const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
 		hdPaths: [makeHDPath(acc_idx_derive)],
 		prefix: "thasa",
