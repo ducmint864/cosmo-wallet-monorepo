@@ -54,7 +54,29 @@ create table fee (
 	txid integer not null,
 	foreign key (txid) references transaction(txid)
 );
-	
+
+-- STORED PROCEDURES:
+
+-- FUNCTIONS
+CREATE OR REPLACE FUNCTION get_largest_derived_acc_id(base_id_param INTEGER)
+RETURNS INTEGER AS $$
+DECLARE
+    max_derived_acc_id INTEGER;
+BEGIN
+    SELECT MAX(derived_acc_id) INTO max_derived_acc_id
+    FROM derived_account
+    WHERE base_acc_id = base_id_param;
+
+    RETURN max_derived_acc_id;
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- CONSTRAINTS
+
+-- TRIGGERS
+
+
 -- Encryption specs:
 -- Bcrypt : { Cost factor: 10 | Tool: https://bcrypt.online/ }
 -- PBKDF2 : { Mode: PBKDF2WithHmacSHA512 | Iterations: 1000 | Base salt: wfci2plBNrUJxZLpdL5vtw== | dkLen: 96 | Format: Base64 | Tool: https://8gwifi.org/pbkdf.jsp }
