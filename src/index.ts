@@ -1,15 +1,8 @@
-<<<<<<< HEAD
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth'
 import 'dotenv/config';
 import testRouter from './routes/test';
-=======
-import express, { Request, Response } from "express";
-import cookieParser from "cookie-parser";
-import authRouter from "./routes/auth";
-import "dotenv/config";
->>>>>>> main
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
