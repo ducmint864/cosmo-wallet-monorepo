@@ -9,7 +9,10 @@ const config = {
 		aes: {
 			algorithm: "aes-256-cbc"
 		},
-		encoding: "base64" as BufferEncoding
+		bech32: {
+			prefix: "thasa",
+		},
+		encoding: "base64" as BufferEncoding,
 	},
 	auth: {
 		accessToken: {
