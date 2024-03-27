@@ -15,6 +15,9 @@ const config = {
 		bcrypt: {
 			saltRounds: 10
 		},
+		pbkdf2: {
+			iterations: 1000
+		},
 		encoding: "base64" as BufferEncoding,
 	},
 	auth: {
