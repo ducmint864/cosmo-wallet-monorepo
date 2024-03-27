@@ -13,6 +13,7 @@ model base_account {
   username        String            @unique @db.VarChar
   password        String            @db.VarChar
   mnemonic        String            @unique @db.VarChar
+  iv              String            @default("VSfWrCR+PASW+eOsS+GmFA==") @db.VarChar
   derived_account derived_account[]
 }
 
