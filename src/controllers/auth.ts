@@ -1,25 +1,26 @@
 import { NextFunction, Request, Response } from "express";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { stringToPath } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
-import jwt  from 'jsonwebtoken';
+import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
+import jwt, { JwtPayload }  from 'jsonwebtoken';
+import { encrypt, decrypt } from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import "dotenv/config";
 
-function checkEmailFormat(email: string): void {
-	if (email) {
-		if (false) {
-			throw createError(400, "Invalid email");
-		}
+function checkEmailAndThrow(email: string): void {
+	if (!email) {
+		throw createError(400, "Missing email");
 	}
 }
 
-function checkUsernameFormat(username: string): void {
+function checkUserNameAndThrow(username: string): void {
 	if (username) {
 		if (false) {
 			throw createError(400, "Invalid username");
@@ -27,7 +28,7 @@ function checkUsernameFormat(username: string): void {
 	}
 }
 
-function checkPasswordFormat(password: string): void {
+function checkPasswordAndThrow(password: string): void {
 	if (password) {
 		if (false) {
 			throw createError(400, "Invalid password");
@@ -43,44 +44,40 @@ export async function register(req: Request, res: Response, next: NextFunction):
 	try {
 		let { email: _email, username: _username, password: _password  } = req.body;
 
+		// Check if request contains required params
 		if (!(_email && _password)) {
 			throw createError(400, "Missing credentials information");
 		}
 
-		// Credential format validation
-		checkEmailFormat(_email);
-		checkPasswordFormat(_password);
+		// Quick validation
+		checkEmailAndThrow(_email);
+		checkPasswordAndThrow(_password);
 		if (_username) {
-			checkUsernameFormat(_username);
+			checkUserNameAndThrow(_username);
 		} else {
 			_username = genUsername();
 		}
 
 		// Password-hashing
-		const hashedPassword = await bcrypt.hash(_password, 10);
+		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
 
 		// Encrypt mnemonic
-		const wallet = DirectSecp256k1HdWallet.generate(24, {
-			prefix: "thasa"
+		const wallet = await DirectSecp256k1HdWallet.generate(24, {
+			prefix: config.crypto.bech32.prefix,
+			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
-		/**
-         * 
-         * @done generate encryptionKey with pbkdf2 algo based on user's email and username
-         * @todo generate mnemonic, create a default derived_account for user on registration: 
-         */
-		const mnemonic = "test test test test test test test test test test test test"; // mock
-		const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, 1000, 32, "sha512");
-		const cipher = crypto.createCipheriv("aes-256-ecb", encryptionKey, null);
-		let encryptedMnemonic = cipher.update(mnemonic, "utf8", "hex");
-		encryptedMnemonic += cipher.final("hex");
+		const mnemonic = wallet.mnemonic;
+		const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, config.crypto.pbkdf2.iterations, 32, "sha512");
+		const { encrypted: _encrypted, iv: _iv } = encrypt(mnemonic, encryptionKey);
 
 		const ba = await prisma.base_account.create({
 			data: {
 				email: _email,
 				username: _username,
-				password: hashedPassword,
-				mnemonic: encryptedMnemonic
+				password: _password,
+				mnemonic: _encrypted,
+				iv: _iv
 			}
 		});
         
@@ -88,7 +85,9 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			throw createError(500, "Failed to create account");
 		}
         
-		const _address = "thasa231412345152hj235125"; // mockr
+
+		// Derive the default account for base account
+		const { address: _address} = (await wallet.getAccounts())[0];
 		const da = await prisma.derived_account.create({
 			data: {
 				address: _address,
@@ -96,7 +95,11 @@ export async function register(req: Request, res: Response, next: NextFunction):
 				base_acc_id: ba.base_acc_id
 			}
 		});
+		if (!da) {
+			throw createError(500, "Failed to create derived account");
+		}
 
+		// Success
 		res.status(201).json({
 			message: "Register successful",
 		});
@@ -113,9 +116,9 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 		}
 
 		// Quick validation
-		checkEmailFormat(_email);
-		checkUsernameFormat(_username);
-		checkPasswordFormat(_password);
+		checkEmailAndThrow(_email); // Check if email has already
+		checkUserNameAndThrow(_username);
+		checkPasswordAndThrow(_password);
 
 		// Validate login credentials
 		const ba = await prisma.base_account.findFirst({
@@ -208,3 +211,38 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 	}
 }
 
+export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+	try {
+		const { password: _password } = req.body;
+		if (!_password) {
+			throw createError(400, "Missing password");
+		}
+		const token = jwt.decode(req.cookies.accessToken, {
+			json: true,
+			complete: true
+		});
+		const { email: _email, _ } = token.payload as JwtPayload;
+		const ba = await prisma.base_account.findFirst({
+			where: {
+				email: _email
+			}
+		})
+		if (!ba) {
+			throw createError(404, 'Base account not found');
+		}
+		if (!bcrypt.compareSync(ba.password, _password)) {
+			throw createError(401, "Incorrect credentials");
+		}
+
+		const mnemonic = "";
+		const encryptedMnemonic = ba.mnemonic;
+
+		
+		const funcResult = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
+		const newHDPathIdx = funcResult[0]["get_largest_derived_acc_id"];
+		const { address } = await getDerivedAccount(mnemonic, newHDPathIdx);
+		
+	} catch (err) {
+		errorHandler(err, req, res, next);
+	}
+}
