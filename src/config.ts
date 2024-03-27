@@ -12,6 +12,9 @@ const config = {
 		bech32: {
 			prefix: "thasa",
 		},
+		bcrypt: {
+			saltRounds: 10
+		},
 		encoding: "base64" as BufferEncoding,
 	},
 	auth: {
