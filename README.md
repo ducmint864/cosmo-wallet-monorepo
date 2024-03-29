@@ -2,12 +2,10 @@
 
 > Thasa Register Page
 
-[![NPM](https://img.shields.io/npm/v/thasa-register-page.svg)](https://www.npmjs.com/package/thasa-register-page) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
-
 ## Install
 
 ```bash
-npm install --save thasa-register-page
+npm install --save @thasa/thasa-register-page
 ```
 
 ## Usage
@@ -15,8 +13,8 @@ npm install --save thasa-register-page
 ```jsx
 import React, { Component } from 'react'
 
-import Register from 'thasa-register-page'
-import 'thasa-register-page/dist/index.css'
+import Register from '@thasa/thasa-register-page'
+import '@thasa/thasa-register-page/dist/index.css'
 
 class Example extends Component {
   function handleDone () {
