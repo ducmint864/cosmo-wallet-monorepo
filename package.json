@@ -1,5 +1,5 @@
 {
-  "name": "@quangliem/thasa-register-page",
+  "name": "@thasa/frontend/thasa-register-page",
   "version": "1.0.0",
   "description": "Thasa Register Page",
   "author": "QuangLiem59",
@@ -60,5 +60,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "publishConfig": {
+    "@thasa/frontend:registry" : "https://gitlab.com/api/v4/projects/55687990/packages/npm/"
+  }
 }
