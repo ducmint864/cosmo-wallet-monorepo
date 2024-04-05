@@ -30,8 +30,8 @@ export const Intro = ({ isActive, setActivePage }) => {
       {isActive && (
         <Stories
           defaultInterval={3000}
-          width={'100%'}
-          height={'100%'}
+          width='100%'
+          height='100%'
           stories={slides}
           preventDefault={false}
         />

@@ -40,11 +40,11 @@ export const BackupCode = ({ isActive, setActivePage }) => {
   }, [isCheckCode, isActive])
 
   useEffect(() => {
-    let listIndex = [randomIndex]
-    let list = [arr[randomIndex - 1]]
+    const listIndex = [randomIndex]
+    const list = [arr[randomIndex - 1]]
 
     while (list.length < 6) {
-      let newIndex = randomInteger(1, 12, listIndex)
+      const newIndex = randomInteger(1, 12, listIndex)
       list.splice(((list.length + 1) * Math.random()) | 0, 0, arr[newIndex - 1])
       listIndex.push(newIndex)
     }
@@ -117,7 +117,7 @@ export const BackupCode = ({ isActive, setActivePage }) => {
             borderRadius: '10px',
             background: '#333',
             color: '#fff',
-            marginBottom: '50px',
+            marginBottom: '50px'
           }
         }
       )

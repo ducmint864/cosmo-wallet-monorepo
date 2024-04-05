@@ -107,7 +107,7 @@ export const PinCode = ({ isActive, setActivePage, handleDone }) => {
                   className={
                     pin.length > i ? pinCode.codeHasValue : pinCode.codeEmpty
                   }
-                ></span>
+                />
               ))}
             </div>
             <div className={pinCode.keyboard}>
@@ -142,7 +142,7 @@ export const PinCode = ({ isActive, setActivePage, handleDone }) => {
                       ? pinCode.codeHasValue
                       : pinCode.codeEmpty
                   }
-                ></span>
+                />
               ))}
             </div>
             <div className={pinCode.keyboard}>
