@@ -181,7 +181,7 @@ export const BackupCode = ({ isActive, setActivePage }) => {
                     borderRadius={20}
                     style={{ overflow: 'hidden' }}
                     size={20}
-                    onChange={(e) => setSelectedAnswer(value)}
+                    onChange={() => setSelectedAnswer(value)}
                     disabled={selectedAnswer}
                   />
                 </div>
