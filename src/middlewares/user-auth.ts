@@ -24,6 +24,10 @@ export const userAuth = async (req: Request, res: Response, next: NextFunction):
 				}))) {
 					throw createError(401, "Unknown identity");
 				}
+				
+				// Attach the token's email and username to request body so the subsequent handlers don't have to query for them again
+				req.body.email = decoded.email;
+				req.body.email = decoded.username;
 				next();
 			}
 		} else {
