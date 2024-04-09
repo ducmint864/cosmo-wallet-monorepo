@@ -12,11 +12,21 @@ create table derived_account (
 	derived_acc_id SERIAL primary key,
 
 	nickname varchar default 'anonymous',
+	privkey varchar not null unique, --encrypted private key
+	privkey_iv varchar not null,
 	address varchar not null unique, --bech32 address
 	hd_path varchar not null,
 
 	base_acc_id integer not null,
 	foreign key (base_acc_id) references base_account(base_acc_id)
+);
+
+create table standalone_account (
+	standalone_acc_id SERIAL primary key,
+
+	nickname varchar default 'anonymous',
+	address varchar not null unique, --bech32 address
+	private_key varchar not null unique  --base64 private key
 );
 
 create table balances (

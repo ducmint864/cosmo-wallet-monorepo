@@ -23,6 +23,8 @@ model derived_account {
   address        String        @unique @db.VarChar
   hd_path        String        @db.VarChar
   base_acc_id    Int
+  privkey        String        @unique @db.VarChar
+  privkey_iv     String        @db.VarChar
   balances       balances[]
   base_account   base_account  @relation(fields: [base_acc_id], references: [base_acc_id], onDelete: NoAction, onUpdate: NoAction)
   transaction    transaction[]
@@ -60,6 +62,13 @@ model transaction {
   derived_acc_id   Int
   fee              fee[]
   derived_account  derived_account @relation(fields: [derived_acc_id], references: [derived_acc_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model standalone_account {
+  standalone_acc_id Int     @id @default(autoincrement())
+  nickname          String? @default("anonymous") @db.VarChar
+  address           String  @unique @db.VarChar
+  private_key       String  @unique @db.VarChar
 }
 
 enum tx_status_enum {

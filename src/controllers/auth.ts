@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { ThasaHdWallet} from "../helpers/ThasaHdWallet";
 import { stringToPath } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
@@ -62,21 +62,21 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
 
 		// Encrypt mnemonic
-		const wallet = await DirectSecp256k1HdWallet.generate(24, {
+		const wallet = await ThasaHdWallet.generate(24, {
 			prefix: config.crypto.bech32.prefix,
 			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
 		const mnemonic = wallet.mnemonic;
 		const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, config.crypto.pbkdf2.iterations, 32, "sha512");
-		const { encrypted: _encrypted, iv: _iv } = encrypt(mnemonic, encryptionKey);
+		const { encrypted: _mnemonic, iv: _iv } = encrypt(mnemonic, encryptionKey);
 
 		const ba = await prisma.base_account.create({
 			data: {
 				email: _email,
 				username: _username,
 				password: _password,
-				mnemonic: _encrypted,
+				mnemonic: _mnemonic,
 				iv: _iv
 			}
 		});
@@ -87,12 +87,19 @@ export async function register(req: Request, res: Response, next: NextFunction):
         
 
 		// Derive the default account for base account
-		const { address: _address} = (await wallet.getAccounts())[0];
+		const { address: _address, privkey } = (await wallet.getAccountsWithPrivkeys())[0];
+		const _hdPath = config.crypto.bip44.defaultHdPath;
+		const { encrypted: _privkey, iv: _privkey_iv } = encrypt(
+			Buffer.from(privkey).toString(config.crypto.encoding),
+			encryptionKey	
+		)
 		const da = await prisma.derived_account.create({
 			data: {
 				address: _address,
-				hd_path: config.crypto.bip44.defaultHdPath,
-				base_acc_id: ba.base_acc_id
+				hd_path: _hdPath,
+				base_acc_id: ba.base_acc_id,
+				privkey: _privkey,
+				privkey_iv: _privkey_iv
 			}
 		});
 		if (!da) {
