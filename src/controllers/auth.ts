@@ -7,7 +7,7 @@ import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import jwt, { JwtPayload }  from 'jsonwebtoken';
-import { encrypt, decrypt } from "../helpers/crypto-helper";
+import { encrypt, isValidPassword } from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
@@ -237,7 +237,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		if (!ba) {
 			throw createError(404, 'Base account not found');
 		}
-		if (!bcrypt.compareSync(ba.password, _password)) {
+		if (!(await isValidPassword(ba.password, _password))) {
 			throw createError(401, "Incorrect credentials");
 		}
 

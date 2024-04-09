@@ -3,6 +3,7 @@ import config from "../config";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto, { pbkdf2, pbkdf2Sync } from 'crypto';
+import bcrypt from "bcrypt";
 
 /**
  * A custom derivation path in the form `m/44'/0'/a'/0/0`
@@ -69,4 +70,9 @@ export function decrypt(encrypted: string, encryptionKey: Buffer, iv: string): s
 	)
 	const decryptedData = Buffer.concat([decipher.update(encrypted, config.crypto.encoding), decipher.final()]).toString("utf-8");
 	return decryptedData;
+}
+
+export async function isValidPassword(password: string, passwordHash: string): Promise<boolean> {
+	const valid = await bcrypt.compare(password, passwordHash);
+	return valid;
 }
