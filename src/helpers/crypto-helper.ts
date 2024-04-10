@@ -43,15 +43,14 @@ export async function getDerivedAccount(mnemonic: string, acc_idx_derive: number
  * @param encryptionKey encryption key derived with pbkdf2 algo
  * @returns encrypted data and the iv used for encryption
  */
-export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: string, iv: string } {
-	let iv = <string | Buffer>crypto.randomBytes(16); // generate random iv
+export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: Buffer, iv: Buffer } {
+	let iv = crypto.randomBytes(config.crypto.aes.ivLength); // generate random iv
 	const cipher = crypto.createCipheriv(
 		config.crypto.aes.algorithm,
 		encryptionKey,
 		iv
 	);
-	const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]).toString(config.crypto.encoding);
-	iv = iv.toString("base64");
+	const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
 	return { encrypted, iv }
 }
 
@@ -62,13 +61,13 @@ export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: 
  * @param iv the iv used for encryption (encoding format same as *encrypted)
  * @returns decrypted data in utf-8 format
  */
-export function decrypt(encrypted: string, encryptionKey: Buffer, iv: string): string {
+export function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): string {
 	const decipher = crypto.createDecipheriv(
 		config.crypto.aes.algorithm,
 		encryptionKey,
-		Buffer.from(iv, config.crypto.encoding)
+		iv
 	)
-	const decryptedData = Buffer.concat([decipher.update(encrypted, config.crypto.encoding), decipher.final()]).toString("utf-8");
+	const decryptedData = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf-8");
 	return decryptedData;
 }
 
@@ -76,3 +75,29 @@ export async function isValidPassword(password: string, passwordHash: string): P
 	const valid = await bcrypt.compare(password, passwordHash);
 	return valid;
 }
+
+
+//async function test() {
+//	const pass = "helloworld1234";
+//	const _email = "hello@gmail.com";
+//	const _username = "ducminh864";
+//	const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`, ), crypto.randomBytes(config.crypto.pbkdf2.saltLength)]);
+//	const encryptionKey = await new Promise<Buffer>((resolve, reject) => pbkdf2(
+//		pass,
+//		_pbkdf2Salt,
+//		config.crypto.pbkdf2.iterations,
+//		config.crypto.pbkdf2.keyLength,
+//		config.crypto.pbkdf2.algorithm,
+//		(err, key) => {
+//			if (err) {
+//				reject(err);
+//			}
+//			resolve(key);
+//		}
+//	));
+//	const { encrypted, iv } =  encrypt(pass, encryptionKey);
+//	console.log(encrypted);
+
+//	const decrypted = decrypt(encrypted, encryptionKey, iv);
+//	console.log(decrypted);
+//}

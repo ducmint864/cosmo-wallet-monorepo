@@ -11,7 +11,7 @@ import { encrypt, isValidPassword } from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
-import crypto from "crypto";
+import { randomBytes, pbkdf2 } from "crypto";
 import "dotenv/config";
 
 function checkEmailAndThrow(email: string): void {
@@ -58,18 +58,32 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			_username = genUsername();
 		}
 
-		// Password-hashing
-		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
 
 		// Encrypt mnemonic
-		const wallet = await ThasaHdWallet.generate(24, {
+		const wallet = await ThasaHdWallet.generate(config.crypto.bip39.mnemonicLength, {
 			prefix: config.crypto.bech32.prefix,
 			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
 		const mnemonic = wallet.mnemonic;
-		const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, config.crypto.pbkdf2.iterations, 32, "sha512");
+		const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`), randomBytes(config.crypto.pbkdf2.saltLength)]);
+		const encryptionKey = await new Promise<Buffer>((resolve, reject) => pbkdf2(
+			_password,
+			_pbkdf2Salt,
+			config.crypto.pbkdf2.iterations,
+			config.crypto.pbkdf2.keyLength,
+			config.crypto.pbkdf2.algorithm,
+			(err, key) => {
+				if (err) {
+					reject(createError(500, err));
+				}
+				resolve(key);
+			}
+		));
 		const { encrypted: _mnemonic, iv: _iv } = encrypt(mnemonic, encryptionKey);
+		
+		// Password-hashing
+		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
 
 		const ba = await prisma.base_account.create({
 			data: {
@@ -77,7 +91,8 @@ export async function register(req: Request, res: Response, next: NextFunction):
 				username: _username,
 				password: _password,
 				mnemonic: _mnemonic,
-				iv: _iv
+				iv: _iv,
+				pbkdf2_salt: _pbkdf2Salt
 			}
 		});
         
@@ -89,7 +104,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		// Derive the default account for base account
 		const { address: _address, privkey } = (await wallet.getAccountsWithPrivkeys())[0];
 		const _hdPath = config.crypto.bip44.defaultHdPath;
-		const { encrypted: _privkey, iv: _privkey_iv } = encrypt(
+		const { encrypted: _privkey, iv: _privkeyIv } = encrypt(
 			Buffer.from(privkey).toString(config.crypto.encoding),
 			encryptionKey	
 		)
@@ -99,7 +114,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 				hd_path: _hdPath,
 				base_acc_id: ba.base_acc_id,
 				privkey: _privkey,
-				privkey_iv: _privkey_iv
+				privkey_iv: _privkeyIv
 			}
 		});
 		if (!da) {
