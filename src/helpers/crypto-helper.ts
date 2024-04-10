@@ -1,6 +1,7 @@
 import { HdPath } from "@cosmjs/crypto";
 import config from "../config";
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+//import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
+import { ThasaHdWallet } from "./ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto from 'crypto';
 import bcrypt from "bcrypt";
@@ -26,15 +27,15 @@ export function makeHDPath(a: number): HdPath {
  * @param {*} acc_idx_derive idex of account to derive
  * @returns {{address:string, pubkey: Uint8Array}}
  */
-export async function getDerivedAccount(mnemonic: string, acc_idx_derive: number): Promise<{ address: string, pubKey: string }> {
-	const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
+export async function getDerivedAccount(mnemonic: string, acc_idx_derive: number): Promise<{pubKey: string, privkey: string,  address: string }> {
+	const wallet = await ThasaHdWallet.fromMnemonic(mnemonic, {
 		hdPaths: [makeHDPath(acc_idx_derive)],
 		prefix: "thasa",
 	});
 
-	const [{ pubkey, address }] = await wallet.getAccounts();
+	const [{ pubkey, privkey, address }] = await wallet.getAccountsWithPrivkeys();
 
-	return { pubKey: pubkey.toString(), address };
+	return { pubKey: pubkey.toString(), privkey: privkey.toString(), address };
 }
 
 /**

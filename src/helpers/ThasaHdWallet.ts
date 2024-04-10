@@ -14,7 +14,7 @@ const defaultOptions = {
 };
 
 export interface AccountDataWithPrivateKey extends AccountData {
-	privkey: any;
+	privkey: Uint8Array;
 }
 
 interface DirectSecp256k1HdWalletConstructorOptions extends Partial<DirectSecp256k1HdWalletOptions> {
