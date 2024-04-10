@@ -4,16 +4,17 @@ create table base_account (
 	email varchar not null unique, --validate email in nodejs b4 inserting to db
 	username varchar not null unique, --server generates random, unique name if not specified
 	password varchar not null, --hashed with bcrypt
-	mnemonic varchar not null unique,
-	iv varchar not null default 'VSfWrCR+PASW+eOsS+GmFA=='
+	mnemonic bytea not null unique,
+	pbkdf2_salt bytea not null,
+	iv bytea not null 
 );
 
 create table derived_account (
 	derived_acc_id SERIAL primary key,
 
 	nickname varchar default 'anonymous',
-	privkey varchar not null unique, --encrypted private key
-	privkey_iv varchar not null,
+	privkey bytea not null unique, --encrypted private key
+	privkey_iv bytea not null,
 	address varchar not null unique, --bech32 address
 	hd_path varchar not null,
 
@@ -21,13 +22,13 @@ create table derived_account (
 	foreign key (base_acc_id) references base_account(base_acc_id)
 );
 
-create table standalone_account (
-	standalone_acc_id SERIAL primary key,
-
-	nickname varchar default 'anonymous',
-	address varchar not null unique, --bech32 address
-	private_key varchar not null unique  --base64 private key
-);
+//create table standalone_account (
+	//standalone_acc_id SERIAL primary key,
+//
+	//nickname varchar default 'anonymous',
+	//address varchar not null unique, --bech32 address
+	//private_key varchar not null unique  --base64 private key
+//);
 
 create table balances (
 	denom varchar not null,
