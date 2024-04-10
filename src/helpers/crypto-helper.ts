@@ -2,7 +2,7 @@ import { HdPath } from "@cosmjs/crypto";
 import config from "../config";
 import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Slip10RawIndex } from "@cosmjs/crypto";
-import crypto, { pbkdf2, pbkdf2Sync } from 'crypto';
+import crypto from 'crypto';
 import bcrypt from "bcrypt";
 
 /**
@@ -77,27 +77,19 @@ export async function isValidPassword(password: string, passwordHash: string): P
 }
 
 
-//async function test() {
-//	const pass = "helloworld1234";
-//	const _email = "hello@gmail.com";
-//	const _username = "ducminh864";
-//	const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`, ), crypto.randomBytes(config.crypto.pbkdf2.saltLength)]);
-//	const encryptionKey = await new Promise<Buffer>((resolve, reject) => pbkdf2(
-//		pass,
-//		_pbkdf2Salt,
-//		config.crypto.pbkdf2.iterations,
-//		config.crypto.pbkdf2.keyLength,
-//		config.crypto.pbkdf2.algorithm,
-//		(err, key) => {
-//			if (err) {
-//				reject(err);
-//			}
-//			resolve(key);
-//		}
-//	));
-//	const { encrypted, iv } =  encrypt(pass, encryptionKey);
-//	console.log(encrypted);
-
-//	const decrypted = decrypt(encrypted, encryptionKey, iv);
-//	console.log(decrypted);
-//}
+export async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Promise<Buffer> {
+	const encryptionKey = await new Promise<Buffer>((resolve, reject) => crypto.pbkdf2(
+		password,
+		pbkdf2Salt,
+		config.crypto.pbkdf2.iterations,
+		config.crypto.pbkdf2.keyLength,
+		config.crypto.pbkdf2.algorithm,
+		(err, key) => {
+			if (err) {
+				reject(err);
+			}
+			resolve(key);
+		}
+	));
+	return encryptionKey;
+}
