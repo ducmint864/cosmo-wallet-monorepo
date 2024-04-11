@@ -1,4 +1,4 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth'
 import 'dotenv/config';
@@ -29,10 +29,6 @@ app.use(cookieParser());
 
 
 app.use(`${root}/auth`, authRouter);
-
-// app.use(root, (req: Request, res: Response) => {
-// 	res.send("Usage: /api/{route}");
-// });
 
 app.listen(port, () => {
 	console.log(`Server listening on port ${port}`);
