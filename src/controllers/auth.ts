@@ -215,28 +215,32 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 
 export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-		const { password, nickname: _nickname } = req.body;
+		const { password, nickname: _nickname, injectedEmail: _email } = req.body;
+		
+		if (!_email) {
+			throw createError(400, "Missing email");
+		}
+		checkEmailAndThrow(_email);
+
 		if (!password) {
 			throw createError(400, "Missing password");
 		}
-		const token = jwt.decode(req.cookies.accessToken, {
-			json: true,
-			complete: true
-		});
-		const { email: _email } = token.payload as JwtPayload;
+
 		const ba = await prisma.base_account.findUnique({
 			where: {
 				email: _email
 			}
 		})
+		
 		if (!ba) {
 			throw createError(404, 'Base account not found');
 		}
-		if (!(await cryptoHelper.isValidPassword(ba.password, password))) {
+		
+		if (!(await cryptoHelper.isValidPassword(password, ba.password))) {
 			throw createError(401, "Incorrect credentials");
 		}
 
-		const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
+	const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
 		const mnemonic = cryptoHelper.decrypt(ba.mnemonic, encryptionKey, ba.iv);
 		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
 		const newAccIndex = result[0]["get_largest_derived_acc_id"];
@@ -254,9 +258,17 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			} : {
 				address: _address,
 				hd_path: _hdPath,
+				nickname: `Account${newAccIndex}`,
 				base_acc_id: ba.base_acc_id
 			}
 		})
+		if (!da) {
+			throw createError(500, "Failed to create account");
+		}
+		
+		res.status(201).json({
+			message: "Account created" 
+		});
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
