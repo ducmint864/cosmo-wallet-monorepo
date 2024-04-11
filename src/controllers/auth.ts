@@ -94,6 +94,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			data: {
 				address: _address,
 				hd_path: config.crypto.bip44.defaultHdPath,
+				nickname: "Account 0",
 				base_acc_id: ba.base_acc_id
 			}
 		});
@@ -242,8 +243,8 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 
 	const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
 		const mnemonic = cryptoHelper.decrypt(ba.mnemonic, encryptionKey, ba.iv);
-		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
-		const newAccIndex = result[0]["get_largest_derived_acc_id"];
+		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_number_of_derived_account(${ba.base_acc_id}::INT)`);
+		const newAccIndex = result[0]["get_number_of_derived_account"];
 		const newHdPath = makeHDPath(newAccIndex);
 		const _hdPath = pathToString(newHdPath);
 		const { address: _address } = await getDerivedAccount(mnemonic, newHdPath);
@@ -258,7 +259,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			} : {
 				address: _address,
 				hd_path: _hdPath,
-				nickname: `Account${newAccIndex}`,
+				nickname: `Account ${newAccIndex}`,
 				base_acc_id: ba.base_acc_id
 			}
 		})
