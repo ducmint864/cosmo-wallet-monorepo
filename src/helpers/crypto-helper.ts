@@ -1,6 +1,5 @@
 import { HdPath } from "@cosmjs/crypto";
 import config from "../config";
-//import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { ThasaHdWallet } from "./ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto from 'crypto';

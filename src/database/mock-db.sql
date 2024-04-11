@@ -4,9 +4,14 @@ create table base_account (
 	email varchar not null unique, --validate email in nodejs b4 inserting to db
 	username varchar not null unique, --server generates random, unique name if not specified
 	password varchar not null, --hashed with bcrypt
+<<<<<<< HEAD
+	mnemonic varchar not null unique,
+	iv varchar not null default 'VSfWrCR+PASW+eOsS+GmFA=='
+=======
 	mnemonic bytea not null unique,
 	pbkdf2_salt bytea not null,
 	iv bytea not null 
+>>>>>>> ducminh-test
 );
 
 create table derived_account (

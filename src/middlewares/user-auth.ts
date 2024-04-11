@@ -2,7 +2,6 @@ import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "./errors/error-handler";
 import { decodeAndVerifyToken } from "../helpers/jwt-helper";
-import { prisma } from "../database/prisma";
 import createError from "http-errors";
 import config from "../config";
 

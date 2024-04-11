@@ -6,12 +6,11 @@ import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
-import jwt, { JwtPayload }  from 'jsonwebtoken';
 import * as cryptoHelper from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
-import { randomBytes, pbkdf2 } from "crypto";
+import { randomBytes } from "crypto";
 import "dotenv/config";
 
 function checkEmailAndThrow(email: string): void {
@@ -94,7 +93,6 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			data: {
 				address: _address,
 				hd_path: config.crypto.bip44.defaultHdPath,
-				nickname: "Account 0",
 				base_acc_id: ba.base_acc_id
 			}
 		});
@@ -259,7 +257,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			} : {
 				address: _address,
 				hd_path: _hdPath,
-				nickname: `Account ${newAccIndex}`,
+				nickname: `Account${newAccIndex}`,
 				base_acc_id: ba.base_acc_id
 			}
 		})
