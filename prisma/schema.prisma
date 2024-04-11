@@ -20,7 +20,7 @@ model base_account {
 
 model derived_account {
   derived_acc_id Int           @id @default(autoincrement())
-  nickname       String?       @default("anonymous") @db.VarChar
+  nickname       String?       @default("Anonymous") @db.VarChar
   privkey        Bytes         @unique
   privkey_iv     Bytes
   address        String        @unique @db.VarChar
