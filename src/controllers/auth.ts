@@ -1,26 +1,16 @@
 import { NextFunction, Request, Response } from "express";
-<<<<<<< HEAD
-import { DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
-import { stringToPath } from "@cosmjs/crypto";
-=======
 import { ThasaHdWallet} from "../helpers/ThasaHdWallet";
 import { stringToPath, pathToString } from "@cosmjs/crypto";
->>>>>>> ducminh-test
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
-import jwt, { JwtPayload }  from 'jsonwebtoken';
-<<<<<<< HEAD
-import { encrypt, decrypt } from "../helpers/crypto-helper";
-=======
 import * as cryptoHelper from "../helpers/crypto-helper";
->>>>>>> ducminh-test
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
-import { randomBytes, pbkdf2 } from "crypto";
+import { randomBytes } from "crypto";
 import "dotenv/config";
 
 function checkEmailAndThrow(email: string): void {
@@ -67,47 +57,28 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			_username = genUsername();
 		}
 
-<<<<<<< HEAD
-		// Password-hashing
-		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
-
-		// Encrypt mnemonic
-		const wallet = await DirectSecp256k1HdWallet.generate(24, {
-=======
 
 		// Encrypt mnemonic
 		const wallet = await ThasaHdWallet.generate(config.crypto.bip39.mnemonicLength, {
->>>>>>> ducminh-test
 			prefix: config.crypto.bech32.prefix,
 			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
-<<<<<<< HEAD
-		const mnemonic = wallet.mnemonic;
-		const encryptionKey = crypto.pbkdf2Sync(_password, `${_email}${_username}`, config.crypto.pbkdf2.iterations, 32, "sha512");
-		const { encrypted: _encrypted, iv: _iv } = encrypt(mnemonic, encryptionKey);
-=======
 		const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`), randomBytes(config.crypto.pbkdf2.saltLength)]);
 		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, _pbkdf2Salt);
 		const { encrypted: _mnemonic, iv: _iv } = cryptoHelper.encrypt(wallet.mnemonic, encryptionKey);
 		
 		// Password-hashing
 		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
->>>>>>> ducminh-test
 
 		const ba = await prisma.base_account.create({
 			data: {
 				email: _email,
 				username: _username,
 				password: _password,
-<<<<<<< HEAD
-				mnemonic: _encrypted,
-				iv: _iv
-=======
 				mnemonic: _mnemonic,
 				iv: _iv,
 				pbkdf2_salt: _pbkdf2Salt
->>>>>>> ducminh-test
 			}
 		});
         
@@ -117,16 +88,11 @@ export async function register(req: Request, res: Response, next: NextFunction):
         
 
 		// Derive the default account for base account
-<<<<<<< HEAD
-		const { address: _address} = (await wallet.getAccounts())[0];
-=======
 		const { address: _address } = (await wallet.getAccounts())[0];
->>>>>>> ducminh-test
 		const da = await prisma.derived_account.create({
 			data: {
 				address: _address,
 				hd_path: config.crypto.bip44.defaultHdPath,
-				nickname: "Account 0",
 				base_acc_id: ba.base_acc_id
 			}
 		});
@@ -248,18 +214,6 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 
 export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-<<<<<<< HEAD
-		const { password: _password } = req.body;
-		if (!_password) {
-			throw createError(400, "Missing password");
-		}
-		const token = jwt.decode(req.cookies.accessToken, {
-			json: true,
-			complete: true
-		});
-		const { email: _email, _ } = token.payload as JwtPayload;
-		const ba = await prisma.base_account.findFirst({
-=======
 		const { password, nickname: _nickname, injectedEmail: _email } = req.body;
 		
 		if (!_email) {
@@ -272,28 +226,10 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		}
 
 		const ba = await prisma.base_account.findUnique({
->>>>>>> ducminh-test
 			where: {
 				email: _email
 			}
 		})
-<<<<<<< HEAD
-		if (!ba) {
-			throw createError(404, 'Base account not found');
-		}
-		if (!bcrypt.compareSync(ba.password, _password)) {
-			throw createError(401, "Incorrect credentials");
-		}
-
-		const mnemonic = "";
-		const encryptedMnemonic = ba.mnemonic;
-
-		
-		const funcResult = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
-		const newHDPathIdx = funcResult[0]["get_largest_derived_acc_id"];
-		const { address } = await getDerivedAccount(mnemonic, newHDPathIdx);
-		
-=======
 		
 		if (!ba) {
 			throw createError(404, 'Base account not found');
@@ -321,7 +257,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			} : {
 				address: _address,
 				hd_path: _hdPath,
-				nickname: `Account ${newAccIndex}`,
+				nickname: `Account${newAccIndex}`,
 				base_acc_id: ba.base_acc_id
 			}
 		})
@@ -332,7 +268,6 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		res.status(201).json({
 			message: "Account created" 
 		});
->>>>>>> ducminh-test
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
