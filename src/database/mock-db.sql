@@ -4,8 +4,14 @@ create table base_account (
 	email varchar not null unique, --validate email in nodejs b4 inserting to db
 	username varchar not null unique, --server generates random, unique name if not specified
 	password varchar not null, --hashed with bcrypt
+<<<<<<< HEAD
 	mnemonic varchar not null unique,
 	iv varchar not null default 'VSfWrCR+PASW+eOsS+GmFA=='
+=======
+	mnemonic bytea not null unique,
+	pbkdf2_salt bytea not null,
+	iv bytea not null 
+>>>>>>> ducminh-test
 );
 
 create table derived_account (
@@ -59,18 +65,19 @@ create table fee (
 -- STORED PROCEDURES:
 
 -- FUNCTIONS
-CREATE OR REPLACE FUNCTION get_largest_derived_acc_id(base_id_param INTEGER)
+CREATE OR REPLACE FUNCTION get_number_of_derived_account(base_id_param INTEGER)
 RETURNS INTEGER AS $$
 DECLARE
-    max_derived_acc_id INTEGER;
+    derived_count INTEGER;
 BEGIN
-    SELECT MAX(derived_acc_id) INTO max_derived_acc_id
+    SELECT COUNT(derived_acc_id) INTO derived_count
     FROM derived_account
     WHERE base_acc_id = base_id_param;
 
-    RETURN max_derived_acc_id;
+    RETURN derived_count;
 END;
 $$ LANGUAGE plpgsql;
+
 
 
 -- CONSTRAINTS

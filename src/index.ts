@@ -1,7 +1,12 @@
 import express, { Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import authRouter from './routes/auth'
+import transactionRouter from './routes/transaction';
 import 'dotenv/config';
+<<<<<<< HEAD
+=======
+// import testRouter from './routes/test';
+>>>>>>> ducminh-test
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -29,10 +34,15 @@ app.use(cookieParser());
 
 
 app.use(`${root}/auth`, authRouter);
+<<<<<<< HEAD
+=======
+// app.use(`${root}/test`, testRouter);
+app.use(`${root}/transaction`, transactionRouter);
+>>>>>>> ducminh-test
 
-app.use(root, (req: Request, res: Response) => {
-	res.send("Usage: /api/{route}");
-});
+// app.use(root, (req: Request, res: Response) => {
+// 	res.send("Usage: /api/{route}");
+// });
 
 app.listen(port, () => {
 	console.log(`Server listening on port ${port}`);

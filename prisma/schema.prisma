@@ -12,14 +12,20 @@ model base_account {
   email           String            @unique @db.VarChar
   username        String            @unique @db.VarChar
   password        String            @db.VarChar
+<<<<<<< HEAD
   mnemonic        String            @unique @db.VarChar
   iv              String            @default("VSfWrCR+PASW+eOsS+GmFA==") @db.VarChar
+=======
+  mnemonic        Bytes             @unique
+  pbkdf2_salt     Bytes
+  iv              Bytes
+>>>>>>> ducminh-test
   derived_account derived_account[]
 }
 
 model derived_account {
   derived_acc_id Int           @id @default(autoincrement())
-  nickname       String?       @default("anonymous") @db.VarChar
+  nickname       String?       @default("Anonymous") @db.VarChar
   address        String        @unique @db.VarChar
   hd_path        String        @db.VarChar
   base_acc_id    Int
