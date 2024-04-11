@@ -1,13 +1,13 @@
 import { NextFunction, Request, Response } from "express";
-import { ThasaHdWallet } from "../helpers/ThasaHdWallet";
-import { stringToPath } from "@cosmjs/crypto";
+import { ThasaHdWallet} from "../helpers/ThasaHdWallet";
+import { stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import jwt, { JwtPayload }  from 'jsonwebtoken';
-import { encrypt, isValidPassword } from "../helpers/crypto-helper";
+import * as cryptoHelper from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
@@ -65,22 +65,9 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
-		const mnemonic = wallet.mnemonic;
 		const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`), randomBytes(config.crypto.pbkdf2.saltLength)]);
-		const encryptionKey = await new Promise<Buffer>((resolve, reject) => pbkdf2(
-			_password,
-			_pbkdf2Salt,
-			config.crypto.pbkdf2.iterations,
-			config.crypto.pbkdf2.keyLength,
-			config.crypto.pbkdf2.algorithm,
-			(err, key) => {
-				if (err) {
-					reject(createError(500, err));
-				}
-				resolve(key);
-			}
-		));
-		const { encrypted: _mnemonic, iv: _iv } = encrypt(mnemonic, encryptionKey);
+		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, _pbkdf2Salt);
+		const { encrypted: _mnemonic, iv: _iv } = cryptoHelper.encrypt(wallet.mnemonic, encryptionKey);
 		
 		// Password-hashing
 		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
@@ -102,7 +89,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
         
 
 		// Derive the default account for base account
-		const { address: _address} = (await wallet.getAccounts())[0];
+		const { address: _address } = (await wallet.getAccounts())[0];
 		const da = await prisma.derived_account.create({
 			data: {
 				address: _address,
@@ -228,16 +215,16 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 
 export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-		const { password: _password } = req.body;
-		if (!_password) {
+		const { password, nickname: _nickname } = req.body;
+		if (!password) {
 			throw createError(400, "Missing password");
 		}
 		const token = jwt.decode(req.cookies.accessToken, {
 			json: true,
 			complete: true
 		});
-		const { email: _email, _ } = token.payload as JwtPayload;
-		const ba = await prisma.base_account.findFirst({
+		const { email: _email } = token.payload as JwtPayload;
+		const ba = await prisma.base_account.findUnique({
 			where: {
 				email: _email
 			}
@@ -245,18 +232,31 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		if (!ba) {
 			throw createError(404, 'Base account not found');
 		}
-		if (!(await isValidPassword(ba.password, _password))) {
+		if (!(await cryptoHelper.isValidPassword(ba.password, password))) {
 			throw createError(401, "Incorrect credentials");
 		}
 
-		const mnemonic = "";
-		const encryptedMnemonic = ba.mnemonic;
+		const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
+		const mnemonic = cryptoHelper.decrypt(ba.mnemonic, encryptionKey, ba.iv);
+		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
+		const newAccIndex = result[0]["get_largest_derived_acc_id"];
+		const newHdPath = makeHDPath(newAccIndex);
+		const _hdPath = pathToString(newHdPath);
+		const { address: _address } = await getDerivedAccount(mnemonic, newHdPath);
 
-		
-		const funcResult = <Array<any>>(await prisma.$queryRaw`SELECT get_largest_derived_acc_id(${ba.base_acc_id}::INT)`);
-		const newHDPathIdx = funcResult[0]["get_largest_derived_acc_id"];
-		const { address } = await getDerivedAccount(mnemonic, newHDPathIdx);
-		
+		const da = await prisma.derived_account.create({
+			data: 
+			_nickname ? {
+				address: _address,
+				hd_path: _hdPath,
+				nickname: _nickname,
+				base_acc_id: ba.base_acc_id
+			} : {
+				address: _address,
+				hd_path: _hdPath,
+				base_acc_id: ba.base_acc_id
+			}
+		})
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
