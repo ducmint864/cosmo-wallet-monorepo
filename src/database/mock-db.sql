@@ -13,8 +13,11 @@ create table derived_account (
 	derived_acc_id SERIAL primary key,
 
 	nickname varchar default 'anonymous',
+<<<<<<< HEAD
 	privkey bytea not null unique, --encrypted private key
 	privkey_iv bytea not null,
+=======
+>>>>>>> parent of 1a755af ([Refactor]:)
 	address varchar not null unique, --bech32 address
 	hd_path varchar not null,
 
@@ -22,6 +25,7 @@ create table derived_account (
 	foreign key (base_acc_id) references base_account(base_acc_id)
 );
 
+<<<<<<< HEAD
 //create table standalone_account (
 	//standalone_acc_id SERIAL primary key,
 //
@@ -30,6 +34,8 @@ create table derived_account (
 	//private_key varchar not null unique  --base64 private key
 //);
 
+=======
+>>>>>>> parent of 1a755af ([Refactor]:)
 create table balances (
 	denom varchar not null,
 	amount integer default 0,

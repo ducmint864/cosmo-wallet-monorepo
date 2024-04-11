@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ThasaHdWallet} from "../helpers/ThasaHdWallet";
+import { ThasaHdWallet } from "../helpers/ThasaHdWallet";
 import { stringToPath } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
@@ -102,19 +102,12 @@ export async function register(req: Request, res: Response, next: NextFunction):
         
 
 		// Derive the default account for base account
-		const { address: _address, privkey } = (await wallet.getAccountsWithPrivkeys())[0];
-		const _hdPath = config.crypto.bip44.defaultHdPath;
-		const { encrypted: _privkey, iv: _privkeyIv } = encrypt(
-			Buffer.from(privkey).toString(config.crypto.encoding),
-			encryptionKey	
-		)
+		const { address: _address} = (await wallet.getAccounts())[0];
 		const da = await prisma.derived_account.create({
 			data: {
 				address: _address,
-				hd_path: _hdPath,
-				base_acc_id: ba.base_acc_id,
-				privkey: _privkey,
-				privkey_iv: _privkeyIv
+				hd_path: config.crypto.bip44.defaultHdPath,
+				base_acc_id: ba.base_acc_id
 			}
 		});
 		if (!da) {
