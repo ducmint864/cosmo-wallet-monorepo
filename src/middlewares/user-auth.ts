@@ -26,8 +26,8 @@ export const userAuth = async (req: Request, res: Response, next: NextFunction):
 				}
 				
 				// Attach the token's email and username to request body so the subsequent handlers don't have to query for them again
-				req.body.email = decoded.email;
-				req.body.email = decoded.username;
+				req.body.injectedEmail = decoded.email;
+				req.body.injectedUsername = decoded.username;
 				next();
 			}
 		} else {
