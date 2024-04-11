@@ -1,5 +1,4 @@
 import "dotenv/config";
-import authRouter from "./routes/auth";
 
 type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
