@@ -17,7 +17,7 @@ export function genToken(payload: baseAccountPayload, secret: string, duration: 
 export function decodeAndVerifyToken(token: string, secret: string): JwtPayload | Error {
 	try {
 		const decoded = jwt.verify(token, secret);
-		return <baseAccountPayload>(decoded);
+		return <JwtPayload>decoded;
 	} catch (err) {
 		return err;
 	}
