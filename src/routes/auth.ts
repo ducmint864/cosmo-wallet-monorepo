@@ -6,7 +6,7 @@ const authRouter = express.Router();
 
 authRouter.route('/register').post(register);
 authRouter.route('/login').post(login);
-authRouter.route('/retrieveNewToken').get(userAuth, retrieveNewToken);
+authRouter.route('/retrieveNewToken').post(userAuth, retrieveNewToken);
 authRouter.route("/deriveAccount").post(userAuth, deriveAccount);
 
 export default authRouter;
