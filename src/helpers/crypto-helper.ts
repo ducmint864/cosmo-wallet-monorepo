@@ -9,13 +9,15 @@ import bcrypt from "bcrypt";
 /**
  * A custom derivation path in the form `m/44'/0'/a'/0/0`
  * with 0-based account index `a`.
+ * @param accIndex 0-based account index
+ * @returns HD path
  */
-export function makeHDPath(a: number): HdPath {
+export function makeHDPath(accIndex: number): HdPath {
 	const args = config.crypto.bip44.defaultHdPath.replaceAll("'", "").split("/");
 	return [
 		Slip10RawIndex.hardened(Number(args[1])),
 		Slip10RawIndex.hardened(Number(args[2])),
-		Slip10RawIndex.hardened(a),
+		Slip10RawIndex.hardened(accIndex),
 		Slip10RawIndex.normal(Number(args[4])),
 		Slip10RawIndex.normal(Number(args[5]))
 	];
@@ -24,12 +26,12 @@ export function makeHDPath(a: number): HdPath {
 /**
  * 
  * @param {*} mnemonic take a mnemonic to recover the wallet
- * @param {*} acc_idx_derive idex of account to derive
+ * @param {*} hdPath idex of account to derive
  * @returns {{address:string, pubkey: Uint8Array}}
  */
-export async function getDerivedAccount(mnemonic: string, acc_idx_derive: number): Promise<{pubKey: string, privkey: string,  address: string }> {
+export async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promise<{ pubKey: string, privkey: string,  address: string }> {
 	const wallet = await ThasaHdWallet.fromMnemonic(mnemonic, {
-		hdPaths: [makeHDPath(acc_idx_derive)],
+		hdPaths: [hdPath],
 		prefix: "thasa",
 	});
 
