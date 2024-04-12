@@ -37,6 +37,14 @@ const config = {
 		refreshToken: {
 			secret: process.env.REFRESH_TOKEN_SECRET,
 			duration: "14d"
+		},
+		password: {
+			minLength: 8,
+			maxLength: 32,
+		},
+		username: {
+			minLength: 6,
+			maxLength: 16
 		}
 	}
 };

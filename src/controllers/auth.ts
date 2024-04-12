@@ -6,6 +6,7 @@ import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountPayload } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
+import * as credentialHelper from "../helpers/credentials-helper"
 import * as cryptoHelper from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
@@ -13,31 +14,6 @@ import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 import "dotenv/config";
 
-function checkEmailAndThrow(email: string): void {
-	if (!email) {
-		throw createError(400, "Missing email");
-	}
-}
-
-function checkUserNameAndThrow(username: string): void {
-	if (username) {
-		if (false) {
-			throw createError(400, "Invalid username");
-		}
-	}
-}
-
-function checkPasswordAndThrow(password: string): void {
-	if (password) {
-		if (false) {
-			throw createError(400, "Invalid password");
-		}
-	}
-}
-
-function genUsername(): string {
-	return `${Math.random().toString(36)}`;
-}
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
@@ -49,12 +25,12 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		}
 
 		// Quick validation
-		checkEmailAndThrow(_email);
-		checkPasswordAndThrow(_password);
+		credentialHelper.checkEmailAndThrow(_email);
+		credentialHelper.checkPasswordAndThrow(_password);
 		if (_username) {
-			checkUserNameAndThrow(_username);
+			credentialHelper.checkUsernameAndThrow(_username);
 		} else {
-			_username = genUsername();
+			_username = await credentialHelper.genUsername();
 		}
 
 
@@ -117,9 +93,9 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 		}
 
 		// Quick validation
-		checkEmailAndThrow(_email); // Check if email has already
-		checkUserNameAndThrow(_username);
-		checkPasswordAndThrow(_password);
+		credentialHelper.checkEmailAndThrow(_email); // Check if email has already
+		credentialHelper.checkUsernameAndThrow(_username);
+		credentialHelper.checkPasswordAndThrow(_password);
 
 		// Validate login credentials
 		const ba = await prisma.base_account.findFirst({
@@ -219,7 +195,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		if (!_email) {
 			throw createError(400, "Missing email");
 		}
-		checkEmailAndThrow(_email);
+		credentialHelper.checkEmailAndThrow(_email);
 
 		if (!password) {
 			throw createError(400, "Missing password");
