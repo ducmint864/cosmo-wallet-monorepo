@@ -37,7 +37,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
-};
+}
 
 export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {

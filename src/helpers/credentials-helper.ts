@@ -1,8 +1,8 @@
-import config from "../config"
+import config from "../config";
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
-import { prisma } from "../database/prisma"
+import { prisma } from "../database/prisma";
 import { randomBytes } from "crypto";
 
 const usernameMinLength = config.auth.username.minLength;
@@ -24,13 +24,14 @@ export function checkPasswordAndThrow(password: string) {
 	const result = passwordSchema.validate(password, {
 		list: true,
 		details: true
+	// eslint-disable-next-line
 	}) as any[];
 
 	if (result.length > 0) {
 		throw createError(400,
 			"Invalid password:\n" +
 			result
-				.map((criteria) => { return criteria.message })
+				.map((criteria) => { return criteria.message; })
 				.join("\n")
 		);
 	}
@@ -44,7 +45,7 @@ export function checkEmailAndThrow(email: string) {
 
 export function checkUsernameAndThrow(username: string) {
 	const generalPattern = /^[a-zA-Z0-9_]+$/; // Only alphanumeric and underscores
-	const containsLetter = /[a-zA-Z]/ // Must contains at least one letter
+	const containsLetter = /[a-zA-Z]/; // Must contains at least one letter
 
 	let lengthErr = false;
 	let symbolErr = false;
@@ -69,7 +70,7 @@ export function checkUsernameAndThrow(username: string) {
 			+ (lengthErr ? `Username must be between ${usernameMinLength}  -  ${usernameMaxLength} characters\n` : "")
 			+ (symbolErr ? "Username can only contain alphanumerics and underscores\n" : "")
 			+ (letterErr ? "Username must contain at least 1 letter\n" : "")
-		)
+		);
 	}
 }
 
@@ -83,7 +84,7 @@ export async function genUsername(): Promise<string> {
 			where: {
 				username: _username
 			}
-		}) != null)
+		}) != null);
 		if (containsLetter && !taken) {
 			break;
 		}

@@ -5,7 +5,7 @@ import { rawSecp256k1PubkeyToRawAddress, encodeSecp256k1Signature } from "@cosmj
 import { SignDoc } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { DirectSecp256k1HdWalletOptions } from "@cosmjs/proto-signing";
 import { AccountData, DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
-import config from "../config"
+import config from "../config";
 
 const defaultOptions = {
 	bip39Password: "",
@@ -72,10 +72,10 @@ export class ThasaHdWallet implements OfflineDirectSigner {
 
 	get mnemonic(): string {
 		return this.secret.toString();
-	};
+	}
 
 	async getAccountsWithPrivkeys(): Promise<readonly AccountDataWithPrivateKey[]> {
-		return Promise.all(this.accounts.map(async ({ hdPath, prefix }) => {
+		return Promise.all(this.accounts.map(async ({ hdPath }) => {
 			const { privkey, pubkey } = await this.getKeyPair(hdPath);
 			const address = toBech32(defaultOptions.prefix, rawSecp256k1PubkeyToRawAddress(pubkey));
 

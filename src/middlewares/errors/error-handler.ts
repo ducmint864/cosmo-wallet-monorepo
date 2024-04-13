@@ -11,14 +11,14 @@ export function errorHandler(err: HttpError, req: Request, res: Response, next: 
 		return res.status(409).json({
 			message: "Email has already been used",
 			stack: err.stack
-		})
+		});
 	}
 
 	if (err.message.includes("Unique constraint failed on the fields: (`username`)")) {
 		return res.status(409).json({
 			message: "Username has already been used",
 			stack: err.stack
-		})
+		});
 	}
 
 	return res.status(err.statusCode || 500).json({

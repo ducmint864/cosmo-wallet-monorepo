@@ -6,7 +6,7 @@ import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountIdentifier } from "../helpers/jwt-helper";
 import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
-import * as credentialHelper from "../helpers/credentials-helper"
+import * as credentialHelper from "../helpers/credentials-helper";
 import * as cryptoHelper from "../helpers/crypto-helper";
 import config from "../config";
 import createError from "http-errors";
@@ -17,7 +17,9 @@ import "dotenv/config";
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
+		
 		let {
+			// eslint-disable-next-line
 			email: _email,
 			username: _username,
 			password: _password
@@ -193,7 +195,7 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 		const payload = <baseAccountIdentifier>{
 			email: decoded.email,
 			username: decoded.username,
-		}
+		};
 		// Generate a new access token using the payload
 		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 
@@ -243,10 +245,10 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			where: {
 				email: _email
 			}
-		})
+		});
 
 		if (!ba) {
-			throw createError(404, 'Base account not found');
+			throw createError(404, "Base account not found");
 		}
 
 		if (!(await cryptoHelper.isValidPassword(password, ba.password))) {
@@ -255,6 +257,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 
 		const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
 		const mnemonic = cryptoHelper.decrypt(ba.mnemonic, encryptionKey, ba.iv);
+		// eslint-disable-next-line
 		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_number_of_derived_account(${ba.base_acc_id}::INT)`);
 		const newAccIndex = result[0]["get_number_of_derived_account"];
 		const newHdPath = makeHDPath(newAccIndex);
@@ -274,7 +277,7 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 					nickname: `Account ${newAccIndex}`,
 					base_acc_id: ba.base_acc_id
 				}
-		})
+		});
 		if (!da) {
 			throw createError(500, "Failed to create account");
 		}

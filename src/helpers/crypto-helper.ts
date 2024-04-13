@@ -2,7 +2,7 @@ import { HdPath } from "@cosmjs/crypto";
 import config from "../config";
 import { ThasaHdWallet } from "./ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
-import crypto from 'crypto';
+import crypto from "crypto";
 import bcrypt from "bcrypt";
 
 /**
@@ -46,14 +46,14 @@ export async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promi
  * @returns encrypted data and the iv used for encryption
  */
 export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: Buffer, iv: Buffer } {
-	let iv = crypto.randomBytes(config.crypto.aes.ivLength); // generate random iv
+	const iv = crypto.randomBytes(config.crypto.aes.ivLength); // generate random iv
 	const cipher = crypto.createCipheriv(
 		config.crypto.aes.algorithm,
 		encryptionKey,
 		iv
 	);
 	const encrypted = Buffer.concat([cipher.update(plaintext, "utf-8"), cipher.final()]);
-	return { encrypted, iv }
+	return { encrypted, iv };
 }
 
 /**
@@ -68,7 +68,7 @@ export function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): s
 		config.crypto.aes.algorithm,
 		encryptionKey,
 		iv
-	)
+	);
 	const decryptedData = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf-8");
 	return decryptedData;
 }

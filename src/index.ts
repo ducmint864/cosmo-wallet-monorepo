@@ -1,7 +1,7 @@
-import express from 'express';
-import cookieParser from 'cookie-parser';
-import authRouter from './routes/auth'
-import 'dotenv/config';
+import express from "express";
+import cookieParser from "cookie-parser";
+import authRouter from "./routes/auth";
+import "dotenv/config";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
