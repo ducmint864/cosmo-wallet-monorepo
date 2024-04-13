@@ -9,6 +9,8 @@ const usernameMinLength = config.auth.username.minLength;
 const usernameMaxLength = config.auth.username.maxLength;
 const passwordMinLength = config.auth.password.minLength;
 const passwordMaxLength = config.auth.password.maxLength;
+const nicknameMinLength = config.auth.nickname.minLength;
+const nicknameMaxLength = config.auth.nickname.maxLength;
 
 const passwordSchema = new PasswordValidator()
 	.min(config.auth.password.minLength, `Password must be between ${passwordMinLength} - ${passwordMaxLength} characters`)
@@ -88,4 +90,11 @@ export async function genUsername(): Promise<string> {
 	}	
 
 	return _username;
+}
+
+
+export function checkNicknameAndThrow(nickname: string) {
+	if (!(nickname.length >= 1 && nickname.length <= 16)) {
+		throw createError(400, `Invalid nickname: Nickname must be between ${nicknameMinLength} - ${nicknameMaxLength} characters`);
+	}
 }

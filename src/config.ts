@@ -45,6 +45,10 @@ const config = {
 		username: {
 			minLength: 6,
 			maxLength: 16
+		},
+		nickname: {
+			minLength: 1,
+			maxLength: 16
 		}
 	}
 };

@@ -1,12 +1,12 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import "dotenv/config";
 
-export interface baseAccountPayload {
+export interface baseAccountIdentifier {
     username: string,
     email: string,
 }
 
-export function genToken(payload: baseAccountPayload, secret: string, duration: string): string {
+export function genToken(payload: baseAccountIdentifier, secret: string, duration: string): string {
 	const options = {
 		expiresIn: duration
 	};
