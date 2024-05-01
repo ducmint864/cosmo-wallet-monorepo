@@ -2,6 +2,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import authRouter from "./routes/auth";
 import "dotenv/config";
+import https from "https";
+import fs from "fs";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -19,7 +21,6 @@ if (!process.env.DB_CONNECTION_STRING) {
 	process.exit(1);
 }
 
-
 const port = 3000;
 const root = "/api";
 const app = express();
@@ -29,7 +30,16 @@ app.use(cookieParser());
 
 
 app.use(`${root}/auth`, authRouter);
+app.get('/', (req, res) => {
+	res.send("Hello world It's Thasa Wallet");
+})
 
-app.listen(port, () => {
+https.createServer(
+	{
+		key: fs.readFileSync("server.key"),
+		cert: fs.readFileSync("server.cert"),
+	},
+	app
+).listen(port, () => {
 	console.log(`Server listening on port ${port}`);
 });
