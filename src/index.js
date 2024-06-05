@@ -1,17 +1,42 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import styles from './styles.module.scss'
-import { Welcome } from './components/welcome/welcome'
-import { Intro } from './components/intro/intro'
-import { BackupCode } from './components/setup/backupCode/backupCode'
+// import { Welcome } from './components/welcome/welcome'
+// import { Intro } from './components/intro/intro'
+// import { BackupCode } from './components/setup/backupCode/backupCode'
 import { Toaster } from 'react-hot-toast'
-import { PinCode } from './components/setup/pinCode/pinCode'
+// import { PinCode } from './components/setup/pinCode/pinCode'
+import { Authentication } from './components/authentication/authentication'
 
-export const Register = ({ handleDone }) => {
-  const [activePage, setActivePage] = useState('welcome')
+export const Register = ({
+  // eslint-disable-next-line
+  handleDone,
+  isSignIn,
+  errMsg,
+  handleSignIn = () => {},
+  handleSignUp = () => {}
+}) => {
+  const [activePage, setActivePage] = useState(
+    isSignIn ? 'welcome' : 'authentication'
+  )
+
+  useEffect(() => {
+    if (!isSignIn) {
+      setActivePage('authentication')
+    }
+  }, [isSignIn])
+
   return (
     <div className={styles.root}>
       <Toaster position='bottom-center' reverseOrder={false} />
-      <Welcome
+      <Authentication
+        isActive={activePage === 'authentication'}
+        setActivePage={setActivePage}
+        isSignIn={isSignIn}
+        errMsg={errMsg}
+        handleSignIn={handleSignIn}
+        handleSignUp={handleSignUp}
+      />
+      {/* <Welcome
         isActive={activePage === 'welcome'}
         setActivePage={setActivePage}
       />
@@ -24,7 +49,7 @@ export const Register = ({ handleDone }) => {
         isActive={activePage === 'pinCode'}
         setActivePage={setActivePage}
         handleDone={handleDone}
-      />
+      /> */}
     </div>
   )
 }
