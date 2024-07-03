@@ -12,14 +12,9 @@ model base_account {
   email           String            @unique @db.VarChar
   username        String            @unique @db.VarChar
   password        String            @db.VarChar
-<<<<<<< HEAD
-  mnemonic        String            @unique @db.VarChar
-  iv              String            @default("VSfWrCR+PASW+eOsS+GmFA==") @db.VarChar
-=======
   mnemonic        Bytes             @unique
   pbkdf2_salt     Bytes
   iv              Bytes
->>>>>>> ducminh-test
   derived_account derived_account[]
 }
 
