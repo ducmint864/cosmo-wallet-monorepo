@@ -11,7 +11,13 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 	const secret: string = config.auth.accessToken.secret;
 
 	try {
-		_preCheckAndThrow(accessToken);
+		if (!accessToken) {
+			throw createError(400, "Missing access token");
+		}
+
+		if (await isTokenBlackListed(accessToken)) {
+			throw createError(403, "Token is black-listed");
+		}	
 
 		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
 		if (!decoded) {
@@ -30,7 +36,13 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 	const secret: string = config.auth.refreshToken.secret;
 
 	try {
-		_preCheckAndThrow(refreshToken);
+		if (!refreshToken) {
+			throw createError(400, "Missing refresh token");
+		}
+		
+		if (await isTokenBlackListed(refreshToken)) {
+			throw createError(403, "Token is black-listed");
+		}	
 
 		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
 		if (!decoded) {
@@ -42,16 +54,5 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 		next();
 	} catch (err) {
 		errorHandler(err, req, res, next);
-	}
-
-}
-
-async function _preCheckAndThrow(token: string): Promise<void> {
-	if (!token) {
-		throw createError(400, "Missing refresh token");
-	}
-
-	if (await isTokenBlackListed(token)) {
-		throw createError(403, "Token is black-listed");
 	}
 }

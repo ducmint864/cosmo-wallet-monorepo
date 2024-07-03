@@ -3,7 +3,7 @@ import { ThasaHdWallet } from "../helpers/types/ThasaHdWallet";
 import { stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
-import { blackListToken } from "../helpers/jwt-helper";
+import { blackListToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { BaseAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
@@ -270,6 +270,28 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 			message: "Account created"
 		});
 	} catch (err) {
+		errorHandler(err, req, res, next);
+	}
+}
+
+export async function logOut(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const accessToken: string = req.cookies.accessToken;
+	const refreshToken: string = req.cookies.refreshToken;
+
+	try {
+		if (accessToken) {
+			const secret: string = config.auth.accessToken.secret;
+			const accessTokenPayload: BaseAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
+			await blackListToken(accessToken, accessTokenPayload);
+		}
+
+		const refreshTokenPayload = <BaseAccountJwtPayload>req.body.decodedRefreshTokenPayload;
+		await blackListToken(refreshToken, refreshTokenPayload)
+		res.status(200).json({
+			message: "Logged out"
+		})
+	} catch (err) {
+		// console.log(err);
 		errorHandler(err, req, res, next);
 	}
 }
