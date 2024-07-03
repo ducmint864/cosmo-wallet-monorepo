@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "./errors/error-handler";
-import { decodeAndVerifyToken } from "../helpers/jwt-helper";
+import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
 import createError from "http-errors";
 import config from "../config";
 
@@ -11,6 +11,10 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 		if (!token) {
 			throw createError(400, "Missing access token");
+		}
+
+		if (isTokenBlackListed(token)) {
+			throw createError(403, "Token is black-listed!");
 		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.accessToken.secret);
@@ -45,6 +49,10 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 
 		if (!token) {
 			throw createError(400, "Missing refresh token");
+		}
+
+		if (isTokenBlackListed(token)) {
+			throw createError(403, "Token is black-listed");
 		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.refreshToken.secret);

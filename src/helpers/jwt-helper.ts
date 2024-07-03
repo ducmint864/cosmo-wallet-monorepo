@@ -1,9 +1,13 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
+import * as redis from "redis";
 import "dotenv/config";
 
+// Init client for redis in-memory db
+const redisClient = redis.createClient();
+
 export interface baseAccountIdentifier {
-    username: string,
-    email: string,
+	username: string,
+	email: string,
 }
 
 export function genToken(payload: baseAccountIdentifier, secret: string, duration: string): string {
@@ -20,5 +24,34 @@ export function decodeAndVerifyToken(token: string, secret: string): JwtPayload 
 		return <JwtPayload>decoded;
 	} catch (err) {
 		return err;
+	}
+}
+
+/**
+ * 
+ * @param token: Raw token string
+ * @returns 
+ */
+export async function isTokenBlackListed(token: string): Promise<boolean> {
+	try {
+		const data = await redisClient.get(token);
+		if (!data) {
+			return false;
+		}
+		return true;
+	} catch (err) {
+		console.log(err);
+		return false;
+	}
+}
+
+export async function blackListToken(token: string, expiry: string, redisKeyExpiry: number) {
+	try {
+		const res = await redisClient.set(token, "black-listed", {
+			EX: redisKeyExpiry
+		});
+		// console.log(res);
+	} catch (err) {
+		throw err;
 	}
 }
