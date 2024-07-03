@@ -35,17 +35,14 @@ export function decodeAndVerifyToken(token: string, secret: string): JwtPayload 
 export async function isTokenBlackListed(token: string): Promise<boolean> {
 	try {
 		const data = await redisClient.get(token);
-		if (!data) {
-			return false;
-		}
-		return true;
+		return data !== null;
 	} catch (err) {
 		console.log(err);
 		return false;
 	}
 }
 
-export async function blackListToken(token: string, expiry: string, redisKeyExpiry: number) {
+export async function blackListToken(token: string, redisKeyExpiry: number) {
 	try {
 		const res = await redisClient.set(token, "black-listed", {
 			EX: redisKeyExpiry
