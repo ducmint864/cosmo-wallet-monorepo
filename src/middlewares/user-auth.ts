@@ -2,57 +2,56 @@ import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "./errors/error-handler";
 import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
+import { BaseAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import createError from "http-errors";
 import config from "../config";
 
 export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const accessToken: string = req.cookies.accessToken;
+	const secret: string = config.auth.accessToken.secret;
+
 	try {
-		const token = req.cookies.accessToken;
+		_preCheckAndThrow(accessToken);
 
-		if (!token) {
-			throw createError(400, "Missing access token");
-		}
-
-		if (await isTokenBlackListed(token)) {
-			throw createError(403, "Token is black-listed!");
-		}
-
-		const decoded = decodeAndVerifyToken(token, config.auth.accessToken.secret);
+		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
 		if (!decoded) {
-			throw createError(400, "Unauthorized access token");
+			throw createError(403, "Unauthorized access token");
 		}
-		
-		// Attach the token's email and username to request body so the subsequent handlers don't have to query for them again
-		req.body.injectedEmail = decoded.email;
-		req.body.injectedUsername = decoded.username;
-		next();
 
+		req.body.decodedAccessTokenPayload = decoded;
+		next();
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
 }
 
 export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const refreshToken: string = req.cookies.refreshToken;
+	const secret: string = config.auth.refreshToken.secret;
+
 	try {
-		const token = req.cookies.refreshToken;
+		_preCheckAndThrow(refreshToken);
 
-		if (!token) {
-			throw createError(400, "Missing refresh token");
-		}
-
-		if (await isTokenBlackListed(token)) {
-			throw createError(403, "Token is black-listed");
-		}
-
-		const decoded = decodeAndVerifyToken(token, config.auth.refreshToken.secret);
+		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
 		if (!decoded) {
-			throw createError(400, "Unauthorized refresh token");
+			throw createError(403, "Unauthorized refresh token");
 		}
 
-		req.body.injectedEmail = decoded.email;
-		req.body.injectedUsername = decoded.username;
+		// Inject the decoded payload of the token into the request body so the subsequent handlers don't have to query for it
+		req.body.decodedRefreshTokenPayload = decoded;
 		next();
 	} catch (err) {
 		errorHandler(err, req, res, next);
+	}
+
+}
+
+async function _preCheckAndThrow(token: string): Promise<void> {
+	if (!token) {
+		throw createError(400, "Missing refresh token");
+	}
+
+	if (await isTokenBlackListed(token)) {
+		throw createError(403, "Token is black-listed");
 	}
 }

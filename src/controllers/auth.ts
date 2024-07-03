@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { ThasaHdWallet } from "../helpers/ThasaHdWallet";
+import { ThasaHdWallet } from "../helpers/types/ThasaHdWallet";
 import { stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
-import { baseAccountIdentifier } from "../helpers/jwt-helper";
+import { blackListToken } from "../helpers/jwt-helper";
+import { BaseAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
@@ -17,7 +18,7 @@ import "dotenv/config";
 
 export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-		
+
 		let {
 			// eslint-disable-next-line
 			email: _email,
@@ -102,10 +103,10 @@ export async function register(req: Request, res: Response, next: NextFunction):
 
 export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-		const { 
+		const {
 			email: _email,
 			username: _username,
-			password: _password 
+			password: _password
 		} = req.body;
 
 		const hasEmail: boolean = (_email != null);
@@ -146,7 +147,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 		}
 
 		// Send access token and refresh token
-		const payload = <baseAccountIdentifier>{
+		const payload = <BaseAccountJwtPayload>{
 			email: _email,
 			username: _username
 		};
@@ -177,13 +178,15 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
 export async function retrieveNewToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const { email: _email, username: _username } = <BaseAccountJwtPayload>req.body.decodedRefreshTokenPayload;
+	const newPayload = {
+		email: _email,
+		username: _username,
+	}
+
 	try {
-		const payload = <baseAccountIdentifier>{
-			email: req.body.injectedEmail,
-			username: req.body.injectedUsername,
-		};
 		// Generate a new access token using the payload
-		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
+		const accessToken = genToken(newPayload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {
@@ -201,20 +204,16 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 }
 
 export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const { email: _email } = <BaseAccountJwtPayload>req.body.decodedAccessTokenPayload;
+	const {
+		password,
+		nickname: _nickname,
+	} = req.body;
+
+	const hasPassword: boolean = (password != null);
+	const hasNickname: boolean = (_nickname != null);
+
 	try {
-		const { 
-			password, 
-			nickname: _nickname, 
-			injectedEmail: _email 
-		} = req.body;
-
-		const hasEmail: boolean = (_email != null);
-		const hasPassword: boolean = (password != null);
-		const hasNickname: boolean = (_nickname != null);
-
-		if (!hasEmail) {
-			throw createError(400, "Missing email");
-		}
 		credentialHelper.checkEmailAndThrow(_email);
 
 		if (!hasPassword) {
@@ -222,10 +221,9 @@ export async function deriveAccount(req: Request, res: Response, next: NextFunct
 		}
 		credentialHelper.checkPasswordAndThrow(password);
 
-		if(hasNickname) {
+		if (hasNickname) {
 			credentialHelper.checkNicknameAndThrow(_nickname);
 		}
-		
 
 		const ba = await prisma.base_account.findUnique({
 			where: {

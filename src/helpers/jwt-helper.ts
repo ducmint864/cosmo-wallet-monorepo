@@ -1,6 +1,8 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { createClient } from "redis";
 import "dotenv/config";
+import { BaseAccountJwtPayload } from "./types/BaseAccountJwtPayload";
+
 
 // Init redis client
 let redisClient = createClient();
@@ -10,14 +12,7 @@ redisClient.on('error', (err: unknown) => console.log('Redis Client Error', err)
 	await redisClient.connect();
 })();
 
-
-
-export interface baseAccountIdentifier {
-	username: string,
-	email: string,
-}
-
-export function genToken(payload: baseAccountIdentifier, secret: string, duration: string): string {
+export function genToken(payload: BaseAccountJwtPayload, secret: string, duration: string): string {
 	const options = {
 		expiresIn: duration
 	};
@@ -25,10 +20,10 @@ export function genToken(payload: baseAccountIdentifier, secret: string, duratio
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): JwtPayload {
+export function decodeAndVerifyToken(token: string, secret: string): BaseAccountJwtPayload {
 	try {
-		const decoded = jwt.verify(token, secret);
-		return <JwtPayload>decoded;
+		const decoded = <BaseAccountJwtPayload>jwt.verify(token, secret);
+		return decoded;
 	} catch (err) {
 		return null;
 	}
