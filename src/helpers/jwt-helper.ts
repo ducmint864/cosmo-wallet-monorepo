@@ -1,9 +1,16 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
-import * as redis from "redis";
+import { createClient } from "redis";
 import "dotenv/config";
 
-// Init client for redis in-memory db
-const redisClient = redis.createClient();
+// Init redis client
+let redisClient = createClient();
+redisClient.on('error', (err: unknown) => console.log('Redis Client Error', err));
+
+(async () => {
+	await redisClient.connect();
+})();
+
+
 
 export interface baseAccountIdentifier {
 	username: string,
@@ -34,11 +41,14 @@ export function decodeAndVerifyToken(token: string, secret: string): JwtPayload 
  */
 export async function isTokenBlackListed(token: string): Promise<boolean> {
 	try {
+		if (!redisClient.isOpen) {
+			redisClient.connect();
+		}
 		const data = await redisClient.get(token);
 		return data !== null;
 	} catch (err) {
 		console.log(err);
-		return false;
+		return true;
 	}
 }
 
@@ -52,3 +62,4 @@ export async function blackListToken(token: string, redisKeyExpiry: number) {
 		throw err;
 	}
 }
+

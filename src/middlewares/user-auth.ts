@@ -13,26 +13,15 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 			throw createError(400, "Missing access token");
 		}
 
-		// if (isTokenBlackListed(token)) {
-		// 	throw createError(403, "Token is black-listed!");
-		// }
+		if (await isTokenBlackListed(token)) {
+			throw createError(403, "Token is black-listed!");
+		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.accessToken.secret);
 		if (!decoded) {
 			throw createError(400, "Unauthorized access token");
 		}
 		
-		// if (!(prisma.base_account.findFirst({
-		// 	where: {
-		// 		OR: [
-		// 			{ email: decoded.email },
-		// 			{ username: decoded.username }
-		// 		]
-		// 	}
-		// }))) {
-		// 	throw createError(401, "Unknown identity");
-		// }
-
 		// Attach the token's email and username to request body so the subsequent handlers don't have to query for them again
 		req.body.injectedEmail = decoded.email;
 		req.body.injectedUsername = decoded.username;
@@ -51,9 +40,9 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 			throw createError(400, "Missing refresh token");
 		}
 
-		// if (isTokenBlackListed(token)) {
-		// 	throw createError(403, "Token is black-listed");
-		// }
+		if (await isTokenBlackListed(token)) {
+			throw createError(403, "Token is black-listed");
+		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.refreshToken.secret);
 		if (!decoded) {
