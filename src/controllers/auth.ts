@@ -4,7 +4,7 @@ import { stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { baseAccountIdentifier } from "../helpers/jwt-helper";
-import { genToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
+import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
 import * as cryptoHelper from "../helpers/crypto-helper";
@@ -178,23 +178,9 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
 export async function retrieveNewToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-		// Extract refresh token from request
-		const refreshToken = req.cookies.refreshToken;
-		if (!refreshToken) {
-			throw createError(400, "Missing refresh token");
-		}
-
-		// Verify the refresh token and extract the payload (i.e email, username)
-		const decoded = decodeAndVerifyToken(refreshToken, config.auth.refreshToken.secret);
-
-		// Check if the refresh token is valid
-		if (decoded instanceof Error) {
-			throw createError(401, "Invalid refresh token");
-		}
-
 		const payload = <baseAccountIdentifier>{
-			email: decoded.email,
-			username: decoded.username,
+			email: req.body.injectedEmail,
+			username: req.body.injectedUsername,
 		};
 		// Generate a new access token using the payload
 		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
