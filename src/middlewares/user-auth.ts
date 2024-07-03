@@ -18,7 +18,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.accessToken.secret);
-		if (decoded instanceof Error) {
+		if (!decoded) {
 			throw createError(400, "Unauthorized access token");
 		}
 		
@@ -56,7 +56,7 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 		}
 
 		const decoded = decodeAndVerifyToken(token, config.auth.refreshToken.secret);
-		if (decoded instanceof Error) {
+		if (!decoded) {
 			throw createError(400, "Unauthorized refresh token");
 		}
 

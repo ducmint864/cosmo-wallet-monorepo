@@ -18,12 +18,12 @@ export function genToken(payload: baseAccountIdentifier, secret: string, duratio
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): JwtPayload | Error {
+export function decodeAndVerifyToken(token: string, secret: string): JwtPayload {
 	try {
 		const decoded = jwt.verify(token, secret);
 		return <JwtPayload>decoded;
 	} catch (err) {
-		return err;
+		return null;
 	}
 }
 
