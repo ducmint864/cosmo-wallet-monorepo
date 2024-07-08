@@ -2,7 +2,7 @@ import config from "../config";
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
-import { prisma } from "../database/prisma";
+import { prisma } from "../../database/prisma";
 import { randomBytes } from "crypto";
 
 const usernameMinLength = config.auth.username.minLength;
