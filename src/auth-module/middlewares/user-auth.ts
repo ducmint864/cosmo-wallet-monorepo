@@ -2,7 +2,7 @@ import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "./errors/error-handler";
 import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
-import { BaseAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import createError from "http-errors";
 import config from "../config";
 
@@ -19,13 +19,14 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 			throw createError(403, "Token is black-listed");
 		}	
 
-		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
+		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
 		if (!decoded) {
 			throw createError(403, "Unauthorized access token");
 		}
 
 		req.body.decodedAccessTokenPayload = decoded;
 		next();
+
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -44,7 +45,7 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 			throw createError(403, "Token is black-listed");
 		}	
 
-		const decoded = <BaseAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
+		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
 		if (!decoded) {
 			throw createError(403, "Unauthorized refresh token");
 		}
@@ -52,6 +53,7 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 		// Inject the decoded payload of the token into the request body so the subsequent handlers don't have to query for it
 		req.body.decodedRefreshTokenPayload = decoded;
 		next();
+		
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}

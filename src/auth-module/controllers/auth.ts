@@ -4,7 +4,7 @@ import { stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { blackListToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
-import { BaseAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
@@ -52,7 +52,10 @@ export async function register(req: Request, res: Response, next: NextFunction):
 			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
 		});
 
-		const _pbkdf2Salt = Buffer.concat([Buffer.from(`${_email}${_username}`), randomBytes(config.crypto.pbkdf2.saltLength)]);
+		const _pbkdf2Salt = Buffer.concat(
+			[Buffer.from(`${_email}${_username}`),
+			randomBytes(config.crypto.pbkdf2.saltLength)]
+		);
 		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, _pbkdf2Salt);
 		const {
 			encrypted: _mnemonic,
@@ -62,33 +65,32 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		// Password-hashing
 		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
 
-		const ba = await prisma.base_account.create({
+		const userAccount = await prisma.user_accounts.create({
 			data: {
 				email: _email,
 				username: _username,
 				password: _password,
-				mnemonic: _mnemonic,
-				iv: _iv,
-				pbkdf2_salt: _pbkdf2Salt
+				crypto_mnemonic: _mnemonic,
+				crypto_iv: _iv,
+				crypto_pbkdf2_salt: _pbkdf2Salt,
 			}
 		});
 
-		if (!ba) {
+		if (!userAccount) {
 			throw createError(500, "Failed to create account");
 		}
 
-
-		// Derive the default account for base account
+		// Derive the default (main) wallet account for the user account
 		const { address: _address } = (await wallet.getAccounts())[0];
-		const da = await prisma.derived_account.create({
+		const walletAccount = await prisma.wallet_accounts.create({
 			data: {
 				address: _address,
-				hd_path: config.crypto.bip44.defaultHdPath,
+				crypto_hd_path: config.crypto.bip44.defaultHdPath,
 				nickname: "Account 0",
-				base_acc_id: ba.base_acc_id
+				user_acc_id: userAccount.user_acc_id,
 			}
 		});
-		if (!da) {
+		if (!walletAccount) {
 			throw createError(500, "Failed to create derived account");
 		}
 
@@ -96,6 +98,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		res.status(201).json({
 			message: "Register successful",
 		});
+		
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -125,31 +128,30 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 		}
 		credentialHelper.checkPasswordAndThrow(_password);
 
-		const ba =
+		const userAccount =
 			hasEmail
-				? await prisma.base_account.findUnique({
+				? await prisma.user_accounts.findUnique({
 					where: {
 						email: _email
 					}
 				})
-				: await prisma.base_account.findUnique({
+				: await prisma.user_accounts.findUnique({
 					where: {
 						username: _username
 					}
 				});
 
-		if (!ba) {
+		if (!userAccount) {
 			throw createError(401, "Invalid login credentials");
 		}
 
-		if (!(await cryptoHelper.isValidPassword(_password, ba.password))) {
+		if (!(await cryptoHelper.isValidPassword(_password, userAccount.password))) {
 			throw createError(401, "Invalid login credentials");
 		}
 
 		// Send access token and refresh token
-		const payload = <BaseAccountJwtPayload>{
-			email: _email,
-			username: _username
+		const payload = <UserAccountJwtPayload>{
+			userAccountID: userAccount.user_acc_id
 		};
 		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 		const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
@@ -177,16 +179,15 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
 
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
-export async function retrieveNewToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { email: _email, username: _username } = <BaseAccountJwtPayload>req.body.decodedRefreshTokenPayload;
-	const newPayload = {
-		email: _email,
-		username: _username,
+export async function refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
+	const payload = <UserAccountJwtPayload>{
+		userAccountID: _userAccountID
 	}
 
 	try {
 		// Generate a new access token using the payload
-		const accessToken = genToken(newPayload, config.auth.accessToken.secret, config.auth.accessToken.duration);
+		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {
@@ -198,77 +199,77 @@ export async function retrieveNewToken(req: Request, res: Response, next: NextFu
 		res.status(200).json({
 			message: "Access token granted"
 		});
+	
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
 }
 
-export async function deriveAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { email: _email } = <BaseAccountJwtPayload>req.body.decodedAccessTokenPayload;
-	const {
-		password,
-		nickname: _nickname,
-	} = req.body;
+export async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;
+	const { password: _password, nickname: _nickname } = req.body;
 
-	const hasPassword: boolean = (password != null);
+	const hasPassword: boolean = (_password != null);
 	const hasNickname: boolean = (_nickname != null);
 
 	try {
-		credentialHelper.checkEmailAndThrow(_email);
-
 		if (!hasPassword) {
 			throw createError(400, "Missing password");
 		}
-		credentialHelper.checkPasswordAndThrow(password);
+		credentialHelper.checkPasswordAndThrow(_password);
 
 		if (hasNickname) {
 			credentialHelper.checkNicknameAndThrow(_nickname);
 		}
 
-		const ba = await prisma.base_account.findUnique({
+		const userAccount = await prisma.user_accounts.findUnique({
 			where: {
-				email: _email
+				user_acc_id: _userAccountID
 			}
 		});
 
-		if (!ba) {
+		if (!userAccount) {
 			throw createError(404, "Base account not found");
 		}
 
-		if (!(await cryptoHelper.isValidPassword(password, ba.password))) {
+		const isValidPassword: boolean = await cryptoHelper.isValidPassword(_password, userAccount.password);
+		if (isValidPassword) {
 			throw createError(401, "Incorrect credentials");
 		}
 
-		const encryptionKey = await cryptoHelper.getEncryptionKey(password, ba.pbkdf2_salt);
-		const mnemonic = cryptoHelper.decrypt(ba.mnemonic, encryptionKey, ba.iv);
+		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, userAccount.crypto_pbkdf2_salt);
+		const mnemonic = cryptoHelper.decrypt(userAccount.crypto_mnemonic, encryptionKey, userAccount.crypto_iv);
+
 		// eslint-disable-next-line
-		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_number_of_derived_account(${ba.base_acc_id}::INT)`);
+		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_number_of_derived_account(${userAccount.user_acc_id}::INT)`);
 		const newAccIndex = result[0]["get_number_of_derived_account"];
 		const newHdPath = makeHDPath(newAccIndex);
 		const _hdPath = pathToString(newHdPath);
 		const { address: _address } = await getDerivedAccount(mnemonic, newHdPath);
 
-		const da = await prisma.derived_account.create({
+		const walletAccount = await prisma.wallet_accounts.create({
 			data:
 				_nickname ? {
 					address: _address,
-					hd_path: _hdPath,
+					crypto_hd_path: _hdPath,
 					nickname: _nickname,
-					base_acc_id: ba.base_acc_id
+					user_acc_id: userAccount.user_acc_id
 				} : {
 					address: _address,
-					hd_path: _hdPath,
+					crypto_hd_path: _hdPath,
 					nickname: `Account ${newAccIndex}`,
-					base_acc_id: ba.base_acc_id
+					user_acc_id: userAccount.user_acc_id
 				}
 		});
-		if (!da) {
+		if (!walletAccount) {
 			throw createError(500, "Failed to create account");
 		}
 
+		// Success
 		res.status(201).json({
 			message: "Account created"
 		});
+
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -281,17 +282,17 @@ export async function logOut(req: Request, res: Response, next: NextFunction): P
 	try {
 		if (accessToken) {
 			const secret: string = config.auth.accessToken.secret;
-			const accessTokenPayload: BaseAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
+			const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
 			await blackListToken(accessToken, accessTokenPayload);
 		}
 
-		const refreshTokenPayload = <BaseAccountJwtPayload>req.body.decodedRefreshTokenPayload;
+		const refreshTokenPayload = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 		await blackListToken(refreshToken, refreshTokenPayload)
 		res.status(200).json({
 			message: "Logged out"
 		})
+
 	} catch (err) {
-		// console.log(err);
 		errorHandler(err, req, res, next);
 	}
 }

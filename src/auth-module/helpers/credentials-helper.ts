@@ -74,18 +74,20 @@ export function checkUsernameAndThrow(username: string) {
 	}
 }
 
+// Temporary solution, should fix later
 export async function genUsername(): Promise<string> {
 	let _username;
 	
 	while (true) {
 		_username = randomBytes(6).toString("hex"); // Choose length of 12 chars (6 bytes) to balance between collision rate and speed
-		const containsLetter = (_username.search(/[a-zA-Z]/) !== -1);
-		const taken = (await prisma.base_account.findUnique({
+		const containsLetter: boolean = (_username.search(/[a-zA-Z]/) !== -1);
+		const userAccount: object = await prisma.user_accounts.findUnique({
 			where: {
 				username: _username
 			}
-		}) != null);
-		if (containsLetter && !taken) {
+		})
+		const taken: boolean = (userAccount != null);
+		if (!taken && containsLetter) {
 			break;
 		}
 	}	

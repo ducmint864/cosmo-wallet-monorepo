@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { createClient } from "redis";
 import "dotenv/config";
-import { BaseAccountJwtPayload } from "./types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "./types/BaseAccountJwtPayload";
 
 
 // Init redis client
@@ -12,7 +12,7 @@ redisClient.on('error', (err: unknown) => console.log('Redis Client Error', err)
 	await redisClient.connect();
 })();
 
-export function genToken(payload: BaseAccountJwtPayload, secret: string, duration: string): string {
+export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {
 	const options = {
 		expiresIn: duration
 	};
@@ -20,9 +20,9 @@ export function genToken(payload: BaseAccountJwtPayload, secret: string, duratio
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): BaseAccountJwtPayload {
+export function decodeAndVerifyToken(token: string, secret: string): UserAccountJwtPayload {
 	try {
-		const decoded = <BaseAccountJwtPayload>jwt.verify(token, secret);
+		const decoded = <UserAccountJwtPayload>jwt.verify(token, secret);
 		return decoded;
 	} catch (err) {
 		return null;
@@ -47,7 +47,7 @@ export async function isTokenBlackListed(token: string): Promise<boolean> {
 	}
 }
 
-export async function blackListToken(token: string, tokenPayload: BaseAccountJwtPayload): Promise<void>	 {
+export async function blackListToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
 	if (!tokenPayload.exp) {
 		throw new Error("Token payload doesn't have expiry field");
 	}
