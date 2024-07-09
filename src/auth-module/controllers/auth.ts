@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { ThasaHdWallet } from "../helpers/types/ThasaHdWallet";
-import { stringToPath, pathToString } from "@cosmjs/crypto";
+import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../database/prisma";
 import { errorHandler } from "../middlewares/errors/error-handler";
 import { blackListToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
@@ -87,6 +87,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 				address: _address,
 				crypto_hd_path: config.crypto.bip44.defaultHdPath,
 				nickname: "Account 0",
+				wallet_order: 1, // User's first wallet
 				user_acc_id: userAccount.user_acc_id,
 			}
 		});
@@ -98,7 +99,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 		res.status(201).json({
 			message: "Register successful",
 		});
-		
+
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -199,7 +200,7 @@ export async function refreshAccessToken(req: Request, res: Response, next: Next
 		res.status(200).json({
 			message: "Access token granted"
 		});
-	
+
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -233,34 +234,31 @@ export async function createWalletAccount(req: Request, res: Response, next: Nex
 		}
 
 		const isValidPassword: boolean = await cryptoHelper.isValidPassword(_password, userAccount.password);
-		if (isValidPassword) {
+		if (!isValidPassword) {
 			throw createError(401, "Incorrect credentials");
 		}
 
-		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, userAccount.crypto_pbkdf2_salt);
-		const mnemonic = cryptoHelper.decrypt(userAccount.crypto_mnemonic, encryptionKey, userAccount.crypto_iv);
+		const encryptionKey: Buffer = await cryptoHelper.getEncryptionKey(_password, userAccount.crypto_pbkdf2_salt);
+		const mnemonic: string = cryptoHelper.decrypt(userAccount.crypto_mnemonic, encryptionKey, userAccount.crypto_iv);
 
 		// eslint-disable-next-line
-		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_number_of_derived_account(${userAccount.user_acc_id}::INT)`);
-		const newAccIndex = result[0]["get_number_of_derived_account"];
-		const newHdPath = makeHDPath(newAccIndex);
-		const _hdPath = pathToString(newHdPath);
+		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_wallet_count_of_user(${userAccount.user_acc_id}::INT)`);
+		const newAccIndex: number = result[0]["get_wallet_count_of_user"];
+		const newHdPath: HdPath = makeHDPath(newAccIndex);
+		const _hdPath: string = pathToString(newHdPath);
+		const _walletOrder: number = newAccIndex + 1;
 		const { address: _address } = await getDerivedAccount(mnemonic, newHdPath);
 
 		const walletAccount = await prisma.wallet_accounts.create({
-			data:
-				_nickname ? {
-					address: _address,
-					crypto_hd_path: _hdPath,
-					nickname: _nickname,
-					user_acc_id: userAccount.user_acc_id
-				} : {
-					address: _address,
-					crypto_hd_path: _hdPath,
-					nickname: `Account ${newAccIndex}`,
-					user_acc_id: userAccount.user_acc_id
-				}
+			data: {
+				address: _address,
+				crypto_hd_path: _hdPath,
+				nickname: _nickname || `Account ${newAccIndex}`,
+				wallet_order: _walletOrder, 
+				user_acc_id: _userAccountID
+			}
 		});
+
 		if (!walletAccount) {
 			throw createError(500, "Failed to create account");
 		}

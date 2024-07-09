@@ -58,6 +58,7 @@ model wallet_accounts {
   address        String         @unique(map: "derived_account_address_key") @db.VarChar
   crypto_hd_path String         @db.VarChar
   user_acc_id    Int
+  wallet_order   Int
   balances       balances[]
   transactions   transactions[]
   user_accounts  user_accounts  @relation(fields: [user_acc_id], references: [user_acc_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
