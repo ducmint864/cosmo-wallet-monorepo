@@ -7,60 +7,60 @@ datasource db {
   url      = env("DB_CONNECTION_STRING")
 }
 
-model base_account {
-  base_acc_id     Int               @id @default(autoincrement())
-  email           String            @unique @db.VarChar
-  username        String            @unique @db.VarChar
-  password        String            @db.VarChar
-  mnemonic        Bytes             @unique
-  pbkdf2_salt     Bytes
-  iv              Bytes
-  derived_account derived_account[]
-}
-
-model derived_account {
-  derived_acc_id Int           @id @default(autoincrement())
-  nickname       String?       @default("Anonymous") @db.VarChar
-  address        String        @unique @db.VarChar
-  hd_path        String        @db.VarChar
-  base_acc_id    Int
-  balances       balances[]
-  base_account   base_account  @relation(fields: [base_acc_id], references: [base_acc_id], onDelete: NoAction, onUpdate: NoAction)
-  transaction    transaction[]
-}
-
 model balances {
   denom           String          @db.VarChar
   amount          Int?            @default(0)
   derived_acc_id  Int
-  derived_account derived_account @relation(fields: [derived_acc_id], references: [derived_acc_id], onDelete: NoAction, onUpdate: NoAction)
+  derived_account wallet_accounts @relation(fields: [derived_acc_id], references: [wallet_acc_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([derived_acc_id, denom])
 }
 
-model fee {
-  denom       String      @db.VarChar
-  amount      Int?        @default(0)
-  txid        Int
-  transaction transaction @relation(fields: [txid], references: [txid], onDelete: NoAction, onUpdate: NoAction)
+model transaction_fees {
+  denom        String       @db.VarChar
+  amount       Int?         @default(0)
+  tx_id        Int
+  transactions transactions @relation(fields: [tx_id], references: [tx_id], onDelete: NoAction, onUpdate: NoAction, map: "fee_txid_fkey")
 
-  @@id([txid, denom])
+  @@id([tx_id, denom], map: "fee_pkey")
 }
 
-model transaction {
-  txid             Int             @id @default(autoincrement())
-  txhash           String          @unique @db.VarChar
-  timestamp        DateTime        @db.Timestamp(6)
-  sender_address   String          @db.VarChar
-  receiver_address String?         @db.VarChar
-  status           tx_status_enum? @default(pending)
-  type             tx_type_enum?   @default(token_transfer)
-  gas_limit        Int?
-  gas_used         Int?
-  gas_price        Int?
-  derived_acc_id   Int
-  fee              fee[]
-  derived_account  derived_account @relation(fields: [derived_acc_id], references: [derived_acc_id], onDelete: NoAction, onUpdate: NoAction)
+model transactions {
+  tx_id              Int                @id(map: "transaction_pkey") @default(autoincrement())
+  tx_hash            String             @unique(map: "transaction_txhash_key") @db.VarChar
+  timestamp          DateTime           @db.Timestamp(6)
+  sender_address     String             @db.VarChar
+  receiver_address   String?            @db.VarChar
+  status             tx_status_enum?    @default(pending)
+  type               tx_type_enum?      @default(token_transfer)
+  gas_limit          Int?
+  gas_used           Int?
+  gas_price          Int?
+  sender_user_acc_id Int
+  transaction_fees   transaction_fees[]
+  wallet_accounts    wallet_accounts    @relation(fields: [sender_user_acc_id], references: [wallet_acc_id], onDelete: NoAction, onUpdate: NoAction, map: "transaction_derived_acc_id_fkey")
+}
+
+model user_accounts {
+  user_acc_id        Int               @id(map: "base_account_pkey") @default(autoincrement())
+  email              String            @unique(map: "base_account_email_key") @db.VarChar
+  username           String            @unique(map: "base_account_username_key") @db.VarChar
+  password           String            @db.VarChar
+  crypto_mnemonic    Bytes             @unique(map: "base_account_mnemonic_key")
+  crypto_pbkdf2_salt Bytes
+  crypto_iv          Bytes
+  wallet_accounts    wallet_accounts[]
+}
+
+model wallet_accounts {
+  wallet_acc_id  Int            @id(map: "derived_account_pkey") @default(autoincrement())
+  nickname       String?        @default("Anonymous") @db.VarChar
+  address        String         @unique(map: "derived_account_address_key") @db.VarChar
+  crypto_hd_path String         @db.VarChar
+  user_acc_id    Int
+  balances       balances[]
+  transactions   transactions[]
+  user_accounts  user_accounts  @relation(fields: [user_acc_id], references: [user_acc_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
 }
 
 enum tx_status_enum {
