@@ -88,7 +88,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 				crypto_hd_path: config.crypto.bip44.defaultHdPath,
 				nickname: "Account 0",
 				wallet_order: 1, // User's first wallet
-				user_acc_id: userAccount.user_acc_id,
+				user_account_id: userAccount.user_account_id,
 			}
 		});
 		if (!walletAccount) {
@@ -152,7 +152,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		// Send access token and refresh token
 		const payload = <UserAccountJwtPayload>{
-			userAccountID: userAccount.user_acc_id
+			userAccountID: userAccount.user_account_id
 		};
 		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 		const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
@@ -225,7 +225,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 
 		const userAccount = await prisma.user_accounts.findUnique({
 			where: {
-				user_acc_id: _userAccountID
+				user_account_id: _userAccountID,
 			}
 		});
 
@@ -242,7 +242,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 		const mnemonic: string = cryptoHelper.decrypt(userAccount.crypto_mnemonic, encryptionKey, userAccount.crypto_iv);
 
 		// eslint-disable-next-line
-		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_wallet_count_of_user(${userAccount.user_acc_id}::INT)`);
+		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_wallet_count_of_user(${userAccount.user_account_id}::INT)`);
 		const newAccIndex: number = result[0]["get_wallet_count_of_user"];
 		const newHdPath: HdPath = makeHDPath(newAccIndex);
 		const _hdPath: string = pathToString(newHdPath);
@@ -255,7 +255,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 				crypto_hd_path: _hdPath,
 				nickname: _nickname || `Account ${newAccIndex}`,
 				wallet_order: _walletOrder, 
-				user_acc_id: _userAccountID
+				user_account_id: _userAccountID
 			}
 		});
 

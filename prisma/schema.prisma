@@ -11,7 +11,7 @@ model balances {
   denom           String          @db.VarChar
   amount          Int?            @default(0)
   derived_acc_id  Int
-  derived_account wallet_accounts @relation(fields: [derived_acc_id], references: [wallet_acc_id], onDelete: NoAction, onUpdate: NoAction)
+  derived_account wallet_accounts @relation(fields: [derived_acc_id], references: [wallet_account_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([derived_acc_id, denom])
 }
@@ -38,11 +38,11 @@ model transactions {
   gas_price          Int?
   sender_user_acc_id Int
   transaction_fees   transaction_fees[]
-  wallet_accounts    wallet_accounts    @relation(fields: [sender_user_acc_id], references: [wallet_acc_id], onDelete: NoAction, onUpdate: NoAction, map: "transaction_derived_acc_id_fkey")
+  wallet_accounts    wallet_accounts    @relation(fields: [sender_user_acc_id], references: [wallet_account_id], onDelete: NoAction, onUpdate: NoAction, map: "transaction_derived_acc_id_fkey")
 }
 
 model user_accounts {
-  user_acc_id        Int               @id(map: "base_account_pkey") @default(autoincrement())
+  user_account_id    Int               @id(map: "base_account_pkey") @default(autoincrement())
   email              String            @unique(map: "base_account_email_key") @db.VarChar
   username           String            @unique(map: "base_account_username_key") @db.VarChar
   password           String            @db.VarChar
@@ -53,15 +53,15 @@ model user_accounts {
 }
 
 model wallet_accounts {
-  wallet_acc_id  Int            @id(map: "derived_account_pkey") @default(autoincrement())
-  nickname       String?        @default("Anonymous") @db.VarChar
-  address        String         @unique(map: "derived_account_address_key") @db.VarChar
-  crypto_hd_path String         @db.VarChar
-  user_acc_id    Int
-  wallet_order   Int
-  balances       balances[]
-  transactions   transactions[]
-  user_accounts  user_accounts  @relation(fields: [user_acc_id], references: [user_acc_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
+  wallet_account_id Int            @id(map: "derived_account_pkey") @default(autoincrement())
+  nickname          String?        @default("Anonymous") @db.VarChar
+  address           String         @unique(map: "derived_account_address_key") @db.VarChar
+  crypto_hd_path    String         @db.VarChar
+  user_account_id   Int
+  wallet_order      Int
+  balances          balances[]
+  transactions      transactions[]
+  user_accounts     user_accounts  @relation(fields: [user_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
 }
 
 enum tx_status_enum {
