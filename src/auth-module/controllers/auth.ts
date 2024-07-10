@@ -16,7 +16,7 @@ import { randomBytes } from "crypto";
 import "dotenv/config";
 
 
-export async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 
 		let {
@@ -105,7 +105,7 @@ export async function register(req: Request, res: Response, next: NextFunction):
 	}
 }
 
-export async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 		const {
 			email: _email,
@@ -180,7 +180,7 @@ export async function login(req: Request, res: Response, next: NextFunction): Pr
 
 
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
-export async function refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
 		userAccountID: _userAccountID
@@ -206,7 +206,7 @@ export async function refreshAccessToken(req: Request, res: Response, next: Next
 	}
 }
 
-export async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;
 	const { password: _password, nickname: _nickname } = req.body;
 
@@ -273,7 +273,7 @@ export async function createWalletAccount(req: Request, res: Response, next: Nex
 	}
 }
 
-export async function logOut(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function logOut(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
 	const refreshToken: string = req.cookies.refreshToken;
 
@@ -294,3 +294,5 @@ export async function logOut(req: Request, res: Response, next: NextFunction): P
 		errorHandler(err, req, res, next);
 	}
 }
+
+export { login, register, logOut, refreshAccessToken, createWalletAccount };
