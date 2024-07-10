@@ -1,6 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
-import authRouter from "./auth-module/routes/auth";
+import { authRouter } from "./auth-module";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
