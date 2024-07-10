@@ -152,7 +152,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		// Send access token and refresh token
 		const payload = <UserAccountJwtPayload>{
-			userAccountID: userAccount.user_account_id
+			userAccountId: userAccount.user_account_id
 		};
 		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
 		const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
@@ -181,9 +181,9 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
 async function refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
+	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
-		userAccountID: _userAccountID
+		userAccountId: _userAccountId
 	}
 
 	try {
@@ -207,7 +207,7 @@ async function refreshAccessToken(req: Request, res: Response, next: NextFunctio
 }
 
 async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { userAccountID: _userAccountID } = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;
+	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;
 	const { password: _password, nickname: _nickname } = req.body;
 
 	const hasPassword: boolean = (_password != null);
@@ -225,7 +225,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 
 		const userAccount = await prisma.user_accounts.findUnique({
 			where: {
-				user_account_id: _userAccountID,
+				user_account_id: _userAccountId,
 			}
 		});
 
@@ -255,7 +255,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 				crypto_hd_path: _hdPath,
 				nickname: _nickname || `Account ${newAccIndex}`,
 				wallet_order: _walletOrder, 
-				user_account_id: _userAccountID
+				user_account_id: _userAccountId
 			}
 		});
 
