@@ -10,7 +10,7 @@ import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
 import * as cryptoHelper from "../helpers/crypto-helper";
 import config from "../config";
-import createError from "http-errors";
+import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
 import "dotenv/config";
@@ -32,7 +32,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 
 		// Check if request contains required params
 		if (!(hasEmail && hasPassword)) {
-			throw createError(400, "Missing credentials information");
+			throw createHttpError(400, "Missing credentials information");
 		}
 
 		// Validate credentials format
@@ -77,7 +77,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		});
 
 		if (!userAccount) {
-			throw createError(500, "Failed to create account");
+			throw createHttpError(500, "Failed to create account");
 		}
 
 		// Derive the default (main) wallet account for the user account
@@ -92,7 +92,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 			}
 		});
 		if (!walletAccount) {
-			throw createError(500, "Failed to create derived account");
+			throw createHttpError(500, "Failed to create derived account");
 		}
 
 		// Success
@@ -118,7 +118,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		const hasPassword: boolean = (_password != null);
 
 		if (!(hasEmail || hasUsername) && hasPassword) {
-			throw createError(400, "Missing credentials information");
+			throw createHttpError(400, "Missing credentials information");
 		}
 
 		// Validate credentials format
@@ -143,11 +143,11 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 				});
 
 		if (!userAccount) {
-			throw createError(401, "Invalid login credentials");
+			throw createHttpError(401, "Invalid login credentials");
 		}
 
 		if (!(await cryptoHelper.isValidPassword(_password, userAccount.password))) {
-			throw createError(401, "Invalid login credentials");
+			throw createHttpError(401, "Invalid login credentials");
 		}
 
 		// Send access token and refresh token
@@ -215,7 +215,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 
 	try {
 		if (!hasPassword) {
-			throw createError(400, "Missing password");
+			throw createHttpError(400, "Missing password");
 		}
 		credentialHelper.checkPasswordAndThrow(_password);
 
@@ -230,12 +230,12 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 		});
 
 		if (!userAccount) {
-			throw createError(404, "Base account not found");
+			throw createHttpError(404, "Base account not found");
 		}
 
 		const isValidPassword: boolean = await cryptoHelper.isValidPassword(_password, userAccount.password);
 		if (!isValidPassword) {
-			throw createError(401, "Incorrect credentials");
+			throw createHttpError(401, "Incorrect credentials");
 		}
 
 		const encryptionKey: Buffer = await cryptoHelper.getEncryptionKey(_password, userAccount.crypto_pbkdf2_salt);
@@ -260,7 +260,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 		});
 
 		if (!walletAccount) {
-			throw createError(500, "Failed to create account");
+			throw createHttpError(500, "Failed to create account");
 		}
 
 		// Success
