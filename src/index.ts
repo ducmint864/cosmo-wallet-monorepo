@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import { authRouter } from "./auth-module";
+import { queryRouter } from "./query-module";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
@@ -30,6 +31,7 @@ app.use(cookieParser());
 
 
 app.use(`${root}/auth`, authRouter);
+app.use(`${root}/query`, queryRouter);
 app.get('/', (req, res) => {
 	res.send("Hello world It's Thasa Wallet");
 })
