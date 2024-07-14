@@ -5,6 +5,7 @@ import { queryRouter } from "./query-module";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
+import cors from "cors";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -26,8 +27,13 @@ const port = 3000;
 const root = "/api";
 const app = express();
 
-app.use(express.json());
+const corsOptions = {
+	credentials: true, // Allow credentials to be attached to reponse
+	origin: "http://localhost:3001", // front-end app
+}
+app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(express.json());
 
 
 app.use(`${root}/auth`, authRouter);

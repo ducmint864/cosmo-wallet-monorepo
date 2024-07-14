@@ -159,12 +159,14 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
+			sameSite: "none",
 			secure: true,
 			maxAge: 10 * 60 * 1000 // 10 mins in milisecs
 		});
 
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
+			sameSite: "none",
 			secure: true,
 			maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
 		});
@@ -172,7 +174,6 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		res.status(200).json({
 			message: "Login sucessful"
 		});
-
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
@@ -194,6 +195,7 @@ async function refreshAccessToken(req: Request, res: Response, next: NextFunctio
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
 			secure: true,
+			sameSite: "none", // Allow cookie to be included in requests from 3rd-party sites
 			maxAge: 10 * 60 * 1000 // 10 mins in milliseconds
 		});
 
