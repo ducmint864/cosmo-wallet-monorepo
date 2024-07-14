@@ -6,8 +6,8 @@ const authRouter: Router = express.Router();
 
 authRouter.route("/register").post(register);
 authRouter.route("/login").post(login);
-authRouter.route("/retrieveNewToken").post(requireRefreshToken, refreshAccessToken);
-authRouter.route("/deriveAccount").post(requireAccessToken, createWalletAccount);
-authRouter.route("/logOut").post(requireRefreshToken, logOut);
+authRouter.route("/get-access-token").post(requireRefreshToken, refreshAccessToken);
+authRouter.route("/create-wallet-account").post(requireAccessToken, createWalletAccount);
+authRouter.route("/logout").post(requireRefreshToken, logOut);
 
 export { authRouter };

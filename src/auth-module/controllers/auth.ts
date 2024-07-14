@@ -181,7 +181,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 
 // This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
-async function refreshAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function getAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
 		userAccountId: _userAccountId
@@ -275,7 +275,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 	}
 }
 
-async function logOut(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
 	const refreshToken: string = req.cookies.refreshToken;
 
@@ -297,4 +297,4 @@ async function logOut(req: Request, res: Response, next: NextFunction): Promise<
 	}
 }
 
-export { login, register, logOut, refreshAccessToken, createWalletAccount };
+export { login, register, logout as logOut, getAccessToken as refreshAccessToken, createWalletAccount };
