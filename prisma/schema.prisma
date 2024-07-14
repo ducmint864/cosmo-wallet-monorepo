@@ -26,19 +26,19 @@ model transaction_fees {
 }
 
 model transactions {
-  tx_id              Int                @id(map: "transaction_pkey") @default(autoincrement())
-  tx_hash            String             @unique(map: "transaction_txhash_key") @db.VarChar
-  timestamp          DateTime           @db.Timestamp(6)
-  sender_address     String             @db.VarChar
-  receiver_address   String?            @db.VarChar
-  status             tx_status_enum?    @default(pending)
-  type               tx_type_enum?      @default(token_transfer)
-  gas_limit          Int?
-  gas_used           Int?
-  gas_price          Int?
-  sender_user_acc_id Int
-  transaction_fees   transaction_fees[]
-  wallet_accounts    wallet_accounts    @relation(fields: [sender_user_acc_id], references: [wallet_account_id], onDelete: NoAction, onUpdate: NoAction, map: "transaction_derived_acc_id_fkey")
+  tx_id                  Int                @id(map: "transaction_pkey") @default(autoincrement())
+  tx_hash                String             @unique(map: "transaction_txhash_key") @db.VarChar
+  timestamp              DateTime           @db.Timestamp(6)
+  sender_address         String             @db.VarChar
+  receiver_address       String?            @db.VarChar
+  status                 tx_status_enum?    @default(pending)
+  type                   tx_type_enum?      @default(token_transfer)
+  gas_limit              Int?
+  gas_used               Int?
+  gas_price              Int?
+  sender_user_account_id Int
+  transaction_fees       transaction_fees[]
+  wallet_accounts        wallet_accounts    @relation(fields: [sender_user_account_id], references: [wallet_account_id], onDelete: NoAction, onUpdate: NoAction, map: "transaction_derived_acc_id_fkey")
 }
 
 model user_accounts {
@@ -59,6 +59,7 @@ model wallet_accounts {
   crypto_hd_path    String         @db.VarChar
   user_account_id   Int
   wallet_order      Int
+  is_main_wallet    Boolean        @default(false)
   balances          balances[]
   transactions      transactions[]
   user_accounts     user_accounts  @relation(fields: [user_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
