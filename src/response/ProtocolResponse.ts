@@ -10,12 +10,12 @@ import {
  * @dev This class implicitly implements the AxiosResponse interface
  */
 export class ProtocolResponse<T = any, D = any> {
-	private _data: T;
-	public _httpStatus: number;
-	public _statusText: string;
-	public _headers: RawAxiosResponseHeaders | AxiosResponseHeaders;
-	public _config: InternalAxiosRequestConfig<D>;
-	public _request?: any;
+	protected _data: T;
+	protected _httpStatus: number;
+	protected _statusText: string;
+	protected _headers: RawAxiosResponseHeaders | AxiosResponseHeaders;
+	protected _config: InternalAxiosRequestConfig<D>;
+	protected _request?: any;
 
 	constructor(
 		data: T,
@@ -66,5 +66,5 @@ export class ProtocolResponse<T = any, D = any> {
 
 	get request(): any {
 		return this._request;
-	}
+	}	
 }
