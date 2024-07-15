@@ -88,6 +88,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 				crypto_hd_path: config.crypto.bip44.defaultHdPath,
 				nickname: "Account 0",
 				wallet_order: 1, // User's first wallet
+				is_main_wallet: true,
 				user_account_id: userAccount.user_account_id,
 			}
 		});

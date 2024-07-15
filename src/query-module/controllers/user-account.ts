@@ -31,14 +31,15 @@ async function getAccountInfo(req: Request, res: Response, next: NextFunction): 
 				username: includeUsername,
 				wallet_accounts: includeMainWallet ? {
 					where: {
-						wallet_order: 1
+						is_main_wallet: true
 					},
 					select: {
 						wallet_account_id: true,
 						user_account_id: true,
 						wallet_order: true,
 						nickname: true,
-						address: true
+						address: true,
+						is_main_wallet: true
 					}
 				} : false
 			}
@@ -66,7 +67,7 @@ async function getAccountInfo(req: Request, res: Response, next: NextFunction): 
 			const walletObj: object = userAccount.wallet_accounts[0];
 			userAccountInfo.mainWallet = <WalletAccountInfo>pick(
 				mapKeys(walletObj, (_, key) => camelCase(key))
-				, ["walletAccountId", "walletOrder", "userAccountId", "address", "nickname"]
+				, ["walletAccountId", "walletOrder", "userAccountId", "address", "nickname", "isMainWallet"]
 			)
 		}
 
