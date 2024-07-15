@@ -11,19 +11,19 @@ async function getAccountInfo(req: Request, res: Response, next: NextFunction): 
 		includeEmail: _includeEmail,
 		includeUsername: _includeUsername,
 		includeMainWallet: _includeMainWallet,
-	} = req.body;
+	} = req.query;
 
 	const includeEmail: boolean = _includeEmail && (_includeEmail as string).toLowerCase() === "true";
 	const includeUsername: boolean = _includeUsername && (_includeUsername as string).toLowerCase() === "true";
 	const includeMainWallet: boolean = _includeMainWallet && (_includeMainWallet as string).toLowerCase() === "true";
 
 	const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
-	const _userAccountID: number = accessToken.userAccountId;
+	const userAccountID: number = accessToken.userAccountId;
 
 	try {
 		const userAccount = await prisma.user_accounts.findUnique({
 			where: {
-				user_account_id: _userAccountID
+				user_account_id: userAccountID
 			},
 			select: {
 				user_account_id: true,
