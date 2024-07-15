@@ -5,4 +5,5 @@ export interface WalletAccountInfo {
 	address?: string,
 	nickname?: string,
 	cryptoHdPath?: string,
+	isMainWallet: boolean,
 }
