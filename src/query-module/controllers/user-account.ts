@@ -7,7 +7,7 @@ import createError from "http-errors";
 import { pick, mapKeys, camelCase } from "lodash";
 
 async function getUserAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
-	let {
+	const {
 		includeEmail: _includeEmail,
 		includeUsername: _includeUsername,
 		includeMainWallet: _includeMainWallet,
