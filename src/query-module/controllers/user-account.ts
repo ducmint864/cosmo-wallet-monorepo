@@ -3,7 +3,7 @@ import { prisma } from "../../database/prisma";
 import { UserAccountInfo, WalletAccountInfo } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../auth-module/middlewares/errors/error-handler";
-import createError from "http-errors";
+import createHttpError from "http-errors";
 import { pick, mapKeys, camelCase } from "lodash";
 
 async function getUserAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
@@ -47,7 +47,7 @@ async function getUserAccountInfo(req: Request, res: Response, next: NextFunctio
 
 
 		if (!userAccount) {
-			throw createError(404, "User account not found");
+			throw createHttpError(404, "User account not found");
 		}
 
 		// Convert prisma response object to instance of UserAccountInfo interface
