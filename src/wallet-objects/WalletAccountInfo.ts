@@ -1,6 +1,6 @@
 export interface WalletAccountInfo {
 	walletAccountId: string,
-	userAccountId?: string,
+	userAccountId: string,
 	walletOrder?: number,
 	address?: string,
 	nickname?: string,
