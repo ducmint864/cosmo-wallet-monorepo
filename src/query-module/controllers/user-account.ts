@@ -6,7 +6,7 @@ import { errorHandler } from "../../auth-module/middlewares/errors/error-handler
 import createError from "http-errors";
 import { pick, mapKeys, camelCase } from "lodash";
 
-async function getAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
+async function getUserAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
 	let {
 		includeEmail: _includeEmail,
 		includeUsername: _includeUsername,
@@ -79,4 +79,4 @@ async function getAccountInfo(req: Request, res: Response, next: NextFunction): 
 	}
 }	
 
-export { getAccountInfo };
+export { getUserAccountInfo };
