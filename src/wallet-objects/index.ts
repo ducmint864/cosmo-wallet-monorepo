@@ -1,2 +1,3 @@
-export { UserAccountInfo } from "./UserAccountInfo";
-export { WalletAccountInfo } from "./WalletAccountInfo";
+export { UserAccountDTO } from "./UserAccountDTO";
+export { WalletInfo } from "./WalletInfo";
+export { WaleltAccountDTO } from "./WalletAccountDTO";
