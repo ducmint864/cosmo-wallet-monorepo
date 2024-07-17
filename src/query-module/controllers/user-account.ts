@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../database/prisma";
-import { UserAccountInfo, WalletAccountInfo } from "thasa-wallet-interface";
+import { UserAccountDTO, WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../auth-module/middlewares/errors/error-handler";
 import createHttpError from "http-errors";
 import { pick, mapKeys, camelCase } from "lodash";
 
-async function getUserAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
+async function getMyUserAccountInfo(req: Request, res: Response, next: NextFunction): Promise<any> {
 	const {
 		includeEmail: _includeEmail,
 		includeUsername: _includeUsername,
@@ -51,7 +51,7 @@ async function getUserAccountInfo(req: Request, res: Response, next: NextFunctio
 		}
 
 		// Convert prisma response object to instance of UserAccountInfo interface
-		const userAccountInfo = <UserAccountInfo>pick(
+		const userAccountDTO = <UserAccountDTO>pick(
 			mapKeys(userAccount, (_, key) => {
 				switch (key) {
 					case "wallet_accounts":
@@ -65,18 +65,18 @@ async function getUserAccountInfo(req: Request, res: Response, next: NextFunctio
 
 		if (userAccount.wallet_accounts && userAccount.wallet_accounts.length > 0) {
 			const walletObj: object = userAccount.wallet_accounts[0];
-			userAccountInfo.mainWallet = <WalletAccountInfo>pick(
+			userAccountDTO.mainWallet = <WalletAccountDTO>pick(
 				mapKeys(walletObj, (_, key) => camelCase(key))
 				, ["walletAccountId", "walletOrder", "userAccountId", "address", "nickname", "isMainWallet"]
 			)
 		}
 
 		// Success
-		res.status(200).json(userAccountInfo);
+		res.status(200).json(userAccountDTO);
 
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
 }	
 
-export { getUserAccountInfo };
+export { getMyUserAccountInfo };

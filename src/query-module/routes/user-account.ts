@@ -1,9 +1,9 @@
 import express, { Router } from "express";
 import { requireAccessToken, requireRefreshToken } from "../../auth-module/middlewares/user-auth";
-import { getUserAccountInfo } from "../controllers/user-account";
+import { getMyUserAccountInfo } from "../controllers/user-account";
 
 const userAccountQueryRouter: Router = express.Router();
 
-userAccountQueryRouter.route("/info").get(requireAccessToken, getUserAccountInfo);
+userAccountQueryRouter.route("/my-account").get(requireAccessToken, getMyUserAccountInfo);
 
 export { userAccountQueryRouter };

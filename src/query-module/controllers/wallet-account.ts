@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../database/prisma";
-import { WalletAccountInfo } from "thasa-wallet-interface";
+import { WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../auth-module/middlewares/errors/error-handler";
-import { pick, mapKeys, camelCase, values } from "lodash";
+import { pick, mapKeys, camelCase } from "lodash";
 import createHttpError from "http-errors";
 
-async function getWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
+// Note -> Get all wallet of the user
+async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const {
 		// Fields that are expected to be in the response's data
 		includeAddress: _includeAddress,
@@ -14,17 +15,17 @@ async function getWalletAccountInfo(req: Request, res: Response, next: NextFunct
 		includeCryptoHdPath: _includeCryptoHdPath,
 
 		// Options (note: if getMainWallet is "true", option getWalletAtOrder is discarded)
-		getMainWallet: _getMainWallet, // value: "true" or "false"
-		getWalletAtOrder: _getWalletAtOrder, // value: "1", "2", ...
+		isMainWallet: _isMainWallet, // value: "true" or "false"
+		walletOrder: _walletAtOrder, // value: "1", "2", ...
 	} = req.query;
 
-	// Convert request query params from string to bool, number
+	// Convert request query params from string to bool or number
 	try {
 		const includeAddress: boolean = _includeAddress && (_includeAddress as string).toLowerCase() === "true";
 		const includeNickname: boolean = _includeNickname && (_includeNickname as string).toLowerCase() === "true";
 		const includeCryptoHdPath: boolean = _includeCryptoHdPath && (_includeCryptoHdPath as string).toLowerCase() === "true";
-		const getMainWallet: boolean = _getMainWallet && (_getMainWallet as string).toLowerCase() === "true";
-		const getWalletAtOrder: number = Number(_getWalletAtOrder);
+		const getMainWallet: boolean = _isMainWallet && (_isMainWallet as string).toLowerCase() === "true";
+		const getWalletAtOrder: number = Number(_walletAtOrder);
 
 		if (!getMainWallet && isNaN(getWalletAtOrder)) {
 			throw createHttpError(400, "Option getWalletAtOrder must be a valid number");
@@ -52,17 +53,17 @@ async function getWalletAccountInfo(req: Request, res: Response, next: NextFunct
 			}
 		});
 
-		const walletAccountInfo = <WalletAccountInfo>pick(
+		const walletAccountDTO = <WalletAccountDTO>pick(
 			mapKeys(walletAccount, (_, key) => camelCase(key)),
-			[ "walletAccountId", "userAccountId", "isMainWallet", "walletOrder", "address", "nickname", "cryptoHdPath" ]
+			["walletAccountId", "userAccountId", "isMainWallet", "walletOrder", "address", "nickname", "cryptoHdPath"]
 		);
 
 		// Success
-		res.status(200).json(walletAccountInfo);
+		res.status(200).json(walletAccountDTO);
 
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
-}	
+}
 
-export { getWalletAccountInfo };
+export { getMyWalletAccountInfo };
