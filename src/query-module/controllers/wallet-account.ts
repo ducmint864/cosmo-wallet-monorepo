@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../database/prisma";
-import { UserAccountInfo, WalletAccountInfo } from "thasa-wallet-interface";
+import { WalletAccountInfo } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../auth-module/middlewares/errors/error-handler";
-import createError from "http-errors";
 import { pick, mapKeys, camelCase, values } from "lodash";
 import createHttpError from "http-errors";
 
