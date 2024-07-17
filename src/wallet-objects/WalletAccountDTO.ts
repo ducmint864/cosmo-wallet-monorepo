@@ -1,17 +1,9 @@
 import { WalletInfo } from "./WalletInfo";
 
-export interface WaleltAccountDTO extends WalletInfo {
-	walletAccountId: string,
-	userAccountId: string,
-	walletOrder?: number,
-	nickname?: string,
-	isMainWallet?: boolean,
-}
-
 /**
  * Extends the WalletInfo interface to represent a wallet account data transfer object.
  */
-export interface WaleltAccountDTO extends WalletInfo {
+export interface WalletAccountDTO extends WalletInfo {
 	/**
 	 * Unique identifier of the wallet account.
 	 */

@@ -1,4 +1,4 @@
-import { WaleltAccountDTO } from "./WalletAccountDTO";
+import { WalletAccountDTO } from "./WalletAccountDTO";
 
 /**
  * Represents a user account data transfer object.
@@ -25,5 +25,5 @@ export interface UserAccountDTO {
 	 * Main wallet associated with the user account.
 	 * @optional
 	 */
-	mainWallet?: WaleltAccountDTO;
+	mainWallet?: WalletAccountDTO;
 }
