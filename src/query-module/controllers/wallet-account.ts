@@ -6,7 +6,22 @@ import { errorHandler } from "../../auth-module/middlewares/errors/error-handler
 import { pick, mapKeys, camelCase, chain } from "lodash";
 import createHttpError from "http-errors";
 
-// Note -> Get all wallet of the user
+function toNumberArray(value: string | string[] | unknown): number[] {
+	if (Array.isArray(value)) {
+		return value.map((v) => parseInt(v.trim()));
+	}
+	else if (typeof value === "string") {
+		return value
+			.toString()
+			.split(",")
+			.map(
+				(v) => parseInt(v.trim())
+			);
+	}
+
+	return new Array<number>();
+}
+
 async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const {
 		// Fields that are expected to be in the response's data
@@ -14,9 +29,9 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 		includeNickname: _includeNickname,
 		includeCryptoHdPath: _includeCryptoHdPath,
 
-		// Options (note: if getMainWallet is "true", option getWalletAtOrder is discarded)
+		// Filter options ( if none is provided then return all wallets of user)
 		isMainWallet: _isMainWallet, // value: "true" or "false"
-		walletOrder: _walletAtOrder, // value: "1", "2", ...
+		walletOrder: _walletAtOrder, // value: "1" or "1, 2, 3"
 	} = req.query;
 
 	// Convert request query params from string to bool or number
@@ -24,24 +39,24 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 		const includeAddress: boolean = _includeAddress && (_includeAddress as string).toLowerCase() === "true";
 		const includeNickname: boolean = _includeNickname && (_includeNickname as string).toLowerCase() === "true";
 		const includeCryptoHdPath: boolean = _includeCryptoHdPath && (_includeCryptoHdPath as string).toLowerCase() === "true";
-		const getMainWallet: boolean = _isMainWallet && (_isMainWallet as string).toLowerCase() === "true";
-		const getWalletAtOrder: number = Number(_walletAtOrder);
+		const isMainWallet: boolean = _isMainWallet && (_isMainWallet as string).toLowerCase() === "true";
+		const walletOrderList: number[] = toNumberArray(_walletAtOrder);
+		const getAllWallet: boolean = (!isMainWallet && walletOrderList.length === 0);
 
-		if (!getMainWallet && isNaN(getWalletAtOrder)) {
-			throw createHttpError(400, "Option getWalletAtOrder must be a valid number");
-		}
+		console.log(walletOrderList);
 
+		// Get the user's access token and account ID
 		const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
 		const userAccountID: number = accessToken.userAccountId;
 
-		const walletAccount = await prisma.wallet_accounts.findFirst({
-			where: getMainWallet ? {
-				user_account_id: userAccountID,
-				is_main_wallet: true,
-			} : {
-				user_account_id: userAccountID,
-				wallet_order: getWalletAtOrder,
-			},
+		// Query the database for the user's wallet account(s)
+		const walletAccountList = await prisma.wallet_accounts.findMany({
+			where: getAllWallet
+				? { user_account_id: userAccountID }
+				: isMainWallet
+					? { user_account_id: userAccountID, is_main_wallet: true }
+					: { user_account_id: userAccountID, wallet_order: { in: walletOrderList } }
+			,
 			select: {
 				wallet_account_id: true,
 				user_account_id: true,
@@ -53,13 +68,18 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 			}
 		});
 
-		const walletAccountDTO = <WalletAccountDTO>pick(
-			mapKeys(walletAccount, (_, key) => camelCase(key)),
-			["walletAccountId", "userAccountId", "isMainWallet", "walletOrder", "address", "nickname", "cryptoHdPath"]
+		const walletAccountDTOList = <WalletAccountDTO[]>walletAccountList.map(
+			(walletAccount) => {
+				const transformedObj = mapKeys(walletAccount, (_, key) => camelCase(key));
+				return <WalletAccountDTO>pick(
+					transformedObj,
+					["walletAccountId", "userAccountId", "isMainWallet", "walletOrder", "address", "nickname", "cryptoHdPath"]
+				)
+			}
 		);
 
 		// Success
-		res.status(200).json(walletAccountDTO);
+		res.status(200).json(walletAccountDTOList);
 
 	} catch (err) {
 		errorHandler(err, req, res, next);
