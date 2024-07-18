@@ -39,6 +39,9 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 				address: includeAddress,
 				nickname: includeNickname,
 				crypto_hd_path: includeCryptoHdPath,
+			},
+			orderBy: {
+				wallet_order: "asc",
 			}
 		});
 
