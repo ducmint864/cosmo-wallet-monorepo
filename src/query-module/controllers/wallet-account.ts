@@ -4,46 +4,20 @@ import { WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../auth-module/middlewares/errors/error-handler";
 import { pick, mapKeys, camelCase, chain } from "lodash";
+import { getBooleanQueryParam, getNumberArrayQueryParam } from "../helpers/request-parser";
 import createHttpError from "http-errors";
 
-function toNumberArray(value: string | string[] | unknown): number[] {
-	if (Array.isArray(value)) {
-		return value.map((v) => parseInt(v.trim()));
-	}
-	else if (typeof value === "string") {
-		return value
-			.toString()
-			.split(",")
-			.map(
-				(v) => parseInt(v.trim())
-			);
-	}
-
-	return new Array<number>();
-}
-
 async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const {
+	try {
 		// Fields that are expected to be in the response's data
-		includeAddress: _includeAddress,
-		includeNickname: _includeNickname,
-		includeCryptoHdPath: _includeCryptoHdPath,
+		const includeAddress: boolean = getBooleanQueryParam(req, "includeAddress");
+		const includeNickname: boolean = getBooleanQueryParam(req, "includeNickname");
+		const includeCryptoHdPath: boolean = getBooleanQueryParam(req, "includeCryptoHdPath");
+		const isMainWallet: boolean = getBooleanQueryParam(req, "isMainWallet");
 
 		// Filter options ( if none is provided then return all wallets of user)
-		isMainWallet: _isMainWallet, // value: "true" or "false"
-		walletOrder: _walletAtOrder, // value: "1" or "1, 2, 3"
-	} = req.query;
-
-	// Convert request query params from string to bool or number
-	try {
-		const includeAddress: boolean = _includeAddress && (_includeAddress as string).toLowerCase() === "true";
-		const includeNickname: boolean = _includeNickname && (_includeNickname as string).toLowerCase() === "true";
-		const includeCryptoHdPath: boolean = _includeCryptoHdPath && (_includeCryptoHdPath as string).toLowerCase() === "true";
-		const isMainWallet: boolean = _isMainWallet && (_isMainWallet as string).toLowerCase() === "true";
-		const walletOrderList: number[] = toNumberArray(_walletAtOrder);
+		const walletOrderList: number[] = getNumberArrayQueryParam(req, "walletOrder");
 		const getAllWallet: boolean = (!isMainWallet && walletOrderList.length === 0);
-
-		console.log(walletOrderList);
 
 		// Get the user's access token and account ID
 		const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
