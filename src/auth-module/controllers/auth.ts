@@ -268,7 +268,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 
 		// Success
 		res.status(201).json({
-			message: "Account created"
+			message: "Wallet account created"
 		});
 
 	} catch (err) {
@@ -290,7 +290,7 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 		const refreshTokenPayload = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 		await blackListToken(refreshToken, refreshTokenPayload)
 		res.status(200).json({
-			message: "logout successful"
+			message: "Logout successful"
 		})
 
 	} catch (err) {
