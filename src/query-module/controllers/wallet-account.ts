@@ -56,7 +56,7 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 		);
 
 		// Success
-		res.status(200).json(walletAccountDTOList);
+		res.status(200).json( { wallets: walletAccountDTOList } );
 
 	} catch (err) {
 		errorHandler(err, req, res, next);
