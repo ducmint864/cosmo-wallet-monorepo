@@ -89,8 +89,13 @@ async function findWithAddress(req: Request, res: Response, next: NextFunction):
 			}
 		})
 
+		// If address not known in db, send back a WalletAccountDTO object with no additional data other than such address
 		if (!walletAccount) {
-			throw createHttpError(400, "Wallet account not found");
+			const walletAccountDTO = <WalletAccountDTO>{
+				address: _address
+			}
+			res.status(200).json(walletAccountDTO);
+			return;
 		}
 
 		const transformedObj = chain(walletAccount)
