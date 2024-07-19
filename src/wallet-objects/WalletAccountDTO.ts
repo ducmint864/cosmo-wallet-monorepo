@@ -1,4 +1,4 @@
-import { WalletInfo } from "./WalletInfo";
+import { WalletInfo } from "./core";
 
 /**
  * Extends the WalletInfo interface to represent a wallet account data transfer object.
