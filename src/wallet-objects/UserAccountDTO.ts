@@ -7,23 +7,23 @@ export interface UserAccountDTO {
 	/**
 	 * Unique identifier of the user account.
 	 */
-	userAccountId: string;
+	userAccountId: string,
 
 	/**
 	 * Email address associated with the user account.
 	 * @optional
 	 */
-	email?: string;
+	email?: string,
 
 	/**
 	 * Username chosen by the user.
 	 * @optional
 	 */
-	username?: string;
+	username?: string,
 
 	/**
 	 * Main wallet associated with the user account.
 	 * @optional
 	 */
-	mainWallet?: WalletAccountDTO;
+	mainWallet?: WalletAccountDTO,
 }
