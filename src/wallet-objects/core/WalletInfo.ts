@@ -29,5 +29,5 @@ export interface WalletInfo {
 	 *   { denom: "ucosm", amount: "50.00" }
 	 * ]
 	 */
-	balances: Coin[]
+	balances?: Coin[]
 }
