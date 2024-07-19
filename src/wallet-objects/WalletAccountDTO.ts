@@ -7,12 +7,12 @@ export interface WalletAccountDTO extends WalletInfo {
 	/**
 	 * Unique identifier of the wallet account.
 	 */
-	walletAccountId: string,
+	walletAccountId?: string,
 
 	/**
 	 * Unique identifier of the user account associated with this wallet.
 	 */
-	userAccountId: string,
+	userAccountId?: string,
 
 	/**
 	 * Order of the wallet in the user's wallet list.
