@@ -1,4 +1,5 @@
 import { Coin } from "./Coin";
+
 export interface WalletInfo {
 	/**
 	 * Bech32-encoded address
