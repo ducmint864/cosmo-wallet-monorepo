@@ -31,6 +31,7 @@
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
+    "@cosmjs/stargate": "^0.32.4",
     "axios": "^1.7.2",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.0",
