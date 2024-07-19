@@ -6,24 +6,24 @@ function getBooleanQueryParam(req: Request, paramName: string): boolean {
 	return isTrue;
 }
 
-function toNumberArray(value: string | string[] | unknown): number[] {
-	if (Array.isArray(value)) {
-		return value.map((v) => parseInt(v.trim()));
-	}
-	else if (typeof value === "string") {
-		return value
-			.toString()
-			.split(",")
-			.map(
-				(v) => parseInt(v.trim())
-			);
+function toNumberArray(stringArr: string[] | unknown): number[] {
+	if (!Array.isArray(stringArr)) {
+		return new Array<number>();
 	}
 
-	return new Array<number>();
+	return stringArr
+		.map( (str: string) => parseInt(str.trim()) )
+		.filter( (num: number) => !isNaN(num) );
 }
 
 function getNumberArrayQueryParam(req: Request, paramName: string): number[] {
-	const value = req.query[paramName];
+	const value: string | string[] | unknown = req.query[paramName];
+
+	if (typeof value === "string") {
+		const stringArr: string[] = value.split(",");
+		return toNumberArray(stringArr);
+	}
+
 	return toNumberArray(value);
 }
 
