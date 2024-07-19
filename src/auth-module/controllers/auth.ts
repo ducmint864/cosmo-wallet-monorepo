@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { ThasaHdWallet } from "../helpers/types/ThasaHdWallet";
 import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../database/prisma";
-import { errorHandler } from "../middlewares/errors/error-handler";
+import { errorHandler } from "../../middlewares/errors/error-handler";
 import { blackListToken, decodeAndVerifyToken } from "../helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import { genToken } from "../helpers/jwt-helper";

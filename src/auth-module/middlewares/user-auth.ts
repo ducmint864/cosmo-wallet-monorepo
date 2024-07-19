@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
-import { errorHandler } from "./errors/error-handler";
+import { errorHandler } from "../../middlewares/errors/error-handler";
 import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import createHttpError from "http-errors";
