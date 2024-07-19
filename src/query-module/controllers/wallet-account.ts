@@ -13,9 +13,9 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 		const includeAddress: boolean = getBooleanQueryParam(req, "includeAddress");
 		const includeNickname: boolean = getBooleanQueryParam(req, "includeNickname");
 		const includeCryptoHdPath: boolean = getBooleanQueryParam(req, "includeCryptoHdPath");
-		const isMainWallet: boolean = getBooleanQueryParam(req, "isMainWallet");
-
+		
 		// Filter options ( if none is provided then return all wallets of user)
+		const isMainWallet: boolean = getBooleanQueryParam(req, "isMainWallet");
 		const walletOrderList: number[] = getNumberArrayQueryParam(req, "walletOrder");
 		const getAllWallet: boolean = (!isMainWallet && walletOrderList.length === 0);
 
