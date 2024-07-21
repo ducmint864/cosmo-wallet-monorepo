@@ -1,5 +1,5 @@
 import { HdPath } from "@cosmjs/crypto";
-import config from "../../config";
+import { cryptoConfig } from "../../config";
 import { ThasaHdWallet } from "./types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto from "crypto";
@@ -12,7 +12,7 @@ import bcrypt from "bcrypt";
  * @returns HD path
  */
 export function makeHDPath(accIndex: number): HdPath {
-	const args = config.crypto.bip44.defaultHdPath.replaceAll("'", "").split("/");
+	const args = cryptoConfig.bip44.defaultHdPath.replaceAll("'", "").split("/");
 	return [
 		Slip10RawIndex.hardened(Number(args[1])),
 		Slip10RawIndex.hardened(Number(args[2])),
@@ -46,9 +46,9 @@ export async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promi
  * @returns encrypted data and the iv used for encryption
  */
 export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: Buffer, iv: Buffer } {
-	const iv = crypto.randomBytes(config.crypto.aes.ivLength); // generate random iv
+	const iv = crypto.randomBytes(cryptoConfig.aes.ivLength); // generate random iv
 	const cipher = crypto.createCipheriv(
-		config.crypto.aes.algorithm,
+		cryptoConfig.aes.algorithm,
 		encryptionKey,
 		iv
 	);
@@ -58,14 +58,14 @@ export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: 
 
 /**
  * 
- * @param encrypted encrypted data in the encoding format defined by config.crypto.encoding
+ * @param encrypted encrypted data in the encoding format defined by cryptoConfig.encoding
  * @param encryptionKey encryption key derived with pbkdf2 algo
  * @param iv the iv used for encryption (encoding format same as *encrypted)
  * @returns decrypted data in utf-8 format
  */
 export function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): string {
 	const decipher = crypto.createDecipheriv(
-		config.crypto.aes.algorithm,
+		cryptoConfig.aes.algorithm,
 		encryptionKey,
 		iv
 	);
@@ -83,9 +83,9 @@ export async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Pr
 	const encryptionKey = await new Promise<Buffer>((resolve, reject) => crypto.pbkdf2(
 		password,
 		pbkdf2Salt,
-		config.crypto.pbkdf2.iterations,
-		config.crypto.pbkdf2.keyLength,
-		config.crypto.pbkdf2.algorithm,
+		cryptoConfig.pbkdf2.iterations,
+		cryptoConfig.pbkdf2.keyLength,
+		cryptoConfig.pbkdf2.algorithm,
 		(err, key) => {
 			if (err) {
 				reject(err);

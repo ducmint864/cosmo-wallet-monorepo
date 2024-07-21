@@ -9,7 +9,7 @@ import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
 import * as cryptoHelper from "../helpers/crypto-helper";
-import config from "../../config";
+import { authConfig, cryptoConfig } from "../../config";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";
@@ -47,14 +47,14 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		}
 
 		// Encrypt mnemonic
-		const wallet = await ThasaHdWallet.generate(config.crypto.bip39.mnemonicLength, {
-			prefix: config.crypto.bech32.prefix,
-			hdPaths: [stringToPath(config.crypto.bip44.defaultHdPath)]
+		const wallet = await ThasaHdWallet.generate(cryptoConfig.bip39.mnemonicLength, {
+			prefix: cryptoConfig.bech32.prefix,
+			hdPaths: [stringToPath(cryptoConfig.bip44.defaultHdPath)]
 		});
 
 		const _pbkdf2Salt = Buffer.concat(
 			[Buffer.from(`${_email}${_username}`),
-			randomBytes(config.crypto.pbkdf2.saltLength)]
+			randomBytes(cryptoConfig.pbkdf2.saltLength)]
 		);
 		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, _pbkdf2Salt);
 		const {
@@ -63,7 +63,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		} = cryptoHelper.encrypt(wallet.mnemonic, encryptionKey);
 
 		// Password-hashing
-		_password = await bcrypt.hash(_password, config.crypto.bcrypt.saltRounds);
+		_password = await bcrypt.hash(_password, cryptoConfig.bcrypt.saltRounds);
 
 		const userAccount = await prisma.user_accounts.create({
 			data: {
@@ -85,7 +85,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		const walletAccount = await prisma.wallet_accounts.create({
 			data: {
 				address: _address,
-				crypto_hd_path: config.crypto.bip44.defaultHdPath,
+				crypto_hd_path: cryptoConfig.bip44.defaultHdPath,
 				nickname: "Account 0",
 				wallet_order: 1, // User's first wallet
 				is_main_wallet: true,
@@ -155,8 +155,8 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		const payload = <UserAccountJwtPayload>{
 			userAccountId: userAccount.user_account_id
 		};
-		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
-		const refreshToken = genToken(payload, config.auth.refreshToken.secret, config.auth.refreshToken.duration);
+		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
+		const refreshToken = genToken(payload, authConfig.refreshToken.secret, authConfig.refreshToken.duration);
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
@@ -190,7 +190,7 @@ async function getAccessToken(req: Request, res: Response, next: NextFunction): 
 
 	try {
 		// Generate a new access token using the payload
-		const accessToken = genToken(payload, config.auth.accessToken.secret, config.auth.accessToken.duration);
+		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {
@@ -282,7 +282,7 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 
 	try {
 		if (accessToken) {
-			const secret: string = config.auth.accessToken.secret;
+			const secret: string = authConfig.accessToken.secret;
 			const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
 			await blackListToken(accessToken, accessTokenPayload);
 		}

@@ -1,20 +1,20 @@
-import config from "../../config";
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
 import { prisma } from "../../database/prisma";
 import { randomBytes } from "crypto";
+import { authConfig } from "../../config";
 
-const usernameMinLength = config.auth.username.minLength;
-const usernameMaxLength = config.auth.username.maxLength;
-const passwordMinLength = config.auth.password.minLength;
-const passwordMaxLength = config.auth.password.maxLength;
-const nicknameMinLength = config.auth.nickname.minLength;
-const nicknameMaxLength = config.auth.nickname.maxLength;
+const usernameMinLength = authConfig.username.minLength;
+const usernameMaxLength = authConfig.username.maxLength;
+const passwordMinLength = authConfig.password.minLength;
+const passwordMaxLength = authConfig.password.maxLength;
+const nicknameMinLength = authConfig.nickname.minLength;
+const nicknameMaxLength = authConfig.nickname.maxLength;
 
 const passwordSchema = new PasswordValidator()
-	.min(config.auth.password.minLength, `Password must be between ${passwordMinLength} - ${passwordMaxLength} characters`)
-	.max(config.auth.password.maxLength, `Password must be between ${passwordMinLength} - ${passwordMaxLength} characters`)
+	.min(authConfig.password.minLength, `Password must be between ${passwordMinLength} - ${passwordMaxLength} characters`)
+	.max(authConfig.password.maxLength, `Password must be between ${passwordMinLength} - ${passwordMaxLength} characters`)
 	.lowercase(1, "Password must contains lowercase letter(s)")
 	.uppercase(1, "Password must contains uppercase letter(s)")
 	.digits(1, "Password must contains digit(s)")

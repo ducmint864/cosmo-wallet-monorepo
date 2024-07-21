@@ -3,12 +3,13 @@ import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "../../middlewares/errors/error-handler";
 import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
+import { authConfig } from "../../config";
 import createHttpError from "http-errors";
-import config from "../../config";
+import HttpError from "http-errors";
 
 export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
-	const secret: string = config.auth.accessToken.secret;
+	const secret: string = authConfig.accessToken.secret;
 
 	try {
 		if (!accessToken) {
@@ -34,7 +35,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const refreshToken: string = req.cookies.refreshToken;
-	const secret: string = config.auth.refreshToken.secret;
+	const secret: string = authConfig.refreshToken.secret;
 	try {
 		if (!refreshToken) {
 			throw createHttpError(400, "Missing refresh token");

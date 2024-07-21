@@ -5,12 +5,12 @@ import { rawSecp256k1PubkeyToRawAddress, encodeSecp256k1Signature } from "@cosmj
 import { SignDoc } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { DirectSecp256k1HdWalletOptions } from "@cosmjs/proto-signing";
 import { AccountData, DirectSignResponse, OfflineDirectSigner } from "@cosmjs/proto-signing";
-import config from "../../../config";
+import { cryptoConfig } from "../../../config";
 
 const defaultOptions = {
 	bip39Password: "",
-	hdPaths: [crypto.stringToPath(config.crypto.bip44.defaultHdPath)],
-	prefix: config.crypto.bech32.prefix,
+	hdPaths: [crypto.stringToPath(cryptoConfig.bip44.defaultHdPath)],
+	prefix: cryptoConfig.bech32.prefix,
 };
 
 export interface AccountDataWithPrivateKey extends AccountData {
