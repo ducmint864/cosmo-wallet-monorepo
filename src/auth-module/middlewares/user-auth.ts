@@ -4,7 +4,7 @@ import { errorHandler } from "../../middlewares/errors/error-handler";
 import { decodeAndVerifyToken, isTokenBlackListed } from "../helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../helpers/types/BaseAccountJwtPayload";
 import createHttpError from "http-errors";
-import config from "../config";
+import config from "../../config";
 
 export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;

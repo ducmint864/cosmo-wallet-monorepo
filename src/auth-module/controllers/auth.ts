@@ -9,7 +9,7 @@ import { genToken } from "../helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../helpers/crypto-helper";
 import * as credentialHelper from "../helpers/credentials-helper";
 import * as cryptoHelper from "../helpers/crypto-helper";
-import config from "../config";
+import config from "../../config";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import { randomBytes } from "crypto";

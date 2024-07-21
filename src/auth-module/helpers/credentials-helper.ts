@@ -1,4 +1,4 @@
-import config from "../config";
+import config from "../../config";
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";

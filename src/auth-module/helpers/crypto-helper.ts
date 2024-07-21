@@ -1,5 +1,5 @@
 import { HdPath } from "@cosmjs/crypto";
-import config from "../config";
+import config from "../../config";
 import { ThasaHdWallet } from "./types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto from "crypto";
