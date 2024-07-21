@@ -1,6 +1,6 @@
 import { HdPath } from "@cosmjs/crypto";
-import { cryptoConfig } from "../../config";
-import { ThasaHdWallet } from "./types/ThasaHdWallet";
+import { cryptoConfig } from "../config";
+import { ThasaHdWallet } from "../types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import crypto from "crypto";
 import bcrypt from "bcrypt";

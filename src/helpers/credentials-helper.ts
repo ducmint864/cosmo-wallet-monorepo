@@ -1,9 +1,9 @@
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
-import { prisma } from "../../database/prisma";
+import { prisma } from "../database/prisma";
 import { randomBytes } from "crypto";
-import { authConfig } from "../../config";
+import { authConfig } from "../config";
 
 const usernameMinLength = authConfig.username.minLength;
 const usernameMaxLength = authConfig.username.maxLength;

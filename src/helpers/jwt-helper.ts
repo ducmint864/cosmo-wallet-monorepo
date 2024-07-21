@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import { createClient } from "redis";
 import "dotenv/config";
-import { UserAccountJwtPayload } from "./types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../types/BaseAccountJwtPayload";
 
 
 // Init redis client
