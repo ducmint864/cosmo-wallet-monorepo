@@ -17,7 +17,7 @@ async function getMyUserAccountInfo(req: Request, res: Response, next: NextFunct
 	const includeUsername: boolean = _includeUsername && (_includeUsername as string).toLowerCase() === "true";
 	const includeMainWallet: boolean = _includeMainWallet && (_includeMainWallet as string).toLowerCase() === "true";
 
-	const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
+	const accessToken: UserAccountJwtPayload = req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
 	const userAccountID: number = accessToken.userAccountId;
 
 	try {
