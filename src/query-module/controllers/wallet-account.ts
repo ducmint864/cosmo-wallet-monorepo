@@ -4,7 +4,7 @@ import { WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../auth-module/helpers/types/BaseAccountJwtPayload";
 import { errorHandler } from "../../middlewares/errors/error-handler";
 import { pick, mapKeys, camelCase, chain } from "lodash";
-import { getBooleanQueryParam, getNumberArrayQueryParam } from "../helpers/request-parser";
+import { getBooleanQueryParam, getNumberArrayQueryParam } from "../../helpers/request-parser";
 import createHttpError from "http-errors";
 
 async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
