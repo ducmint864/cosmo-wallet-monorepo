@@ -20,8 +20,8 @@ async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFun
 		const getAllWallet: boolean = (!isMainWallet && walletOrderList.length === 0);
 
 		// Get the user's access token and account ID
-		const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
-		const userAccountID: number = accessToken.userAccountId;
+		const tokenPayload = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
+		const userAccountID: number = tokenPayload.userAccountId;
 
 		// Query the database for the user's wallet account(s)
 		const walletAccountList = await prisma.wallet_accounts.findMany({
@@ -74,8 +74,8 @@ async function findWithAddress(req: Request, res: Response, next: NextFunction):
 			throw createHttpError(400, "Please specify wallet address");
 		}
 
-		const accessToken = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
-		const userAccountID: number = accessToken.userAccountId;
+		const tokenPayload = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;  // token guaranteed to be valid, decoded by user-auth middleware
+		const userAccountID: number = tokenPayload.userAccountId;
 
 		const walletAccount = await prisma.wallet_accounts.findUnique({
 			where: {
