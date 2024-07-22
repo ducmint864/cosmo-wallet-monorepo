@@ -7,10 +7,21 @@ export class WebSocketClientManager {
 
 	protected _idToClient: Map<number, WebSocket>;
 	protected _client: WebSocket
-	private _defaultUrl: string;
+	protected _defaultUrl: string;
 
-	constructor(defaultUrl?: string) {
+	// Singleton isntance
+	private static _instance: WebSocketClientManager;	
+
+	private constructor(defaultUrl?: string) {
 		this._defaultUrl = defaultUrl ?? undefined;
+	}
+
+	public static getInstance(defaultUrl?: string): WebSocketClientManager {
+		if (!WebSocketClientManager._instance) {
+			WebSocketClientManager._instance = new WebSocketClientManager(defaultUrl);
+		}
+
+		return WebSocketClientManager._instance;
 	}
 
 	public get client(): WebSocket {
