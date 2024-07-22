@@ -99,7 +99,7 @@ export class WebSocketClientManager {
 				throw new Error("No url or default url provided");
 			}
 
-			client = new WebSocket(this.defaultUrl);
+			client = new WebSocket(this.defaultUrl, {});
 		} else {
 			client = new WebSocket(url);
 		}
@@ -127,6 +127,7 @@ export class WebSocketClientManager {
 	 */
 	public closeClient(id: number): void {
 		const client: WebSocket = this.getClient(id);
+		this._idToClient.delete(id);
 		client.close();
 	}
 
