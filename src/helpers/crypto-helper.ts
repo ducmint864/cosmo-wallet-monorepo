@@ -2,7 +2,7 @@ import { HdPath } from "@cosmjs/crypto";
 import { cryptoConfig } from "../config";
 import { ThasaHdWallet } from "../types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
-import { pathToString, stringToPath } from "@cosmjs/crypto";
+import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
@@ -104,6 +104,6 @@ export {
 	encrypt,
 	decrypt,
 	isValidPassword,
-	stringToPath as stringToHdPath,
-	pathToString as hdPathToString,
+	stringToHdPath,
+	hdPathToString,
 }
