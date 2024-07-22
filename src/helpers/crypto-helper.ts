@@ -2,6 +2,7 @@ import { HdPath } from "@cosmjs/crypto";
 import { cryptoConfig } from "../config";
 import { ThasaHdWallet } from "../types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
+import { pathToString, stringToPath } from "@cosmjs/crypto";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
@@ -11,7 +12,7 @@ import bcrypt from "bcrypt";
  * @param accIndex 0-based account index
  * @returns HD path
  */
-export function makeHDPath(accIndex: number): HdPath {
+function makeHDPath(accIndex: number): HdPath {
 	const args = cryptoConfig.bip44.defaultHdPath.replaceAll("'", "").split("/");
 	return [
 		Slip10RawIndex.hardened(Number(args[1])),
@@ -28,7 +29,7 @@ export function makeHDPath(accIndex: number): HdPath {
  * @param {*} hdPath idex of account to derive
  * @returns {{address:string, pubkey: Uint8Array}}
  */
-export async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promise<{ pubKey: string, privkey: string,  address: string }> {
+async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promise<{ pubKey: string, privkey: string,  address: string }> {
 	const wallet = await ThasaHdWallet.fromMnemonic(mnemonic, {
 		hdPaths: [hdPath],
 		prefix: "thasa",
@@ -45,7 +46,7 @@ export async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promi
  * @param encryptionKey encryption key derived with pbkdf2 algo
  * @returns encrypted data and the iv used for encryption
  */
-export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: Buffer, iv: Buffer } {
+function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: Buffer, iv: Buffer } {
 	const iv = crypto.randomBytes(cryptoConfig.aes.ivLength); // generate random iv
 	const cipher = crypto.createCipheriv(
 		cryptoConfig.aes.algorithm,
@@ -63,7 +64,7 @@ export function encrypt(plaintext: string, encryptionKey: Buffer): { encrypted: 
  * @param iv the iv used for encryption (encoding format same as *encrypted)
  * @returns decrypted data in utf-8 format
  */
-export function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): string {
+function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): string {
 	const decipher = crypto.createDecipheriv(
 		cryptoConfig.aes.algorithm,
 		encryptionKey,
@@ -73,13 +74,13 @@ export function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): s
 	return decryptedData;
 }
 
-export async function isValidPassword(password: string, passwordHash: string): Promise<boolean> {
+async function isValidPassword(password: string, passwordHash: string): Promise<boolean> {
 	const valid = await bcrypt.compare(password, passwordHash);
 	return valid;
 }
 
 
-export async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Promise<Buffer> {
+async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Promise<Buffer> {
 	const encryptionKey = await new Promise<Buffer>((resolve, reject) => crypto.pbkdf2(
 		password,
 		pbkdf2Salt,
@@ -94,4 +95,15 @@ export async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Pr
 		}
 	));
 	return encryptionKey;
+}
+
+export {
+	makeHDPath,
+	getDerivedAccount,
+	getEncryptionKey,
+	encrypt,
+	decrypt,
+	isValidPassword,
+	stringToPath as stringToHdPath,
+	pathToString as hdPathToString,
 }
