@@ -3,7 +3,7 @@ import { errorHandler } from "../../middlewares/errors/error-handler";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
-import { prisma } from "../../database/prisma";
+import { prisma } from "../../connections/database/prisma";
 import { decrypt, getEncryptionKey, getSigner } from "../../helpers/crypto-helper";
 import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";

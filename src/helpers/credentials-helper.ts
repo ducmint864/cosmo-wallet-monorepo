@@ -1,7 +1,7 @@
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
-import { prisma } from "../database/prisma";
+import { prisma } from "../connections/database/prisma";
 import { randomBytes } from "crypto";
 import { authConfig } from "../config";
 
