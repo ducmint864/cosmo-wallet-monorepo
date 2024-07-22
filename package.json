@@ -30,8 +30,7 @@
     "password-validator": "^5.3.0",
     "prisma": "^5.10.2",
     "redis": "^4.6.15",
-    "thasa-wallet-interface": "file:../thasa-wallet-interface",
-    "websocket": "^1.0.35"
+    "thasa-wallet-interface": "file:../thasa-wallet-interface"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.7",
