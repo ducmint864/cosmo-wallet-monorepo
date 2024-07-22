@@ -40,6 +40,7 @@ export class WebSocketClientManager {
 	 * @param defaultUrl Default URL for WebSocket connections.
 	 */
 	private constructor(defaultUrl?: string) {
+		this._idToClient = new Map<number, WebSocket>();
 		this._defaultUrl = defaultUrl ?? undefined;
 	}
 
