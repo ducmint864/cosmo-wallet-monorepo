@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "../../connections/database/prisma";
+import { prisma } from "../../connections";
 import { UserAccountDTO, WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { errorHandler } from "../../middlewares/errors/error-handler";
