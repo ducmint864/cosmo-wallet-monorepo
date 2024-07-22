@@ -3,6 +3,7 @@ import { cryptoConfig } from "../config";
 import { ThasaHdWallet } from "../types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
+import { DirectSecp256k1HdWallet, OfflineDirectSigner } from "@cosmjs/proto-signing";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 
@@ -29,7 +30,7 @@ function makeHDPath(accIndex: number): HdPath {
  * @param {*} hdPath idex of account to derive
  * @returns {{address:string, pubkey: Uint8Array}}
  */
-async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promise<{ pubKey: string, privkey: string,  address: string }> {
+async function getDerivedAccount(mnemonic: string, hdPath: HdPath): Promise<{ pubKey: string, privkey: string, address: string }> {
 	const wallet = await ThasaHdWallet.fromMnemonic(mnemonic, {
 		hdPaths: [hdPath],
 		prefix: "thasa",
@@ -97,6 +98,26 @@ async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Promise<B
 	return encryptionKey;
 }
 
+async function getSigner(
+	mnemonic: string,
+	bip39Password?: string,
+	...hdPathStrings: string[]
+): Promise<OfflineDirectSigner> {
+	const hdPaths: HdPath[] = hdPathStrings.map((pathStr) => stringToHdPath(pathStr));
+	const options = {
+		prefix: cryptoConfig.bech32.prefix,
+		hdPaths: hdPaths,
+	}
+
+	const signer: OfflineDirectSigner = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic,
+		!bip39Password 
+			? { ...options }
+			: { ...options, bip39Password: bip39Password }
+	);
+
+	return signer;
+}
+
 export {
 	makeHDPath,
 	getDerivedAccount,
@@ -106,4 +127,5 @@ export {
 	isValidPassword,
 	stringToHdPath,
 	hdPathToString,
+	getSigner,
 }
