@@ -1,16 +1,7 @@
 import jwt from "jsonwebtoken";
-import { createClient } from "redis";
-import "dotenv/config";
+import { redisClient } from "../connections";
 import { UserAccountJwtPayload } from "../types/BaseAccountJwtPayload";
-
-
-// Init redis client
-let redisClient = createClient();
-redisClient.on('error', (err: unknown) => console.log('Redis Client Error', err));
-
-(async () => {
-	await redisClient.connect();
-})();
+import "dotenv/config";
 
 export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {
 	const options = {
