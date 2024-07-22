@@ -51,4 +51,15 @@ const cryptoConfig = {
 	},
 }
 
-export { cryptoConfig, authConfig };
+const webSocketConfig = {
+	client: {
+		minClientCount: 0,
+		maxClientCount: 0,
+	}
+}
+
+export { 
+	cryptoConfig, 
+	authConfig,
+	webSocketConfig,
+};
