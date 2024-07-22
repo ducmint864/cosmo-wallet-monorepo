@@ -54,7 +54,7 @@ const cryptoConfig = {
 const webSocketConfig = {
 	client: {
 		minClientCount: 0,
-		maxClientCount: 0,
+		maxClientCount: 5,
 	}
 }
 
