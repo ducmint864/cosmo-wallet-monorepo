@@ -3,23 +3,28 @@ import { errorHandler } from "../../middlewares/errors/error-handler";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
-import { prisma } from "../../connections/database/prisma";
+import { prisma } from "../../connections";
 import { decrypt, getEncryptionKey, getSigner } from "../../helpers/crypto-helper";
 import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";
 import { writeFile } from "fs"
+import { webSocketClientManager } from "../../connections";
 import WebSocket from "ws";
 import createHttpError from "http-errors";
 
 const nodeWsUrl = "ws://localhost:26657/websocket";
-const wsClient = new WebSocket(nodeWsUrl);
+
+const { 
+	client: wsClient,
+	id: wsClietnId,
+} = webSocketClientManager.initClient(nodeWsUrl);
 
 wsClient.on("open", () => {
 	console.log("Connected to node's websocket server");
 });
 
 wsClient.on("close", () => {
-	console.log("Disconnecte from node's websocket server")
+	console.log("Disconnected from node's websocket server")
 });
 
 wsClient.on("error", (err) => {
