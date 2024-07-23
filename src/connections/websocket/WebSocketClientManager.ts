@@ -70,7 +70,7 @@ export class WebSocketClientManager {
 	 * @param id Client ID.
 	 * @returns The WebSocket client associated with the given ID.
 	 */
-	public getClient(id: number): WebSocket {
+	public getClient(id: number): WebSocket | undefined {
 		return this._idToClient.get(id);
 	}
 
