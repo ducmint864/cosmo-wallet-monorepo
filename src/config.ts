@@ -58,8 +58,14 @@ const webSocketConfig = {
 	}
 }
 
+const chainNodeConfig =  {
+	minNodeCount: 0,
+	maxNodeCount: 100,
+}
+
 export { 
 	cryptoConfig, 
 	authConfig,
 	webSocketConfig,
+	chainNodeConfig
 };
