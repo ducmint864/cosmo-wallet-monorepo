@@ -3,8 +3,7 @@ import { prisma } from "./database/prisma";
 import { redisClient } from "./redis/redis-client";
 
 // Singleton instance of WebSocketClientManager
-const wsUrl = "ws://localhost:26657/websocket";
-const webSocketClientManager = WebSocketClientManager.getInstance(wsUrl);
+const webSocketClientManager = WebSocketClientManager.instance;
 
 export {
 	webSocketClientManager,

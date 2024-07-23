@@ -1,5 +1,10 @@
 import WebSocket from "ws";
 import { webSocketConfig } from "../../config";
+import {
+	WebSocketClientManagerError,
+	WebSocketClientManagerErrorCode
+} from "./WebSocketClientManagerError";
+
 
 /**
  * WebSocketClientManager class.
@@ -15,20 +20,11 @@ export class WebSocketClientManager {
 	 */
 	public static readonly MAX_CLIENT_COUNT: number = webSocketConfig.client.maxClientCount;
 
+
 	/**
 	 * Map of client IDs to WebSocket clients.
 	 */
 	protected _idToClient: Map<number, WebSocket>;
-
-	/**
-	 * Default WebSocket client.
-	 */
-	protected _client: WebSocket;
-
-	/**
-	 * Default URL for WebSocket connections.
-	 */
-	private _defaultUrl: string;
 
 	/**
 	 * Singleton instance.
@@ -39,9 +35,8 @@ export class WebSocketClientManager {
 	 * Private constructor to prevent direct instantiation.
 	 * @param defaultUrl Default URL for WebSocket connections.
 	 */
-	private constructor(defaultUrl?: string) {
+	private constructor() {
 		this._idToClient = new Map<number, WebSocket>();
-		this._defaultUrl = defaultUrl ?? undefined;
 	}
 
 	/**
@@ -49,20 +44,12 @@ export class WebSocketClientManager {
 	 * @param defaultUrl Default URL for WebSocket connections.
 	 * @returns The singleton instance of the WebSocketClientManager.
 	 */
-	public static getInstance(defaultUrl?: string): WebSocketClientManager {
+	public static get instance(): WebSocketClientManager {
 		if (!WebSocketClientManager._instance) {
-			WebSocketClientManager._instance = new WebSocketClientManager(defaultUrl);
+			WebSocketClientManager._instance = new WebSocketClientManager();
 		}
 
 		return WebSocketClientManager._instance;
-	}
-
-	/**
-	 * Gets the default WebSocket client.
-	 * @returns The default WebSocket client.
-	 */
-	public get client(): WebSocket {
-		return this._client;
 	}
 
 	/**
@@ -84,25 +71,24 @@ export class WebSocketClientManager {
 
 	/**
 	 * Initializes a new WebSocket client.
-	 * @param url URL for the WebSocket connection. Defaults to `defaultUrl` if `defaultUrl` was set during initialization of `WebSocketClientManager` instance
+	 * @param url URL for the WebSocket connection. 
 	 * @returns An object containing the new WebSocket client and its ID.
 	 * @throws `Error` if fails to create a websocket client
 	 */
-	public initClient(url: string = this.defaultUrl): { client: WebSocket, id: number } {
+	public initClient(url: string): { client: WebSocket, id: number } {
 		if (this.clientCount >= webSocketConfig.client.maxClientCount) {
-			throw new Error("Client count has reached limit!");
+			throw new WebSocketClientManagerError(
+				WebSocketClientManagerErrorCode.ERR_MAX_CLIENTS_REACHED
+			);
 		}
 
-		let client: WebSocket;
 		if (!url) {
-			if (!this.defaultUrl) {
-				throw new Error("No url or default url provided");
-			}
-
-			client = new WebSocket(this.defaultUrl, {});
-		} else {
-			client = new WebSocket(url);
+			throw new WebSocketClientManagerError(
+				WebSocketClientManagerErrorCode.ERR_INVALID_URL
+			);
 		}
+
+		const client: WebSocket = new WebSocket(url);
 
 		let id: number = this.clientCount + 1;
 		while (this.getClient(id) != null) { // Acceptable runtime for small client counts.
@@ -114,19 +100,30 @@ export class WebSocketClientManager {
 	}
 
 	/**
-	 * Gets the default URL for WebSocket connections.
-	 * @returns The default URL for WebSocket connections.
-	 */
-	public get defaultUrl(): string {
-		return this._defaultUrl;
-	}
-
-	/**
 	 * Closes a WebSocket client by ID.
 	 * @param id Client ID.
 	 */
 	public closeClient(id: number): void {
+		if (this.clientCount <= WebSocketClientManager.MIN_CLIENT_COUNT) {
+			throw new WebSocketClientManagerError(
+				WebSocketClientManagerErrorCode.ERR_MIN_CLIENTS_REACHED
+			);
+		}
+
+		if (!id) {
+			throw new WebSocketClientManagerError(
+				WebSocketClientManagerErrorCode.ERR_INVALID_ID
+			);
+		}
+
 		const client: WebSocket = this.getClient(id);
+		if (!client) {
+			throw new WebSocketClientManagerError(
+				WebSocketClientManagerErrorCode.ERR_CLIENT_NOT_FOUND
+			);
+		}
+
+
 		client.removeAllListeners();
 		client.close();
 		this._idToClient.delete(id);
