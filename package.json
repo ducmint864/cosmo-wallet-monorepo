@@ -32,7 +32,8 @@
     "prisma": "^5.10.2",
     "redis": "^4.6.15",
     "thasa-wallet-interface": "file:../thasa-wallet-interface",
-    "ws": "^8.18.0"
+    "ws": "^8.18.0",
+    "xxhashjs": "^0.2.2"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.7",
