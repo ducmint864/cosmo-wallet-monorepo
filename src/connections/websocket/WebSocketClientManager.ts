@@ -127,8 +127,9 @@ export class WebSocketClientManager {
 	 */
 	public closeClient(id: number): void {
 		const client: WebSocket = this.getClient(id);
-		this._idToClient.delete(id);
+		client.removeAllListeners();
 		client.close();
+		this._idToClient.delete(id);
 	}
 
 	/**
