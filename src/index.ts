@@ -4,11 +4,12 @@ import { authRouter } from "./auth-module";
 import { queryRouter } from "./query-module";
 import { transactionRouter } from "./transaction-module";
 import { join } from "path";
-import helmet from "helmet";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
 import cors from "cors";
+import xss from "xss";
+import helmet from "helmet";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -54,22 +55,12 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(frontendPath));
 
-
 app.use(`${root}/auth`, authRouter);
 app.use(`${root}/query`, queryRouter);
 app.use(`${root}/transaction`, transactionRouter);
 app.get('/', (req, res) => {
 	res.sendFile(join(frontendPath, "index.html"));	 // Serve the front-end GUI
 })
-app.get("/xss", (req, res, next) => {
-	const { value } = req.query;
-	res
-		.status(200)
-		.send(
-			`<html>${value}</html>`
-		);
-	next();
-});
 
 https.createServer(
 	{
