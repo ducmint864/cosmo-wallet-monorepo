@@ -63,9 +63,16 @@ const chainNodeConfig =  {
 	maxNodeCount: 100,
 }
 
+const requestDataConfig = {
+	objects: {
+		maxNestLevel: 7,
+	}
+}
+
 export { 
 	cryptoConfig, 
 	authConfig,
 	webSocketConfig,
-	chainNodeConfig
+	chainNodeConfig,
+	requestDataConfig,
 };
