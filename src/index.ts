@@ -49,6 +49,17 @@ const helmetCspOptions = {
 	}
 }
 
+// (XSS) Sanitize user's input
+const xssSanitizerOptions = {
+	whiteList: {
+	// 	a: ['href', 'title', 'target'],
+	// 	img: ['src', 'alt'],
+	},
+	stripIgnoreTagBody: ['script'], // Remove content inside <script> tags
+	stripIgnoreTag: true, // Escape all HTML tags that are not in the whitelist -> normal texts
+};
+
+
 app.use(cors(corsOptions));
 app.use(helmet.contentSecurityPolicy(helmetCspOptions));
 app.use(cookieParser());
