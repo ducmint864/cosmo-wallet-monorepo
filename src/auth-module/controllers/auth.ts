@@ -160,14 +160,14 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
-			sameSite: "none",
+			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
 			maxAge: 10 * 60 * 1000 // 10 mins in milisecs
 		});
 
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
-			sameSite: "none",
+			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
 			maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
 		});
