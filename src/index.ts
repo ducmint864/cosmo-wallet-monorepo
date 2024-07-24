@@ -3,6 +3,7 @@ import cookieParser from "cookie-parser";
 import { authRouter } from "./auth-module";
 import { queryRouter } from "./query-module";
 import { transactionRouter  } from "./transaction-module";
+import { join } from "path";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
@@ -24,6 +25,12 @@ if (!process.env.DB_CONNECTION_STRING) {
 	process.exit(1);
 }
 
+const frontendPath: string = process.env.FRONTEND_PATH;
+if (!frontendPath) {
+	console.error("Env error: front-end static folder path not configured");
+	process.exit(1);
+}
+
 const port = 3000;
 const root = "/api";
 const app = express();
@@ -35,13 +42,15 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+app.use(express.static(frontendPath));
 
 
 app.use(`${root}/auth`, authRouter);
 app.use(`${root}/query`, queryRouter);
 app.use(`${root}/transaction`, transactionRouter);
 app.get('/', (req, res) => {
-	res.send("Hello world It's Thasa Wallet");
+	// res.send("Hello world It's Thasa Wallet");
+	res.sendFile(join(frontendPath, "index.html"));	 // Serve the front-end GUI
 })
 
 https.createServer(
