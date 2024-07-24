@@ -1,9 +1,10 @@
-import express from "express";
+import express, { NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { authRouter } from "./auth-module";
 import { queryRouter } from "./query-module";
-import { transactionRouter  } from "./transaction-module";
+import { transactionRouter } from "./transaction-module";
 import { join } from "path";
+import helmet from "helmet";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
@@ -39,7 +40,16 @@ const corsOptions = {
 	credentials: true, // Allow credentials to be attached to reponse
 	origin: "http://localhost:3001", // front-end app
 }
+
+// (XSS) Instruct browsers to display/execute resources from these trusted sources only:
+const helmetCspOptions = {
+	directives: {
+		scriptsrc: ["'self'"], // Client can only execute scripts issued by this web-server
+	}
+}
+
 app.use(cors(corsOptions));
+app.use(helmet.contentSecurityPolicy(helmetCspOptions));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(frontendPath));
@@ -49,9 +59,17 @@ app.use(`${root}/auth`, authRouter);
 app.use(`${root}/query`, queryRouter);
 app.use(`${root}/transaction`, transactionRouter);
 app.get('/', (req, res) => {
-	// res.send("Hello world It's Thasa Wallet");
 	res.sendFile(join(frontendPath, "index.html"));	 // Serve the front-end GUI
 })
+app.get("/xss", (req, res, next) => {
+	const { value } = req.query;
+	res
+		.status(200)
+		.send(
+			`<html>${value}</html>`
+		);
+	next();
+});
 
 https.createServer(
 	{
