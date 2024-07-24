@@ -25,6 +25,7 @@
     "dotenv": "^16.4.5",
     "email-validator": "^2.0.4",
     "express": "^4.18.3",
+    "helmet": "^7.1.0",
     "http-errors": "^2.0.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
