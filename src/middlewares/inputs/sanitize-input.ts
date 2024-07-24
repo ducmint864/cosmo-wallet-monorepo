@@ -25,14 +25,12 @@ const MAX_NEST_LEVEL: number = requestDataConfig.objects.maxNestLevel; // Preven
  * @returns {SanitizedObject} Sanitized object
  */
 function _sanitize(obj: Record<string, any>, nestLevel: number = 1): SanitizedObject {
-	console.log(nestLevel);
 	if (obj && typeof obj === "object") {
 		if (nestLevel > MAX_NEST_LEVEL) {
 			throw createHttpError(400, "Request data too nested");
 		}
 
 		Object.keys(obj).forEach((key) => {
-			console.log("Processing key: " + key);
 			obj[key] = _sanitize(obj[key], nestLevel + 1);
 		});
 
@@ -60,7 +58,6 @@ function sanitizeInput(
 	next: NextFunction
 ) {
 	console.log("Debug:");
-	console.log("Original req.params = ", req.params);
 	try {
 		if (req.query) {
 			req.query = _sanitize(req.query) as { [key: string]: string }
@@ -73,7 +70,6 @@ function sanitizeInput(
 		if (req.body) {
 			req.body = _sanitize(req.body) as { [key: string]: string }
 		}
-		console.log("req.params = ", req.params);
 
 		next();
 	} catch (err) {
