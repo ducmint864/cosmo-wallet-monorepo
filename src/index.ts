@@ -36,9 +36,9 @@ const port = 3000;
 const root = "/api";
 const app = express();
 
+// (CORS) config CORS policy
 const corsOptions = {
 	credentials: true, // Allow credentials to be attached to reponse
-	origin: "http://localhost:3001", // front-end app
 }
 
 // (XSS) Instruct browsers to display/execute resources from these trusted sources only:
