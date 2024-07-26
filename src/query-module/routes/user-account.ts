@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import { requireAccessToken, requireRefreshToken } from "../../auth-module/middlewares/user-auth";
 import { getMyUserAccountInfo } from "../controllers/user-account";
-import { sanitizeInput } from "../../middlewares/inputs/sanitize-input";
+import { sanitizeInput } from "../../middlewares/security/xss";
 
 const userAccountQueryRouter: Router = express.Router();
 

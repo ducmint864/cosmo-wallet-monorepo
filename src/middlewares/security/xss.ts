@@ -57,7 +57,6 @@ function sanitizeInput(
 	res: Response,
 	next: NextFunction
 ) {
-	console.log("Debug:");
 	try {
 		if (req.query) {
 			req.query = _sanitize(req.query) as { [key: string]: string }

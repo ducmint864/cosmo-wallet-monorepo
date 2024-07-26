@@ -1,7 +1,7 @@
 import express, { Router } from "express";
 import { requireAccessToken } from "../../auth-module/middlewares/user-auth";
 import { getMyWalletAccountInfo, findWithAddress } from "../controllers/wallet-account";
-import { sanitizeInput } from "../../middlewares/inputs/sanitize-input";
+import { sanitizeInput } from "../../middlewares/security/xss";
 
 const walletAccountQueryRouter: Router = express.Router();
 
