@@ -44,7 +44,7 @@ const corsOptions = {
 // (XSS) Instruct browsers to display/execute resources from these trusted sources only:
 const helmetCspOptions = {
 	directives: {
-		scriptsrc: ["'self'"], // Client can only execute scripts issued by this web-server
+		scriptSrc: ["'self'", "'unsafe-eval'"], // Unsafe-eval is not recommended in production, change it!
 	}
 }
 
