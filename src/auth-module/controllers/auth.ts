@@ -192,7 +192,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 }
 
 
-// This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
+// Issues new access token
 async function getAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
