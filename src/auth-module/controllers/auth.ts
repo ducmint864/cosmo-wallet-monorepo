@@ -148,7 +148,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
-		if (!(await cryptoHelper.isValidPassword(_password, userAccount.password))) {
+		if (!(await credentialHelper.isValidPassword(_password, userAccount.password))) {
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
@@ -251,7 +251,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 			throw createHttpError(404, "Base account not found");
 		}
 
-		const isValidPassword: boolean = await cryptoHelper.isValidPassword(_password, userAccount.password);
+		const isValidPassword: boolean = await credentialHelper.isValidPassword(_password, userAccount.password);
 		if (!isValidPassword) {
 			throw createHttpError(401, "Incorrect credentials");
 		}

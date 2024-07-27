@@ -4,6 +4,7 @@ import createError from "http-errors";
 import { prisma } from "../../connections";
 import { randomBytes } from "crypto";
 import { authConfig } from "../../config";
+import { compare as bcryptCompare } from "bcrypt";
 
 const usernameMinLength = authConfig.username.minLength;
 const usernameMaxLength = authConfig.username.maxLength;
@@ -20,7 +21,7 @@ const passwordSchema = new PasswordValidator()
 	.digits(1, "Password must contains digit(s)")
 	.symbols(1, "Password must contains at least 1 symbol");
 
-export function checkPasswordAndThrow(password: string) {
+function checkPasswordAndThrow(password: string) {
 	const result = passwordSchema.validate(password, {
 		list: true,
 		details: true
@@ -37,13 +38,13 @@ export function checkPasswordAndThrow(password: string) {
 	}
 }
 
-export function checkEmailAndThrow(email: string) {
+function checkEmailAndThrow(email: string) {
 	if (!emailValidator.validate(email)) {
 		throw createError(400, "Invalid email");
 	}
 }
 
-export function checkUsernameAndThrow(username: string) {
+function checkUsernameAndThrow(username: string) {
 	const generalPattern = /^[a-zA-Z0-9_]+$/; // Only alphanumeric and underscores
 	const containsLetter = /[a-zA-Z]/; // Must contains at least one letter
 
@@ -75,7 +76,7 @@ export function checkUsernameAndThrow(username: string) {
 }
 
 // Temporary solution, should fix later
-export async function genUsername(): Promise<string> {
+async function genUsername(): Promise<string> {
 	let _username;
 	
 	while (true) {
@@ -95,9 +96,22 @@ export async function genUsername(): Promise<string> {
 	return _username;
 }
 
-
-export function checkNicknameAndThrow(nickname: string) {
+function checkNicknameAndThrow(nickname: string) {
 	if (!(nickname.length >= 1 && nickname.length <= 16)) {
 		throw createError(400, `Invalid nickname: Nickname must be between ${nicknameMinLength} - ${nicknameMaxLength} characters`);
 	}
+}
+
+async function isValidPassword(password: string, passwordHash: string): Promise<boolean> {
+	const valid = await bcryptCompare(password, passwordHash);
+	return valid;
+}
+
+export {
+	checkEmailAndThrow,
+	checkUsernameAndThrow,
+	checkNicknameAndThrow,
+	checkPasswordAndThrow,
+	genUsername,
+	isValidPassword,
 }
