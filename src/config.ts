@@ -1,15 +1,22 @@
+import { BinaryToTextEncoding } from "crypto";
+import { Algorithm } from "jsonwebtoken";
 import "dotenv/config";
 
 type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
 const authConfig = {
-	accessToken: {
-		secret: process.env.ACCESS_TOKEN_SECRET,
-		duration: "10m"
-	},
-	refreshToken: {
-		secret: process.env.REFRESH_TOKEN_SECRET,
-		duration: "14d"
+	token: {
+		// signingAlgo: "RS512" as Algorithm, // Implement this later (requires asymmetric key pair)
+		accessToken: {
+			secret: process.env.ACCESS_TOKEN_SECRET,
+			durationStr: "5m",
+			durationMinutes: 5,
+		},
+		refreshToken: {
+			secret: process.env.REFRESH_TOKEN_SECRET,
+			durationStr: "4h",
+			durationMinutes: 60 * 4,
+		},
 	},
 	password: {
 		minLength: 8,
@@ -22,11 +29,15 @@ const authConfig = {
 	nickname: {
 		minLength: 1,
 		maxLength: 16
-	}
+	},
+	session: {
+		durationMinutes: 60 * 4,
+	},
 }
 
 const cryptoConfig = {
 	encoding: "base64" as BufferEncoding,
+	binToTextEncoding: "base64" as BinaryToTextEncoding,
 	bip39: {
 		mnemonicLength: <MnemonicLength>24
 	},

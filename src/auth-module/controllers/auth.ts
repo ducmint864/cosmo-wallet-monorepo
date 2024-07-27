@@ -155,21 +155,21 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		const payload = <UserAccountJwtPayload>{
 			userAccountId: userAccount.user_account_id
 		};
-		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
-		const refreshToken = genToken(payload, authConfig.refreshToken.secret, authConfig.refreshToken.duration);
+		const accessToken: string = genToken(payload, authConfig.token.accessToken.secret, authConfig.token.accessToken.durationStr);
+		const refreshToken: string = genToken(payload, authConfig.token.refreshToken.secret, authConfig.token.refreshToken.durationStr);
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
 			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
-			maxAge: 10 * 60 * 1000 // 10 mins in milisecs
+			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // convert inutes to milisecs
 		});
 
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
 			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
-			maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
+			maxAge: authConfig.token.refreshToken.durationMinutes * 60 * 1000 //  Convert minutes to milisecs
 		});
 
 		res.status(200).json({
@@ -190,14 +190,18 @@ async function getAccessToken(req: Request, res: Response, next: NextFunction): 
 
 	try {
 		// Generate a new access token using the payload
-		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
+		const accessToken: string = genToken(
+			payload,
+			authConfig.token.accessToken.secret,
+			authConfig.token.accessToken.durationStr
+		);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none", // Allow cookie to be included in requests from 3rd-party sites
-			maxAge: 10 * 60 * 1000 // 10 mins in milliseconds
+			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // Convert minutes to  milliseconds
 		});
 
 		res.status(200).json({
@@ -282,7 +286,7 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 
 	try {
 		if (accessToken) {
-			const secret: string = authConfig.accessToken.secret;
+			const secret: string = authConfig.token.accessToken.secret;
 			const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
 			await blackListToken(accessToken, accessTokenPayload);
 		}

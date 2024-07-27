@@ -8,7 +8,7 @@ import createHttpError from "http-errors";
 
 export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
-	const secret: string = authConfig.accessToken.secret;
+	const secret: string = authConfig.token.accessToken.secret;
 
 	try {
 		if (!accessToken) {
@@ -34,7 +34,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const refreshToken: string = req.cookies.refreshToken;
-	const secret: string = authConfig.refreshToken.secret;
+	const secret: string = authConfig.token.refreshToken.secret;
 	try {
 		if (!refreshToken) {
 			throw createHttpError(400, "Missing refresh token");
