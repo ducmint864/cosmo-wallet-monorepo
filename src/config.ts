@@ -72,7 +72,7 @@ const webSocketConfig = {
 	}
 }
 
-const chainNodeConfig =  {
+const chainNodeConfig = {
 	minNodeCount: 0,
 	maxNodeCount: 100,
 }
