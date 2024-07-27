@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
-import { errorHandler } from "../../middlewares/errors/error-handler";
-import { decodeAndVerifyToken, isTokenBlackListed } from "../../helpers/jwt-helper";
+import { errorHandler } from "../../errors/middlewares/error-handler";
+import { decodeAndVerifyToken, isTokenBlackListed } from "../../general/helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { authConfig } from "../../config";
 import createHttpError from "http-errors";

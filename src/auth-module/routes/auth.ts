@@ -1,7 +1,8 @@
 import express, { Router } from "express";
 import { register, login, getAccessToken, createWalletAccount, logout } from "../controllers/auth";
 import { requireAccessToken, requireRefreshToken } from "../middlewares/user-auth";
-import { sanitizeInput } from "../../middlewares/security/xss";
+import { sanitizeInput } from "../../security/middlewares/xss";
+import { sendCsrfToken } from "../../security/middlewares/csrf";
 
 const authRouter: Router = express.Router();
 

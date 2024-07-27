@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { errorHandler } from "../errors/error-handler";
+import { errorHandler } from "../../errors/middlewares/error-handler";
 import { requestDataConfig } from "../../config";
 import createHttpError from "http-errors";
 import xss from "xss";

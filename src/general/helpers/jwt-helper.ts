@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
-import { redisClient } from "../connections";
-import { UserAccountJwtPayload } from "../types/BaseAccountJwtPayload";
+import { redisClient } from "../../connections";
+import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import "dotenv/config";
 
 export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {

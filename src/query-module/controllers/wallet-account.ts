@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from "express";
 import { prisma } from "../../connections";
 import { WalletAccountDTO } from "thasa-wallet-interface";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
-import { errorHandler } from "../../middlewares/errors/error-handler";
+import { errorHandler } from "../../errors/middlewares/error-handler";
 import { pick, mapKeys, camelCase, chain } from "lodash";
-import { getBooleanQueryParam, getNumberArrayQueryParam } from "../../helpers/request-parser";
+import { getBooleanQueryParam, getNumberArrayQueryParam } from "../../general/helpers/request-parser";
 import createHttpError from "http-errors";
 
 async function getMyWalletAccountInfo(req: Request, res: Response, next: NextFunction): Promise<void> {
