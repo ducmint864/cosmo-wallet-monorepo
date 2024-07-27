@@ -7,7 +7,6 @@ import { authConfig, cryptoConfig } from "../../config";
 export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {
 	const options = {
 		expiresIn: duration,
-		encoding: cryptoConfig.binToTextEncoding,
 		// algorithm: authConfig.token.signingAlgo, // To be implemented later
 	};
 	const token = jwt.sign(payload, secret, options);
