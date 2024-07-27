@@ -60,6 +60,9 @@ const cryptoConfig = {
 		keyLength: 32,
 		saltLength: 32
 	},
+	hmac: {
+		algorithm: "sha-256",
+	}
 }
 
 const webSocketConfig = {
@@ -80,10 +83,22 @@ const requestDataConfig = {
 	}
 }
 
-export { 
-	cryptoConfig, 
+const securityConfig = {
+	xss: {},
+	csrf: {
+		csrfToken: {
+			secret: process.env.CSRF_TOKEN_SECRET,
+			length: 16,
+			durationMinutes: 60 * 4,
+		},
+	},
+}
+
+export {
+	cryptoConfig,
 	authConfig,
 	webSocketConfig,
 	chainNodeConfig,
 	requestDataConfig,
+	securityConfig,
 };

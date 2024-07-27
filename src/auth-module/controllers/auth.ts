@@ -9,10 +9,11 @@ import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
 import * as credentialHelper from "../../general/helpers/credentials-helper";
 import * as cryptoHelper from "../../general/helpers/crypto-helper";
-import { authConfig, cryptoConfig } from "../../config";
+import { authConfig, cryptoConfig, securityConfig } from "../../config";
+import { randomBytes } from "crypto";
+import { genCsrfToken } from "../../security/helpers/csrf-helper";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import { randomBytes } from "crypto";
 import "dotenv/config";
 
 
@@ -171,6 +172,16 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			secure: true,
 			maxAge: authConfig.token.refreshToken.durationMinutes * 60 * 1000 //  Convert minutes to milisecs
 		});
+
+
+		// Send csrf-token
+		const csrfToken: string = genCsrfToken(accessToken);
+		res.cookie("csrfToken", csrfToken, {
+			httpOnly: false,
+			sameSite: "strict",
+			secure: true,
+			maxAge: securityConfig.csrf.csrfToken.durationMinutes * 60 * 1000 // Convert minutes to milisecs
+		})
 
 		res.status(200).json({
 			message: "Login sucessful"
