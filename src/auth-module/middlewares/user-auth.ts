@@ -12,7 +12,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 	try {
 		if (!accessToken) {
-			throw createHttpError(400, "Missing access token");
+			throw createHttpError(400, "Missing access-token");
 		}
 
 		if (await isTokenBlackListed(accessToken)) {
@@ -21,7 +21,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
 		if (!decoded) {
-			throw createHttpError(403, "Unauthorized access token");
+			throw createHttpError(403, "Unauthorized access-token");
 		}
 
 		req.body.decodedAccessTokenPayload = decoded;
@@ -46,7 +46,7 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 
 		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
 		if (!decoded) {
-			throw createHttpError(401, "Unauthorized refresh token")
+			throw createHttpError(401, "Unauthorized refresh-token")
 		}
 
 		// Inject the decoded payload of the token into the request body so the subsequent handlers don't have to query for it
