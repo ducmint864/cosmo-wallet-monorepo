@@ -12,12 +12,12 @@ import helmet from "helmet";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
-	console.error("Env error: access token secret not configured");
+	console.error("Env error: access-token secret not configured");
 	process.exit(1);
 }
 
 if (!process.env.REFRESH_TOKEN_SECRET) {
-	console.error("Env error: refresh token secret not configured");
+	console.error("Env error: refresh-token secret not configured");
 	process.exit(1);
 }
 
