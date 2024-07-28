@@ -2,17 +2,18 @@ import { NextFunction, Request, Response } from "express";
 import { ThasaHdWallet } from "../../types/ThasaHdWallet";
 import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../connections";
-import { errorHandler } from "../../middlewares/errors/error-handler";
-import { blackListToken, decodeAndVerifyToken } from "../../helpers/jwt-helper";
+import { errorHandler } from "../../errors/middlewares/error-handler";
+import { invalidateToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
-import { genToken } from "../../helpers/jwt-helper";
-import { getDerivedAccount, makeHDPath } from "../../helpers/crypto-helper";
-import * as credentialHelper from "../../helpers/credentials-helper";
-import * as cryptoHelper from "../../helpers/crypto-helper";
-import { authConfig, cryptoConfig } from "../../config";
+import { genToken } from "../../general/helpers/jwt-helper";
+import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
+import * as credentialHelper from "../../general/helpers/credentials-helper";
+import * as cryptoHelper from "../../general/helpers/crypto-helper";
+import { authConfig, cryptoConfig, securityConfig } from "../../config";
+import { randomBytes } from "crypto";
+import { genCsrfToken } from "../../security/helpers/csrf-helper";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
-import { randomBytes } from "crypto";
 import "dotenv/config";
 
 
@@ -147,30 +148,50 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
-		if (!(await cryptoHelper.isValidPassword(_password, userAccount.password))) {
+		if (!(await credentialHelper.isValidPassword(_password, userAccount.password))) {
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
 		// Send access token and refresh token
 		const payload = <UserAccountJwtPayload>{
-			userAccountId: userAccount.user_account_id
+			userAccountId: userAccount.user_account_id,
 		};
-		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
-		const refreshToken = genToken(payload, authConfig.refreshToken.secret, authConfig.refreshToken.duration);
+		const accessToken: string = genToken(
+			payload,
+			authConfig.token.accessToken.privateKey,
+			authConfig.token.accessToken.durationStr,
+			authConfig.token.accessToken.signingAlgo,
+		);
+		const refreshToken: string = genToken(
+			payload,
+			authConfig.token.refreshToken.privateKey,
+			authConfig.token.refreshToken.durationStr,
+			authConfig.token.refreshToken.signingAlgo,
+		);
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
-			sameSite: "none",
+			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
-			maxAge: 10 * 60 * 1000 // 10 mins in milisecs
+			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // convert inutes to milisecs
 		});
 
 		res.cookie("refreshToken", refreshToken, {
 			httpOnly: true,
-			sameSite: "none",
+			sameSite: "strict", // Assume that front-end statics will be served on the same host and port as the back-end code, by the back-end code
 			secure: true,
-			maxAge: 14 * 24 * 60 * 60 * 1000 // 14 days in milisecs
+			maxAge: authConfig.token.refreshToken.durationMinutes * 60 * 1000 //  Convert minutes to milisecs
 		});
+
+
+		// Send csrf-token
+		const csrfToken: string = genCsrfToken(payload);
+		res.cookie("csrfToken", csrfToken, {
+			httpOnly: false,
+			sameSite: "strict",
+			secure: true,
+			maxAge: securityConfig.csrf.csrfToken.durationMinutes * 60 * 1000 // Convert minutes to milisecs
+		})
 
 		res.status(200).json({
 			message: "Login sucessful"
@@ -181,8 +202,8 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 }
 
 
-// This function lets user send their refresh token then verify if the refresh token is valid to get a new access token
-async function getAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+// Issues new access token
+async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
 		userAccountId: _userAccountId
@@ -190,18 +211,34 @@ async function getAccessToken(req: Request, res: Response, next: NextFunction): 
 
 	try {
 		// Generate a new access token using the payload
-		const accessToken = genToken(payload, authConfig.accessToken.secret, authConfig.accessToken.duration);
+		const accessToken: string = genToken(
+			payload,
+			authConfig.token.accessToken.privateKey,
+			authConfig.token.accessToken.durationStr
+		);
 
 		// Send the new access token to the client
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
 			secure: true,
 			sameSite: "none", // Allow cookie to be included in requests from 3rd-party sites
-			maxAge: 10 * 60 * 1000 // 10 mins in milliseconds
+			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // Convert minutes to  milliseconds
 		});
 
+
+		// Generate new csrf-token
+		const csrfToken: string = genCsrfToken(payload);
+
+		// Send the new csrf-token to client
+		res.cookie("csrfToken", csrfToken, {
+			httpOnly: false,
+			secure: true,
+			sameSite: "strict",
+			maxAge: securityConfig.csrf.csrfToken.durationMinutes * 60 * 1000 // Convert minutes to miliseconds
+		})
+
 		res.status(200).json({
-			message: "Access token granted"
+			message: "Access-token, csrf-token issued"
 		});
 
 	} catch (err) {
@@ -236,7 +273,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 			throw createHttpError(404, "Base account not found");
 		}
 
-		const isValidPassword: boolean = await cryptoHelper.isValidPassword(_password, userAccount.password);
+		const isValidPassword: boolean = await credentialHelper.isValidPassword(_password, userAccount.password);
 		if (!isValidPassword) {
 			throw createHttpError(401, "Incorrect credentials");
 		}
@@ -257,7 +294,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 				address: _address,
 				crypto_hd_path: _hdPath,
 				nickname: _nickname || `Account ${newAccIndex}`,
-				wallet_order: _walletOrder, 
+				wallet_order: _walletOrder,
 				user_account_id: _userAccountId
 			}
 		});
@@ -277,18 +314,31 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 }
 
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const accessToken: string = req.cookies.accessToken;
-	const refreshToken: string = req.cookies.refreshToken;
+	const accessToken: string = req.cookies["accessToken"];
+	const refreshToken: string = req.cookies["refreshToken"];
 
 	try {
-		if (accessToken) {
-			const secret: string = authConfig.accessToken.secret;
-			const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
-			await blackListToken(accessToken, accessTokenPayload);
+		/** This middelware comes after requireAccessToken(...)
+		 * -> Guarateeed availability of decoded access-token payload
+		 *    Meanwhile, access to refresh-token is not guaranteed
+		 * */
+
+		// Invalidate access-token
+		const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
+		await invalidateToken(accessToken, accessTokenPayload);
+
+		// Invalidate refresh token (if available)
+		if (refreshToken) {
+			const refreshPublicKey: string = authConfig.token.refreshToken.publicKey;
+			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshPublicKey);
+			await invalidateToken(refreshToken, refreshTokenPayload)
 		}
 
-		const refreshTokenPayload = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
-		await blackListToken(refreshToken, refreshTokenPayload)
+		// Instruct clients to remove obsolete token cookies
+		res.clearCookie("accessToken"); // Add domain options later
+		res.clearCookie("refreshToken");
+		res.clearCookie("csrfToken");
+
 		res.status(200).json({
 			message: "Logout successful"
 		})
@@ -298,4 +348,10 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 	}
 }
 
-export { login, register, logout, getAccessToken, createWalletAccount };
+export { 
+	login,
+	register,
+	logout,
+	refreshSession,
+	createWalletAccount,
+};

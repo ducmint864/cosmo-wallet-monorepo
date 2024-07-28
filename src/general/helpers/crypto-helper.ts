@@ -1,11 +1,10 @@
 import { HdPath } from "@cosmjs/crypto";
-import { cryptoConfig } from "../config";
-import { ThasaHdWallet } from "../types/ThasaHdWallet";
+import { cryptoConfig } from "../../config";
+import { ThasaHdWallet } from "../../types/ThasaHdWallet";
 import { Slip10RawIndex } from "@cosmjs/crypto";
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import { DirectSecp256k1HdWallet, OfflineDirectSigner } from "@cosmjs/proto-signing";
 import crypto from "crypto";
-import bcrypt from "bcrypt";
 
 /**
  * A custom derivation path in the form `m/44'/0'/a'/0/0`
@@ -75,12 +74,6 @@ function decrypt(encrypted: Buffer, encryptionKey: Buffer, iv: Buffer): string {
 	return decryptedData;
 }
 
-async function isValidPassword(password: string, passwordHash: string): Promise<boolean> {
-	const valid = await bcrypt.compare(password, passwordHash);
-	return valid;
-}
-
-
 async function getEncryptionKey(password: string, pbkdf2Salt: Buffer): Promise<Buffer> {
 	const encryptionKey = await new Promise<Buffer>((resolve, reject) => crypto.pbkdf2(
 		password,
@@ -124,7 +117,6 @@ export {
 	getEncryptionKey,
 	encrypt,
 	decrypt,
-	isValidPassword,
 	stringToHdPath,
 	hdPathToString,
 	getSigner,

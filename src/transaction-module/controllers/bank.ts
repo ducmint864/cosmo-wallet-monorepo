@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { errorHandler } from "../../middlewares/errors/error-handler";
+import { errorHandler } from "../../errors/middlewares/error-handler";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { prisma } from "../../connections";
-import { decrypt, getEncryptionKey, getSigner } from "../../helpers/crypto-helper";
-import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../helpers/request-parser";
+import { decrypt, getEncryptionKey, getSigner } from "../../general/helpers/crypto-helper";
+import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../general/helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";
 import { writeFile } from "fs"
 import { webSocketClientManager } from "../../connections";
