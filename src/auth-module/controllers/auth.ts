@@ -154,7 +154,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		// Send access token and refresh token
 		const payload = <UserAccountJwtPayload>{
-			userAccountId: userAccount.user_account_id
+			userAccountId: userAccount.user_account_id,
 		};
 		const accessToken: string = genToken(payload, authConfig.token.accessToken.secret, authConfig.token.accessToken.durationStr);
 		const refreshToken: string = genToken(payload, authConfig.token.refreshToken.secret, authConfig.token.refreshToken.durationStr);
@@ -272,7 +272,7 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 				address: _address,
 				crypto_hd_path: _hdPath,
 				nickname: _nickname || `Account ${newAccIndex}`,
-				wallet_order: _walletOrder, 
+				wallet_order: _walletOrder,
 				user_account_id: _userAccountId
 			}
 		});
@@ -292,8 +292,8 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 }
 
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const accessToken: string = req.cookies.accessToken;
-	const refreshToken: string = req.cookies.refreshToken;
+	const accessToken: string = req.cookies["accessToken"];
+	const refreshToken: string = req.cookies["refreshToken"];
 
 	try {
 		if (accessToken) {
