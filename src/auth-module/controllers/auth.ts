@@ -3,7 +3,7 @@ import { ThasaHdWallet } from "../../types/ThasaHdWallet";
 import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../connections";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { blackListToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
+import { invalidateToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
@@ -308,14 +308,27 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 	const refreshToken: string = req.cookies["refreshToken"];
 
 	try {
-		if (accessToken) {
-			const secret: string = authConfig.token.accessToken.secret;
-			const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, secret);
-			await blackListToken(accessToken, accessTokenPayload);
+		/** This middelware comes after requireAccessToken(...)
+		 * -> Guarateeed availability of decoded access-token payload
+		 *    Meanwhile, access to refresh-token is not guaranteed
+		 * */
+
+		// Invalidate access-token
+		const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
+		await invalidateToken(accessToken, accessTokenPayload);
+
+		// Invalidate refresh token (if available)
+		if (refreshToken) {
+			const refreshSecret: string = authConfig.token.refreshToken.secret;
+			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshSecret);
+			await invalidateToken(refreshToken, refreshTokenPayload)
 		}
 
-		const refreshTokenPayload = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
-		await blackListToken(refreshToken, refreshTokenPayload)
+		// Instruct clients to remove obsolete token cookies
+		res.clearCookie("accessToken"); // Add domain options later
+		res.clearCookie("refreshToken");
+		res.clearCookie("csrfToken");
+
 		res.status(200).json({
 			message: "Logout successful"
 		})

@@ -41,15 +41,15 @@ export async function isTokenBlackListed(token: string): Promise<boolean> {
 	}
 }
 
-export async function blackListToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
+export async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
 	if (!tokenPayload.exp) {
 		throw new Error("Token payload doesn't have expiry field");
 	}
 
 	try {
-		const redisKeyDurationSecs: number = tokenPayload.exp - Math.floor(Date.now() / 1000);
+		const remainingTTL: number = tokenPayload.exp - Math.floor(Date.now() / 1000);
 		const res = await redisClient.set(token, "black-listed", {
-			EX: redisKeyDurationSecs,
+			EX: remainingTTL,
 		});
 		// console.log(res);
 	} catch (err) {
