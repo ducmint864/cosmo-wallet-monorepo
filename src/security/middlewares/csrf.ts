@@ -7,29 +7,29 @@ import { isValidCsrfToken } from "../helpers/csrf-helper";
 
 
 function sendCsrfToken(req: Request, res: Response, next: NextFunction): void {
-	if (req.headers["x-csrf-token"]) {
-		next();
-	}
+	// if (req.headers["x-csrf-token"]) {
+	// 	next();
+	// }
 
-	const token: string = randomBytes(20).toString("hex");
+	// const token: string = randomBytes(20).toString("hex");
 
-	try {
-		const signedToken = createHmac(
-			cryptoConfig.hmac.algorithm,
-			securityConfig.csrf.csrfToken.secret
-		).update(token).digest("hex");
+	// try {
+	// 	const signedToken = createHmac(
+	// 		cryptoConfig.hmac.algorithm,
+	// 		securityConfig.csrf.csrfToken.secret
+	// 	).update(token).digest("hex");
 
-		res.cookie("csrfToken", signedToken, {
-			httpOnly: false,
-			secure: true,
-			sameSite: "strict",
-			maxAge: authConfig.session.durationMinutes
-		})
+	// 	res.cookie("csrfToken", signedToken, {
+	// 		httpOnly: false,
+	// 		secure: true,
+	// 		sameSite: "strict",
+	// 		maxAge: authConfig.session.durationMinutes
+	// 	})
 
-		next();
-	} catch (err) {
-		errorHandler(err, req, res, next);
-	}
+	// 	next();
+	// } catch (err) {
+	// 	errorHandler(err, req, res, next);
+	// }
 }
 
 // const 
