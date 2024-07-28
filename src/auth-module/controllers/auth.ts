@@ -193,7 +193,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 
 // Issues new access token
-async function getAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
 	const payload = <UserAccountJwtPayload>{
 		userAccountId: _userAccountId
@@ -215,8 +215,20 @@ async function getAccessToken(req: Request, res: Response, next: NextFunction): 
 			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // Convert minutes to  milliseconds
 		});
 
+
+		// Generate new csrf-token
+		const csrfToken: string = genCsrfToken(payload);
+
+		// Send the new csrf-token to client
+		res.cookie("csrfToken", csrfToken, {
+			httpOnly: false,
+			secure: true,
+			sameSite: "strict",
+			maxAge: securityConfig.csrf.csrfToken.durationMinutes * 60 * 1000 // Convert minutes to miliseconds
+		})
+
 		res.status(200).json({
-			message: "Access token granted"
+			message: "Access-token, csrf-token issued"
 		});
 
 	} catch (err) {
@@ -317,6 +329,6 @@ export {
 	login,
 	register,
 	logout,
-	getAccessToken,
-	createWalletAccount 
+	refreshSession,
+	createWalletAccount,
 };
