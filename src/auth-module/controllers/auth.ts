@@ -175,7 +175,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 
 		// Send csrf-token
-		const csrfToken: string = genCsrfToken(accessToken);
+		const csrfToken: string = genCsrfToken(payload);
 		res.cookie("csrfToken", csrfToken, {
 			httpOnly: false,
 			sameSite: "strict",
