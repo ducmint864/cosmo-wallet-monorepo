@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { NextFunction, Request, Response } from "express";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { decodeAndVerifyToken, isTokenBlackListed } from "../../general/helpers/jwt-helper";
+import { decodeAndVerifyToken, isTokenInvalidated } from "../../general/helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import { authConfig } from "../../config";
 import createHttpError from "http-errors";
@@ -15,13 +15,13 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 			throw createHttpError(400, "Missing access-token");
 		}
 
-		if (await isTokenBlackListed(accessToken)) {
-			throw createHttpError(403, "Token is black-listed");
+		if (await isTokenInvalidated(accessToken)) {
+			throw createHttpError(403, "Logged out, please login again");
 		}	
 
 		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(accessToken, publicKey);
 		if (!decoded) {
-			throw createHttpError(403, "Unauthorized access-token");
+			throw createHttpError(403, "Unauthorized access-token, please refresh session/login again");
 		}
 
 		req.body.decodedAccessTokenPayload = decoded;
@@ -40,8 +40,8 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 			throw createHttpError(400, "Missing refresh token");
 		}
 		
-		if (await isTokenBlackListed(refreshToken)) {
-			throw createHttpError(403, "Token is black-listed");
+		if (await isTokenInvalidated(refreshToken)) {
+			throw createHttpError(403, "Logged out, please login again");
 		}	
 
 		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(refreshToken, publicKey);

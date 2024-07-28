@@ -35,7 +35,7 @@ export function decodeAndVerifyToken(token: string, publicKey: string): UserAcco
  * @param token: Raw token string
  * @returns 
  */
-export async function isTokenBlackListed(token: string): Promise<boolean> {
+export async function isTokenInvalidated(token: string): Promise<boolean> {
 	try {
 		if (!redisClient.isOpen) {
 			redisClient.connect();
@@ -55,12 +55,10 @@ export async function invalidateToken(token: string, tokenPayload: UserAccountJw
 
 	try {
 		const remainingTTL: number = tokenPayload.exp - Math.floor(Date.now() / 1000);
-		const res = await redisClient.set(token, "black-listed", {
+		await redisClient.set(token, "invalidated", {
 			EX: remainingTTL,
 		});
-		// console.log(res);
 	} catch (err) {
 		throw err;
 	}
 }
-
