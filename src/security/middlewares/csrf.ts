@@ -36,37 +36,36 @@ function sendCsrfToken(req: Request, res: Response, next: NextFunction): void {
 // const 
 
 function requireCsrfToken(req: Request, res: Response, next: NextFunction): void {
-	let csrfToken: string | string[] = req.headers["x-csrf-token"];
+	// let csrfToken: string | string[] = req.headers["x-csrf-token"];
 
-	try {
-		if (!csrfToken) {
-			throw createHttpError(400, "Missing x-csrf-token field in request header");
-		}
+	// try {
+	// 	if (!csrfToken) {
+	// 		throw createHttpError(400, "Missing x-csrf-token field in request header");
+	// 	}
 
-		if (Array.isArray(csrfToken)) {
-			throw createHttpError(400, "Multiple x-csrf-token values found in request headers");
-		}
+	// 	if (Array.isArray(csrfToken)) {
+	// 		throw createHttpError(400, "Multiple x-csrf-token values found in request headers");
+	// 	}
 
-		const userPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
+	// 	const userPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
 
-		if (!userPayload) {
-			throw createHttpError(403, "User payload is required is required for verifying csrf-token");
-		}
+	// 	if (!userPayload) {
+	// 		throw createHttpError(403, "User payload is required is required for verifying csrf-token");
+	// 	}
 
-		// Decode URI-encoded csrfToken cookie
-		csrfToken = decodeURIComponent(csrfToken);
+	// 	// Decode URI-encoded csrfToken cookie
+	// 	csrfToken = decodeURIComponent(csrfToken);
 
-		// Verify csrf-token
-		const isValid: boolean = isValidCsrfToken(userPayload, csrfToken);
-		if (!isValid) {
-			throw createHttpError(403, "Unauthorized csrf-token");
-		}
+	// 	// Verify csrf-token
+	// 	const isValid: boolean = isValidCsrfToken(userPayload, csrfToken);
+	// 	if (!isValid) {
+	// 		throw createHttpError(403, "Unauthorized csrf-token");
+	// 	}
 
 		next();
-	} catch (err) {
-		errorHandler(err, req, res, next);
-	}
-
+	// } catch (err) {
+	// 	errorHandler(err, req, res, next);
+	// }
 }
 
 export {
