@@ -1,15 +1,25 @@
+import { BinaryToTextEncoding } from "crypto";
+import { Algorithm } from "jsonwebtoken";
 import "dotenv/config";
 
 type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
 const authConfig = {
-	accessToken: {
-		secret: process.env.ACCESS_TOKEN_SECRET,
-		duration: "10m"
-	},
-	refreshToken: {
-		secret: process.env.REFRESH_TOKEN_SECRET,
-		duration: "14d"
+	token: {
+		accessToken: {
+			privateKey: process.env.ACCESS_TOKEN_PRIVATE_KEY,
+			publicKey: process.env.ACCESS_TOKEN_PUBLIC_KEY,
+			durationStr: "5m",
+			durationMinutes: 5,
+			signingAlgo: "ES256" as Algorithm,
+		},
+		refreshToken: {
+			privateKey: process.env.REFRESH_TOKEN_PRIVATE_KEY,
+			publicKey: process.env.REFRESH_TOKEN_PUBLIC_KEY,
+			durationStr: "4h",
+			durationMinutes: 60 * 4,
+			signingAlgo: "ES384" as Algorithm,
+		},
 	},
 	password: {
 		minLength: 8,
@@ -22,11 +32,15 @@ const authConfig = {
 	nickname: {
 		minLength: 1,
 		maxLength: 16
-	}
+	},
+	session: {
+		durationMinutes: 60 * 4,
+	},
 }
 
 const cryptoConfig = {
 	encoding: "base64" as BufferEncoding,
+	binToTextEncoding: "base64" as BinaryToTextEncoding,
 	bip39: {
 		mnemonicLength: <MnemonicLength>24
 	},
@@ -49,6 +63,9 @@ const cryptoConfig = {
 		keyLength: 32,
 		saltLength: 32
 	},
+	hmac: {
+		algorithm: "sha-256",
+	}
 }
 
 const webSocketConfig = {
@@ -58,14 +75,33 @@ const webSocketConfig = {
 	}
 }
 
-const chainNodeConfig =  {
+const chainNodeConfig = {
 	minNodeCount: 0,
 	maxNodeCount: 100,
 }
 
-export { 
-	cryptoConfig, 
+const requestDataConfig = {
+	objects: {
+		maxNestLevel: 7,
+	}
+}
+
+const securityConfig = {
+	xss: {},
+	csrf: {
+		csrfToken: {
+			secret: process.env.CSRF_TOKEN_SECRET,
+			length: 16,
+			durationMinutes: 60 * 4,
+		},
+	},
+}
+
+export {
+	cryptoConfig,
 	authConfig,
 	webSocketConfig,
-	chainNodeConfig
+	chainNodeConfig,
+	requestDataConfig,
+	securityConfig,
 };
