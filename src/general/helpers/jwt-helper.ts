@@ -5,6 +5,7 @@ import "dotenv/config";
 import { authConfig, cryptoConfig } from "../../config";
 
 export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {
+	payload.iat = Math.floor(Date.now() / 1000); // Manually set the timestamp to ensure integrity across modules that use UserAccountJwtPayload
 	const options = {
 		expiresIn: duration,
 		// algorithm: authConfig.token.signingAlgo, // To be implemented later
