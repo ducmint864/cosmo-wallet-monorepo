@@ -36,26 +36,26 @@ function sendCsrfToken(req: Request, res: Response, next: NextFunction): void {
 
 function requireCsrfToken(req: Request, res: Response, next: NextFunction): void {
 	let csrfToken: string | string[] = req.headers["x-csrf-token"];
-	
-	if (Array.isArray(csrfToken)) {
-		throw createHttpError(400, "Multiple x-csrf-token values found in request headers");
-	}
-	
-	
-	if (!csrfToken) {
-		throw createHttpError(400, "Missing x-csrf-token field in request header");
-	}
-	
-	const accessToken: string = req.cookies["csrfToken"];
-	if (!accessToken) {
-		throw createHttpError(403, "Access-token is required");
-	}
-	
-	// Decode URI-encoded csrfToken cookie
-	csrfToken = decodeURIComponent(csrfToken); 
 
-	// Verify csrf-token
 	try {
+		if (Array.isArray(csrfToken)) {
+			throw createHttpError(400, "Multiple x-csrf-token values found in request headers");
+		}
+
+
+		if (!csrfToken) {
+			throw createHttpError(400, "Missing x-csrf-token field in request header");
+		}
+
+		const accessToken: string = req.cookies["csrfToken"];
+		if (!accessToken) {
+			throw createHttpError(403, "Access-token is required");
+		}
+
+		// Decode URI-encoded csrfToken cookie
+		csrfToken = decodeURIComponent(csrfToken);
+
+		// Verify csrf-token
 		const isValid = isValidCsrfToken(accessToken, csrfToken);
 		if (!isValid) {
 			throw createHttpError(403, "Unauthorized csrf-token");
