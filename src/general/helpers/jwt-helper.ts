@@ -1,22 +1,29 @@
-import jwt from "jsonwebtoken";
+import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import "dotenv/config";
 import { authConfig, cryptoConfig } from "../../config";
 
-export function genToken(payload: UserAccountJwtPayload, secret: string, duration: string): string {
+export function genToken(
+	payload: UserAccountJwtPayload,
+	secret: string,
+	duration: string,
+	signingAlgo?: Algorithm
+): string {
 	payload.iat = Math.floor(Date.now() / 1000); // Manually set the timestamp to ensure integrity across modules that use UserAccountJwtPayload
+
+	const defaultSigningAlgo: Algorithm = "ES256";
 	const options = {
 		expiresIn: duration,
-		// algorithm: authConfig.token.signingAlgo, // To be implemented later
+		algorithm: signingAlgo ?? defaultSigningAlgo,
 	};
 	const token = jwt.sign(payload, secret, options);
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, secret: string): UserAccountJwtPayload {
+export function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload {
 	try {
-		const decoded = <UserAccountJwtPayload>jwt.verify(token, secret);
+		const decoded = <UserAccountJwtPayload>jwt.verify(token, publicKey);
 		return decoded;
 	} catch (err) {
 		return null;

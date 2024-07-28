@@ -6,16 +6,19 @@ type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
 const authConfig = {
 	token: {
-		// signingAlgo: "RS512" as Algorithm, // Implement this later (requires asymmetric key pair)
 		accessToken: {
-			secret: process.env.ACCESS_TOKEN_SECRET,
+			privateKey: process.env.ACCESS_TOKEN_PRIVATE_KEY,
+			publicKey: process.env.ACCESS_TOKEN_PUBLIC_KEY,
 			durationStr: "5m",
 			durationMinutes: 5,
+			signingAlgo: "ES256" as Algorithm,
 		},
 		refreshToken: {
-			secret: process.env.REFRESH_TOKEN_SECRET,
+			privateKey: process.env.REFRESH_TOKEN_PRIVATE_KEY,
+			publicKey: process.env.REFRESH_TOKEN_PUBLIC_KEY,
 			durationStr: "4h",
 			durationMinutes: 60 * 4,
+			signingAlgo: "ES384" as Algorithm,
 		},
 	},
 	password: {

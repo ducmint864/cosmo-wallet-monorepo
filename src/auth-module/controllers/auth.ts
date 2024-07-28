@@ -156,8 +156,18 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		const payload = <UserAccountJwtPayload>{
 			userAccountId: userAccount.user_account_id,
 		};
-		const accessToken: string = genToken(payload, authConfig.token.accessToken.secret, authConfig.token.accessToken.durationStr);
-		const refreshToken: string = genToken(payload, authConfig.token.refreshToken.secret, authConfig.token.refreshToken.durationStr);
+		const accessToken: string = genToken(
+			payload,
+			authConfig.token.accessToken.privateKey,
+			authConfig.token.accessToken.durationStr,
+			authConfig.token.accessToken.signingAlgo,
+		);
+		const refreshToken: string = genToken(
+			payload,
+			authConfig.token.refreshToken.privateKey,
+			authConfig.token.refreshToken.durationStr,
+			authConfig.token.refreshToken.signingAlgo,
+		);
 
 		res.cookie("accessToken", accessToken, {
 			httpOnly: true,
@@ -203,7 +213,7 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 		// Generate a new access token using the payload
 		const accessToken: string = genToken(
 			payload,
-			authConfig.token.accessToken.secret,
+			authConfig.token.accessToken.privateKey,
 			authConfig.token.accessToken.durationStr
 		);
 
@@ -319,8 +329,8 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 
 		// Invalidate refresh token (if available)
 		if (refreshToken) {
-			const refreshSecret: string = authConfig.token.refreshToken.secret;
-			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshSecret);
+			const refreshPublicKey: string = authConfig.token.refreshToken.publicKey;
+			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshPublicKey);
 			await invalidateToken(refreshToken, refreshTokenPayload)
 		}
 

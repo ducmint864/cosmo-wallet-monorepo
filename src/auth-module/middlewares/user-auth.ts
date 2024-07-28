@@ -8,7 +8,7 @@ import createHttpError from "http-errors";
 
 export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
-	const secret: string = authConfig.token.accessToken.secret;
+	const publicKey: string = authConfig.token.accessToken.publicKey;
 
 	try {
 		if (!accessToken) {
@@ -19,7 +19,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 			throw createHttpError(403, "Token is black-listed");
 		}	
 
-		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(accessToken, secret);
+		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(accessToken, publicKey);
 		if (!decoded) {
 			throw createHttpError(403, "Unauthorized access-token");
 		}
@@ -34,7 +34,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 
 export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const refreshToken: string = req.cookies.refreshToken;
-	const secret: string = authConfig.token.refreshToken.secret;
+	const publicKey: string = authConfig.token.refreshToken.publicKey;
 	try {
 		if (!refreshToken) {
 			throw createHttpError(400, "Missing refresh token");
@@ -44,7 +44,7 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 			throw createHttpError(403, "Token is black-listed");
 		}	
 
-		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(refreshToken, secret);
+		const decoded = <UserAccountJwtPayload>decodeAndVerifyToken(refreshToken, publicKey);
 		if (!decoded) {
 			throw createHttpError(401, "Unauthorized refresh-token")
 		}
