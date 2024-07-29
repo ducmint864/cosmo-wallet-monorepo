@@ -2,9 +2,8 @@ import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
 import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
 import "dotenv/config";
-import { authConfig, cryptoConfig } from "../../config";
 
-export function genToken(
+function genToken(
 	payload: UserAccountJwtPayload,
 	secret: string,
 	duration: string,
@@ -21,7 +20,7 @@ export function genToken(
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload {
+function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload {
 	try {
 		const decoded = <UserAccountJwtPayload>jwt.verify(token, publicKey);
 		return decoded;
@@ -35,7 +34,7 @@ export function decodeAndVerifyToken(token: string, publicKey: string): UserAcco
  * @param token: Raw token string
  * @returns 
  */
-export async function isTokenInvalidated(token: string): Promise<boolean> {
+async function isTokenInvalidated(token: string): Promise<boolean> {
 	try {
 		if (!redisClient.isOpen) {
 			redisClient.connect();
@@ -48,7 +47,7 @@ export async function isTokenInvalidated(token: string): Promise<boolean> {
 	}
 }
 
-export async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
+async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
 	if (!tokenPayload.exp) {
 		throw new Error("Token payload doesn't have expiry field");
 	}
@@ -61,4 +60,11 @@ export async function invalidateToken(token: string, tokenPayload: UserAccountJw
 	} catch (err) {
 		throw err;
 	}
+}
+
+export {
+	decodeAndVerifyToken,
+	genToken,
+	invalidateToken,
+	isTokenInvalidated,
 }
