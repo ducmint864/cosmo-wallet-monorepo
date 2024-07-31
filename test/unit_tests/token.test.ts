@@ -20,4 +20,17 @@ describe('decodeAndVerifyToken', () => {
         expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
         expect(result).toEqual(payload);
     })
+
+    it('should null if the token invalid', () => {
+        const token = "invalid-token";
+        
+        (jwt.verify as jest.Mock).mockImplementation(() => {
+            throw new Error("Invalid token");
+          });
+
+        const result = decodeAndVerifyToken(token, publicKey);
+
+        expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
+        expect(result).toBeNull();
+    })
 })
