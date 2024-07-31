@@ -11,9 +11,9 @@ export class EnvCollection {
 		this.REFRESH_TOKEN_PRIVATE_KEY = process.env.REFRESH_TOKEN_PRIVATE_KEY;
 		this.REFRESH_TOKEN_PUBLIC_KEY = process.env.REFRESH_TOKEN_PUBLIC_KEY;
 		this.CSRF_TOKEN_SECRET = process.env.CSRF_TOKEN_SECRET;
-		this.COMET_BFT_ENDPOINTS = process.env.COMET_BFT_ENDPOINTS?.split(",").map(values => values.trim());
-		this.RPC_ENDPOINTS = process.env.RPC_ENDPOINTS?.split(",").map(value => value.trim());
-		this.WEB_SOCKET_ENDPOINTS = process.env.WEB_SOCKET_ENDPOINTS?.split(",").map(value => value.trim());
+		this.COMET_BFT_HTTP_ENDPOINTS = process.env.COMET_BFT_HTTP_ENDPOINTS?.split(",").map(values => values.trim());
+		this.RPC_REST_ENDPOINTS = process.env.RPC_REST_ENDPOINTS?.split(",").map(value => value.trim());
+		this.COMET_BFT_WEBSOCKET_ENDPOINTS = process.env.COMET_BFT_WEBSOCKET_ENDPOINTS?.split(",").map(value => value.trim());
 
 		this.checkEnvironmentVariables();
 	}
@@ -29,13 +29,13 @@ export class EnvCollection {
 				toSpecify.push(property);
 			}
 		}
-		
+
 		if (!isFulfilled) {
 			console.error("Please fulfill these environment variables before starting web server:");
 			for (const property of toSpecify) {
 				console.error(`  - ${property}`);
 			}
-			process.exit(1);			
+			process.exit(1);
 		}
 	}
 
@@ -52,7 +52,7 @@ export class EnvCollection {
 	public readonly REFRESH_TOKEN_PRIVATE_KEY: string;
 	public readonly REFRESH_TOKEN_PUBLIC_KEY: string;
 	public readonly CSRF_TOKEN_SECRET: string;
-	public readonly COMET_BFT_ENDPOINTS: string[];
-	public readonly RPC_ENDPOINTS: string[];
-	public readonly WEB_SOCKET_ENDPOINTS: string[];
+	public readonly COMET_BFT_HTTP_ENDPOINTS: string[];
+	public readonly RPC_REST_ENDPOINTS: string[];
+	public readonly COMET_BFT_WEBSOCKET_ENDPOINTS: string[];
 }

@@ -73,17 +73,17 @@ const webSocketConfig = {
 		minClientCount: 0,
 		maxClientCount: 5,
 	},
-	webSocketEndpoints: envCollection.WEB_SOCKET_ENDPOINTS,
 }
 
-const chainNodeConfig = {
+const chainRpcConfig = {
 	minNodeCount: 0,
 	maxNodeCount: 100,
 	devNodes: [
 		{}
 	],
-	combetBftNodes: envCollection.COMET_BFT_ENDPOINTS,
-	rpcEndpoints: envCollection.RPC_ENDPOINTS,
+	rpcRestEndpoints: envCollection.RPC_REST_ENDPOINTS,
+	cometBftHttpEndpoints: envCollection.COMET_BFT_HTTP_ENDPOINTS,
+	cometBftWebSocketEndpoints: envCollection.COMET_BFT_WEBSOCKET_ENDPOINTS,
 }
 
 const requestDataConfig = {
@@ -107,7 +107,7 @@ export {
 	cryptoConfig,
 	authConfig,
 	webSocketConfig,
-	chainNodeConfig,
+	chainRpcConfig,
 	requestDataConfig,
 	securityConfig,
 };
