@@ -1,15 +1,8 @@
 /**
  * Enum for WebSocketClientManager error codes.
  */
-enum WebSocketClientManagerErrorCode {
-	/**
-	 * Error code for invalid URL.
-	 */
-	ERR_INVALID_URL = 0,
-	/**
-	 * Error code for invalid client ID.
-	 */
-	ERR_INVALID_ID = 1,
+enum CometWsManagerErrorCode {
+	ERR_ADD_CLIENT_FAILED = 0,
 	/**
 	 * Error code for client not found.
 	 */
@@ -26,32 +19,37 @@ enum WebSocketClientManagerErrorCode {
 	 * Error code for unknown error.
 	 */
 	ERR_UNKNOWN = 5,
+
+	/**
+	 * 
+	 */
+	ERR_CONNECTION_FAILED = 6,
 }
 
 /**
  * Custom error class for WebSocketClientManager.
  */
-class WebSocketClientManagerError extends Error {
+class CometWsManagerError extends Error {
 	/**
 	 * Error code.
 	 */
-	protected _code: WebSocketClientManagerErrorCode;
+	protected _code: CometWsManagerErrorCode;
 
 	/**
 	 * Constructor for WebSocketClientManagerError.
-	 * @param {WebSocketClientManagerErrorCode} code - Error code.
+	 * @param {CometWsManagerErrorCode} code - Error code.
 	 * @param {string} [msg] - Optional error message.
 	 * @example
 	 * const error = new WebSocketClientManagerError(WebSocketClientManagerErrorCode.ERR_INVALID_URL, 'Invalid URL provided');
 	 */
 	public constructor(
-		code: WebSocketClientManagerErrorCode,
+		code: CometWsManagerErrorCode,
 		msg?: string
 	) {
 		super("WebSocketClientManager error: " + (msg ?? ""));
 
 		if (!code) {
-			code = WebSocketClientManagerErrorCode.ERR_UNKNOWN;
+			code = CometWsManagerErrorCode.ERR_UNKNOWN;
 		}
 
 		this._code = code;
@@ -59,17 +57,17 @@ class WebSocketClientManagerError extends Error {
 
 	/**
 	 * Getter for error code.
-	 * @returns {WebSocketClientManagerErrorCode} Error code.
+	 * @returns {CometWsManagerErrorCode} Error code.
 	 * @example
 	 * const error = new WebSocketClientManagerError(WebSocketClientManagerErrorCode.ERR_INVALID_URL);
 	 * console.log(error.code); // Output: 0
 	 */
-	public get code(): WebSocketClientManagerErrorCode {
+	public get code(): CometWsManagerErrorCode {
 		return this._code;
 	}
 }
 
 export {
-	WebSocketClientManagerError,
-	WebSocketClientManagerErrorCode,
+	CometWsManagerError,
+	CometWsManagerErrorCode,
 };

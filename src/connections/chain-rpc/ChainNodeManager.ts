@@ -1,4 +1,4 @@
-import { chainNodeConfig } from "../../config";
+import { chainRpcConfig } from "../../config";
 import {
 	ChainNodeManagerError,
 	ChainNodeManagerErrorCode
@@ -11,12 +11,12 @@ export class ChainNodeManager {
 	/**
 	 * Minimum number of nodes required
 	 */
-	public static readonly MIN_NODE_COUNT: number = chainNodeConfig.minNodeCount;
+	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.minNodeCount;
 
 	/**
 	 * Maximum number of nodes allowed
 	 */
-	public static readonly MAX_NODE_COUNT: number = chainNodeConfig.maxNodeCount;
+	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.maxNodeCount;
 
 	private static _instance: ChainNodeManager; // Singleton instance
 
