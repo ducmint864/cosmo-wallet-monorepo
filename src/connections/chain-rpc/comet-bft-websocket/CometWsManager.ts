@@ -55,7 +55,7 @@ export class CometWsManager {
 
 	public static init(selector: Selector): void {
 		if (CometWsManager._instance) {
-			throw new Error("WebSocketClientManager instance already initialized");
+			throw new Error("WebSocketClientManager's instance already initialized");
 		}
 
 		CometWsManager._instance = new CometWsManager(selector);
