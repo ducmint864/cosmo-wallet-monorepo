@@ -24,7 +24,7 @@ describe('decodeAndVerifyToken', () => {
         expect(result).toEqual(payload);
     })
 
-    it('should null if the token invalid', () => {
+    it('should return null if the token invalid', () => {
         // Arrange
         const token = "invalid-token";
         
@@ -37,6 +37,17 @@ describe('decodeAndVerifyToken', () => {
 
         // Assert
         expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
+        expect(result).toBeNull();
+    })
+
+    it('should return null if token is null', () => {
+        // Arrange
+        const token = "";
+
+        // Act
+        const result = decodeAndVerifyToken(token, publicKey);
+
+        // Assert
         expect(result).toBeNull();
     })
 })
