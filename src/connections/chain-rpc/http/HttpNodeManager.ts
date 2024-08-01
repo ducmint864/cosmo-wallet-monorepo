@@ -8,15 +8,26 @@ import {
  * Manage blockchain nodes
  */
 export abstract class HttpNodeManager {
-	private static _instance: HttpNodeManager; // Singleton instance
+	protected static _instance: HttpNodeManager; // Singleton instance
 
 	protected _urls: Set<string>;
 
 	/**
 	 * Private constructor to ensure singleton instance
 	 */
-	private constructor() {
+	protected constructor() {
 		this._urls = new Set<string>();
+	}
+
+	public static get instance(): HttpNodeManager {
+		if (!this._instance) {
+			throw new Error("HttpNodeManager's concrete instance is not initialized");
+		}
+		
+		return this._instance;
+	}
+
+	public static init(): void {
 	}
 
 	/**
