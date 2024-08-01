@@ -58,4 +58,13 @@ export class CometHttpManager extends HttpNodeManager {
 
 		this._urls.delete(url);
 	}
+
+	// Override
+	public async getNode(): Promise<string> {
+		const url: string = await this._selector.selectCometHttp(
+			this.registeredNodes
+		)
+		
+		return url;
+	}
 }

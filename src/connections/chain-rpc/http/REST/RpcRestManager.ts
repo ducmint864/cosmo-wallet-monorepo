@@ -56,4 +56,13 @@ export class RpcRestManager extends HttpNodeManager {
 
 		this._urls.delete(url);
 	}
+
+	// Override
+	public async getNode(): Promise<string> {
+		const url: string = await this._selector.selectRest(
+			this.registeredNodes
+		);
+
+		return url;
+	}
 }

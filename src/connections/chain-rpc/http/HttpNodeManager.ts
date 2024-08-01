@@ -100,4 +100,5 @@ export abstract class HttpNodeManager {
 	 */
 	public abstract removeNode(url: string): void;
 
+	public abstract getNode(): Promise<string>;
 }
