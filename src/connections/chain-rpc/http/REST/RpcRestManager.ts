@@ -4,21 +4,22 @@ import {
 	HttpNodeManagerErrorCode
 } from "../HttpNodeManagerError";
 import { chainRpcConfig } from "../../../../config";
+import { Selector } from "../../selector/Selector";
 
 export class RpcRestManager extends HttpNodeManager {
 	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.rpcRest.minNodes;
 	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.rpcRest.maxNodes;
 
-	protected constructor() {
-		super();
+	protected constructor(selector: Selector) {
+		super(selector);
 	}
 
-	public static init(): void {
+	public static init(selector: Selector): void {
 		if (RpcRestManager._instance) {
 			throw new Error("Concrete instance of RpcRestManager(HttpNodeManager) is already initialized");
 		}
 
-		this._instance = new RpcRestManager();
+		this._instance = new RpcRestManager(selector);
 	}
 
 	// Override

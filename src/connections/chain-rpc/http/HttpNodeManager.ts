@@ -1,8 +1,4 @@
-import { chainRpcConfig } from "../../../config";
-import {
-	HttpNodeManagerError,
-	HttpNodeManagerErrorCode
-} from "./HttpNodeManagerError";
+import { Selector } from "../selector/Selector";
 
 /**
  * Manage blockchain nodes
@@ -11,23 +7,28 @@ export abstract class HttpNodeManager {
 	protected static _instance: HttpNodeManager; // Singleton instance
 
 	protected _urls: Set<string>;
+	protected _selector: Selector;
 
 	/**
 	 * Private constructor to ensure singleton instance
 	 */
-	protected constructor() {
+	protected constructor(selector: Selector) {
 		this._urls = new Set<string>();
+		this._selector = selector;
 	}
 
 	public static get instance(): HttpNodeManager {
 		if (!this._instance) {
 			throw new Error("HttpNodeManager's concrete instance is not initialized");
 		}
-		
+
 		return this._instance;
 	}
 
-	public static init(): void {
+	public static init(selector: Selector): void { }
+
+	public get selectorClass(): string {
+		return this._selector.constructor.name;
 	}
 
 	/**
@@ -98,4 +99,5 @@ export abstract class HttpNodeManager {
 	 * manager.removeNode("https://node2.com");
 	 */
 	public abstract removeNode(url: string): void;
+
 }

@@ -5,22 +5,23 @@ import {
 
 import { HttpNodeManager } from "../HttpNodeManager";
 import { chainRpcConfig } from "../../../../config";
+import { Selector } from "../../selector/Selector";
 
 export class CometHttpManager extends HttpNodeManager {
 	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.cometBftHttp.minNodes;
 	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.cometBftHttp.maxNodes;
 
-	protected constructor() {
-		super();
+	protected constructor(selector: Selector) {
+		super(selector);
 	}
 
 	// Override
-	public static init(): void {
+	public static init(selector: Selector): void {
 		if (this._instance) {
-			throw new Error("Concrete instance of CometHttpManager(HttpNodeManager) is already initialized");
+			throw new Error("Concrete instance of CometHt		tpManager(HttpNodeManager) is already initialized");
 		}
 
-		this._instance = new CometHttpManager();
+		this._instance = new CometHttpManager(selector);
 	}
 
 	// Override

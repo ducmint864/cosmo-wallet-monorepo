@@ -25,7 +25,7 @@ for (const endpoint of chainRpcConfig.cometBftWebSocket.endpoints) {
 }
 
 // Init CometHttpManager singleton instance
-CometHttpManager.init();
+CometHttpManager.init(selector);
 const cometHttpManager = CometHttpManager.instance;
 registerHttpNodes(
 	cometHttpManager,
@@ -33,7 +33,7 @@ registerHttpNodes(
 );
 
 // Init RpcRestManager singleton instance
-RpcRestManager.init();
+RpcRestManager.init(selector);
 const rpcRestManager = RpcRestManager.instance;
 registerHttpNodes(
 	rpcRestManager,
