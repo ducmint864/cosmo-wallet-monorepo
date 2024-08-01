@@ -68,22 +68,24 @@ const cryptoConfig = {
 	}
 }
 
-const webSocketConfig = {
-	client: {
-		minClientCount: 0,
-		maxClientCount: 5,
-	},
-}
-
 const chainRpcConfig = {
-	minNodeCount: 0,
-	maxNodeCount: 100,
-	devNodes: [
-		{}
-	],
-	rpcRestEndpoints: envCollection.RPC_REST_ENDPOINTS,
-	cometBftHttpEndpoints: envCollection.COMET_BFT_HTTP_ENDPOINTS,
-	cometBftWebSocketEndpoints: envCollection.COMET_BFT_WEBSOCKET_ENDPOINTS,
+	http: {
+		rpcRest: {
+			minNodes: 1,
+			maxNodes: 50,
+			endpoints: envCollection.RPC_REST_ENDPOINTS,
+		},
+		cometBftHttp: {
+			minNodes: 1,
+			maxNodes: 20,
+			endpoints: envCollection.COMET_BFT_HTTP_ENDPOINTS,
+		}
+	},
+	cometBftWebSocket: {
+		minNodes: 1,
+		maxNodes: 5,
+		endpoints: envCollection.COMET_BFT_WEBSOCKET_ENDPOINTS,
+	},
 }
 
 const requestDataConfig = {
@@ -106,7 +108,6 @@ const securityConfig = {
 export {
 	cryptoConfig,
 	authConfig,
-	webSocketConfig,
 	chainRpcConfig,
 	requestDataConfig,
 	securityConfig,

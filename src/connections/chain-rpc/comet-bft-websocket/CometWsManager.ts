@@ -1,5 +1,5 @@
 import WebSocket from "ws";
-import { webSocketConfig } from "../../../config";
+import { chainRpcConfig } from "../../../config";
 import {
 	CometWsManagerError,
 	CometWsManagerErrorCode
@@ -17,14 +17,14 @@ export class CometWsManager {
 	 * 
 	 * The minimum number of clients that can be connected at any given time.
 	 */
-	public static readonly MIN_CLIENT_COUNT: number = webSocketConfig.client.minClientCount;
+	public static readonly MIN_CLIENT_COUNT: number = chainRpcConfig.cometBftWebSocket.minNodes;
 
 	/**
 	 * Maximum client count.
 	 * 
 	 * The maximum number of clients that can be connected at any given time.
 	 */
-	public static readonly MAX_CLIENT_COUNT: number = webSocketConfig.client.maxClientCount;
+	public static readonly MAX_CLIENT_COUNT: number = chainRpcConfig.cometBftWebSocket.maxNodes;;
 
 	/**
 	 * Map of client IDs to WebSocket clients.
@@ -138,7 +138,7 @@ export class CometWsManager {
 	 * console.log(`New client with ID ${id} connected to ${client.url}`);
 	 */
 	public addClient(url: string): WebSocket {
-		if (this.clientCount >= webSocketConfig.client.maxClientCount) {
+		if (this.clientCount >= CometWsManager.MAX_CLIENT_COUNT) {
 			throw new CometWsManagerError(
 				CometWsManagerErrorCode.ERR_MAX_CLIENTS_REACHED
 			);
