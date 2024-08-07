@@ -14,6 +14,12 @@ export class RestRpcManager extends HttpNodeManager {
 		super(selector);
 	}
 
+	// Must override (abstract method)
+	protected override get classRedisKey(): string {
+		return RestRpcManager.name;
+	}
+
+	// Override
 	public static override init(selector: Selector): void {
 		if (RestRpcManager._instance) {
 			throw new Error("Concrete instance of RpcRestManager(HttpNodeManager) is already initialized");
@@ -24,45 +30,31 @@ export class RestRpcManager extends HttpNodeManager {
 
 	// Override
 	// TODO: check if the node is responsive before adding
-	public override registerNode(url: string): void {
-		if (this.registeredNodeCount >= RestRpcManager.MAX_NODE_COUNT) {
+	public override async registerNode(url: string): Promise<void> {
+		const nodeCount: number = await this.getRegisteredNodeCount();
+		if (nodeCount >= RestRpcManager.MAX_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MAX_NODES_REACHED,
 			);
 		}
-
-		if (!url) {
-			throw new HttpNodeManagerError(
-				HttpNodeManagerErrorCode.ERR_INVALID_URL,
-			);
-		}
-
-		if (this.isRegistered(url)) {
-			throw new HttpNodeManagerError(
-				HttpNodeManagerErrorCode.ERR_ALREADY_REGISTERED,
-			);
-		}
-
-		this._urls.add(url);	
+		await super.registerNode(url);
 	}
 
 	// Override
-	public override removeNode(url: string): void {
-		if (this.registeredNodeCount <= RestRpcManager.MIN_NODE_COUNT) {
+	public override async removeNode(url: string): Promise<void> {
+		const nodeCount: number = await this.getRegisteredNodeCount();
+		if (nodeCount <= RestRpcManager.MIN_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED,
 			);
 		}
-
-		this._urls.delete(url);
+		await super.removeNode(url);
 	}
 
 	// Override
 	public override async getNode(): Promise<string> {
-		const url: string = await this._selector.selectRest(
-			this.registeredNodes
-		);
-
+		const registeredNodes: string[] = await this.getRegisteredNodes();
+		const url: string = await this._selector.selectRest(registeredNodes);
 		return url;
 	}
 }
