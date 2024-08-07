@@ -4,7 +4,7 @@ import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../connections";
 import { errorHandler } from "../../errors/middlewares/error-handler";
 import { invalidateToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
 import * as credentialHelper from "../../general/helpers/credentials-helper";
