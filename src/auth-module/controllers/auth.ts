@@ -146,7 +146,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		// Send access token and refresh token
 		const payload: UserAccountJwtPayload = {
 			userAccountId: userAccount.user_account_id,
-			userType: "normal",
+			userType: userAccount.user_type,
 		};
 		const accessToken: string = genToken(
 			payload,
@@ -197,11 +197,15 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 // Issues new access token
 async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const refreshTokenPayload: UserAccountJwtPayload = req.body["decodedRefreshTokenPayload"];
+	const newTokenPayload: UserAccountJwtPayload = {
+		userAccountId: refreshTokenPayload.userAccountId,
+		userType: refreshTokenPayload.userType,
+	};
 
 	try {
 		// Generate a new access token using the payload
 		const accessToken: string = genToken(
-			refreshTokenPayload,
+			newTokenPayload,
 			authConfig.token.accessToken.privateKey,
 			authConfig.token.accessToken.durationStr
 		);
@@ -214,9 +218,8 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // Convert minutes to  milliseconds
 		});
 
-
 		// Generate new csrf-token
-		const csrfToken: string = genCsrfToken(refreshTokenPayload);
+		const csrfToken: string = genCsrfToken(newTokenPayload);
 
 		// Send the new csrf-token to client
 		res.cookie("csrfToken", csrfToken, {
