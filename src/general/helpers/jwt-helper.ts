@@ -2,6 +2,18 @@ import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import "dotenv/config";
+import { user_type_enum } from "@prisma/client";
+
+function genAndTimestampPayload(inputUserAccountId: number, inputUserType: user_type_enum): UserAccountJwtPayload {
+	// Manually set the timestamp to ensure integrity across modules that use UserAccountJwtPayload
+	const argTimestamp: number = Math.floor(Date.now() / 1000); 
+	const payload: UserAccountJwtPayload = {
+		userAccountId: inputUserAccountId,
+		userType: inputUserType,
+		iat: argTimestamp,
+	}
+	return payload;
+}
 
 function genToken(
 	payload: UserAccountJwtPayload,
@@ -67,4 +79,5 @@ export {
 	genToken,
 	invalidateToken,
 	isTokenInvalidated,
+	genAndTimestampPayload,
 }
