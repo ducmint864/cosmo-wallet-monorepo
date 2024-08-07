@@ -16,7 +16,7 @@ export class CometHttpManager extends HttpNodeManager {
 	}
 
 	// Override
-	public static init(selector: Selector): void {
+	public static override init(selector: Selector): void {
 		if (this._instance) {
 			throw new Error("Concrete instance of CometHt		tpManager(HttpNodeManager) is already initialized");
 		}
@@ -26,7 +26,7 @@ export class CometHttpManager extends HttpNodeManager {
 
 	// Override
 	// TODO: Check to see whether the node is responsive before adding
-	public registerNode(url: string): void {
+	public override registerNode(url: string): void {
 		if (this.registeredNodeCount >= CometHttpManager.MAX_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MAX_NODES_REACHED,
@@ -49,7 +49,7 @@ export class CometHttpManager extends HttpNodeManager {
 	}
 
 	// Override
-	public removeNode(url: string): void {
+	public override removeNode(url: string): void {
 		if (this.registeredNodeCount <= CometHttpManager.MIN_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED,
@@ -60,7 +60,7 @@ export class CometHttpManager extends HttpNodeManager {
 	}
 
 	// Override
-	public async getNode(): Promise<string> {
+	public override async getNode(): Promise<string> {
 		const url: string = await this._selector.selectCometHttp(
 			this.registeredNodes
 		)

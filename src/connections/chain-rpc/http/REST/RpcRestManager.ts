@@ -14,7 +14,7 @@ export class RpcRestManager extends HttpNodeManager {
 		super(selector);
 	}
 
-	public static init(selector: Selector): void {
+	public static override init(selector: Selector): void {
 		if (RpcRestManager._instance) {
 			throw new Error("Concrete instance of RpcRestManager(HttpNodeManager) is already initialized");
 		}
@@ -24,7 +24,7 @@ export class RpcRestManager extends HttpNodeManager {
 
 	// Override
 	// TODO: check if the node is responsive before adding
-	public registerNode(url: string): void {
+	public override registerNode(url: string): void {
 		if (this.registeredNodeCount >= RpcRestManager.MAX_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MAX_NODES_REACHED,
@@ -47,7 +47,7 @@ export class RpcRestManager extends HttpNodeManager {
 	}
 
 	// Override
-	public removeNode(url: string): void {
+	public override removeNode(url: string): void {
 		if (this.registeredNodeCount <= RpcRestManager.MIN_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED,
@@ -58,7 +58,7 @@ export class RpcRestManager extends HttpNodeManager {
 	}
 
 	// Override
-	public async getNode(): Promise<string> {
+	public override async getNode(): Promise<string> {
 		const url: string = await this._selector.selectRest(
 			this.registeredNodes
 		);
