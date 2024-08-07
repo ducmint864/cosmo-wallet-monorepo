@@ -16,7 +16,7 @@ export abstract class HttpNodeManager {
 		registeredNodesKey: string
 	} {
 		const keys: any = {};
-		keys["registeredNodesKey"] = this.classRedisKey.concat(".", "registeredNodeKeys");
+		keys["registeredNodesKey"] = this.classRedisKey.concat(".", "registeredNodes");
 
 		return keys;
 	}
