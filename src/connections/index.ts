@@ -3,7 +3,7 @@ import { prisma } from "./database/prisma";
 import { redisClient } from "./redis/redis-client";
 import { HttpNodeManager } from "./chain-rpc/http/types/HttpNodeManager";
 import { CometHttpManager } from "./chain-rpc/http/comet-bft-http/types/CometHttpManager";
-import { RpcRestManager } from "./chain-rpc/http/REST/types/RpcRestManager";
+import { RestRpcManager } from "./chain-rpc/http/REST/types/RpcRestManager";
 import { Selector } from "./chain-rpc/types/Selector";
 import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
@@ -33,8 +33,8 @@ registerHttpNodes(
 );
 
 // Init RpcRestManager singleton instance
-RpcRestManager.init(selector);
-const rpcRestManager = RpcRestManager.instance;
+RestRpcManager.init(selector);
+const rpcRestManager = RestRpcManager.instance;
 registerHttpNodes(
 	rpcRestManager,
 	...chainRpcConfig.http.rpcRest.endpoints

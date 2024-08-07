@@ -6,7 +6,7 @@ import {
 import { chainRpcConfig } from "../../../../../config";
 import { Selector } from "../../../types/Selector";
 
-export class RpcRestManager extends HttpNodeManager {
+export class RestRpcManager extends HttpNodeManager {
 	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.rpcRest.minNodes;
 	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.rpcRest.maxNodes;
 
@@ -15,17 +15,17 @@ export class RpcRestManager extends HttpNodeManager {
 	}
 
 	public static override init(selector: Selector): void {
-		if (RpcRestManager._instance) {
+		if (RestRpcManager._instance) {
 			throw new Error("Concrete instance of RpcRestManager(HttpNodeManager) is already initialized");
 		}
 
-		this._instance = new RpcRestManager(selector);
+		this._instance = new RestRpcManager(selector);
 	}
 
 	// Override
 	// TODO: check if the node is responsive before adding
 	public override registerNode(url: string): void {
-		if (this.registeredNodeCount >= RpcRestManager.MAX_NODE_COUNT) {
+		if (this.registeredNodeCount >= RestRpcManager.MAX_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MAX_NODES_REACHED,
 			);
@@ -48,7 +48,7 @@ export class RpcRestManager extends HttpNodeManager {
 
 	// Override
 	public override removeNode(url: string): void {
-		if (this.registeredNodeCount <= RpcRestManager.MIN_NODE_COUNT) {
+		if (this.registeredNodeCount <= RestRpcManager.MIN_NODE_COUNT) {
 			throw new HttpNodeManagerError(
 				HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED,
 			);
