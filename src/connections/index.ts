@@ -3,8 +3,8 @@ import { prisma } from "./database/prisma";
 import { redisClient } from "./redis/redis-client";
 import { HttpNodeManager } from "./chain-rpc/http/types/HttpNodeManager";
 import { HttpNodeManagerError, HttpNodeManagerErrorCode } from "./chain-rpc/http/types/HttpNodeManagerError"
-import { CometHttpManager } from "./chain-rpc/http/comet-bft-http/types/CometHttpManager";
-import { RestRpcManager } from "./chain-rpc/http/REST/types/RpcRestManager";
+import { CometHttpNodeManager } from "./chain-rpc/http/comet-bft-http/types/CometHttpNodeManager";
+import { BlockchainApiNodeManager } from "./chain-rpc/http/blockchain-app-api/types/BlockchainApiNodeManager";
 import { Selector } from "./chain-rpc/types/Selector";
 import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
@@ -26,18 +26,18 @@ for (const endpoint of chainRpcConfig.cometBftWebSocket.endpoints) {
 }
 
 // Init CometHttpManager singleton instance
-CometHttpManager.init(selector);
-const cometHttpManager = CometHttpManager.instance;
+CometHttpNodeManager.init(selector);
+const cometHttpNodeMan = CometHttpNodeManager.instance;
 registerHttpNodes(
-	cometHttpManager,
+	cometHttpNodeMan,
 	...chainRpcConfig.http.cometBftHttp.endpoints
 ).then();
 
 // Init RpcRestManager singleton instance
-RestRpcManager.init(selector);
-const rpcRestManager = RestRpcManager.instance;
+BlockchainApiNodeManager.init(selector);
+const blockchainApiNodeMan = BlockchainApiNodeManager.instance;
 registerHttpNodes(
-	rpcRestManager,
+	blockchainApiNodeMan,
 	...chainRpcConfig.http.rpcRest.endpoints
 ).then();
 
@@ -61,6 +61,6 @@ export {
 	prisma,
 	redisClient,
 	cometWsManager,
-	cometHttpManager,
-	rpcRestManager,
+	cometHttpNodeMan,
+	blockchainApiNodeMan,
 };

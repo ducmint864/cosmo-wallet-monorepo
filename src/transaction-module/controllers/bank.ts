@@ -8,7 +8,7 @@ import { decrypt, getEncryptionKey, getSigner } from "../../general/helpers/cryp
 import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../general/helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";
 import { writeFile } from "fs"
-import { cometWsManager, cometHttpManager } from "../../connections";
+import { cometWsManager, cometHttpNodeMan } from "../../connections";
 import WebSocket from "ws";
 import createHttpError from "http-errors";
 
@@ -94,7 +94,7 @@ async function sendCoin(
 		const accounts = await signer.getAccounts();
 		console.log(accounts);
 
-		const cometHttpUrl: string = await cometHttpManager.getNode();
+		const cometHttpUrl: string = await cometHttpNodeMan.getNode();
 		const client: SigningStargateClient = await SigningStargateClient.connectWithSigner(
 			cometHttpUrl,
 			signer,
