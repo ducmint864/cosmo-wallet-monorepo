@@ -1,11 +1,11 @@
-import { CometWsManager } from "./chain-rpc/comet-bft-websocket/CometWsManager";
+import { CometWsManager } from "./chain-rpc/comet-bft-websocket/types/CometWsManager";
 import { prisma } from "./database/prisma";
 import { redisClient } from "./redis/redis-client";
-import { HttpNodeManager } from "./chain-rpc/http/HttpNodeManager";
-import { CometHttpManager } from "./chain-rpc/http/comet-bft-http/CometHttpManager";
-import { RpcRestManager } from "./chain-rpc/http/REST/RpcRestManager";
-import { Selector } from "./chain-rpc/selector/Selector";
-import { RandomSelector } from "./chain-rpc/selector/RandomSelector";
+import { HttpNodeManager } from "./chain-rpc/http/types/HttpNodeManager";
+import { CometHttpManager } from "./chain-rpc/http/comet-bft-http/types/CometHttpManager";
+import { RpcRestManager } from "./chain-rpc/http/REST/types/RpcRestManager";
+import { Selector } from "./chain-rpc/types/Selector";
+import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
 
 // Init singleton selector

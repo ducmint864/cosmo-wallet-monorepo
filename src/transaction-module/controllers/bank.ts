@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { prisma } from "../../connections";

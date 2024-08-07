@@ -1,6 +1,6 @@
 import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import "dotenv/config";
 
 function genToken(

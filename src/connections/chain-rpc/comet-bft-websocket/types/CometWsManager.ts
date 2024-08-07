@@ -1,10 +1,10 @@
 import WebSocket from "ws";
-import { chainRpcConfig } from "../../../config";
+import { chainRpcConfig } from "../../../../config";
 import {
 	CometWsManagerError,
 	CometWsManagerErrorCode
 } from "./CometWsManagerError";
-import { Selector } from "../selector/Selector";
+import { Selector } from "../../types/Selector";
 
 /**
  * WebSocketClientManager class.

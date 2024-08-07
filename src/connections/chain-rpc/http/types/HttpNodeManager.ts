@@ -1,4 +1,4 @@
-import { Selector } from "../selector/Selector";
+import { Selector } from "../../types/Selector";
 
 /**
  * Manage blockchain nodes

@@ -1,11 +1,11 @@
 import {
 	HttpNodeManagerError,
 	HttpNodeManagerErrorCode,
-} from "../HttpNodeManagerError";
+} from "../../types/HttpNodeManagerError";
 
-import { HttpNodeManager } from "../HttpNodeManager";
-import { chainRpcConfig } from "../../../../config";
-import { Selector } from "../../selector/Selector";
+import { HttpNodeManager } from "../../types/HttpNodeManager";
+import { chainRpcConfig } from "../../../../../config";
+import { Selector } from "../../../types/Selector";
 
 export class CometHttpManager extends HttpNodeManager {
 	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.cometBftHttp.minNodes;

@@ -1,10 +1,10 @@
-import { HttpNodeManager } from "../HttpNodeManager";
+import { HttpNodeManager } from "../../types/HttpNodeManager";
 import { 
 	HttpNodeManagerError,
 	HttpNodeManagerErrorCode
-} from "../HttpNodeManagerError";
-import { chainRpcConfig } from "../../../../config";
-import { Selector } from "../../selector/Selector";
+} from "../../types/HttpNodeManagerError";
+import { chainRpcConfig } from "../../../../../config";
+import { Selector } from "../../../types/Selector";
 
 export class RpcRestManager extends HttpNodeManager {
 	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.rpcRest.minNodes;

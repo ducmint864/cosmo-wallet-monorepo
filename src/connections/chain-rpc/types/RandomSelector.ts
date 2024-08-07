@@ -1,8 +1,8 @@
 import { error } from "console";
 import { Selector } from "./Selector";
 import { WebSocket } from "ws";
-import { CometWsManager } from "../comet-bft-websocket/CometWsManager";
-import { CometWsUtil } from "../comet-bft-websocket/CometWsUtil";
+import { CometWsManager } from "../comet-bft-websocket/types/CometWsManager";
+import { CometWsUtil } from "../comet-bft-websocket/types/CometWsUtil";
 
 export class RandomSelector implements Selector {
 	protected getRandomElement<T>(array: Array<T>): T {
