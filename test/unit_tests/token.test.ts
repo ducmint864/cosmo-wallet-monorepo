@@ -78,4 +78,13 @@ describe('isTokenInvalidated', () => {
         expect(redisClient.connect).toHaveBeenCalledTimes(1);
     });
     
+    it('should return true when received an error', async () => {
+        Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
+        (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
+        (redisClient.get as jest.Mock).mockRejectedValue(new Error('this is an error'));
+
+        const result = await isTokenInvalidated('testToken');
+        expect(result).toBe(true);
+    })
+
 })
