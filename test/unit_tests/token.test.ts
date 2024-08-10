@@ -22,7 +22,33 @@ describe('genToken', () => {
         const token = genToken(payload, secret, duration);
         const decoded = jwt.verify(token, secret);
         expect(decoded).toEqual(payload);
-    })
+    });
+
+    it('return a valid token with provided decode algorithms', async () => {
+        const payload: UserAccountJwtPayload = {
+            userAccountId: 2,
+        };
+        const secret = "wakanda forever";
+        const duration = "1hours";
+        const algorithm1 = "RS256";
+        const algorithm2 = "PS256";
+        const algorithm3 = "HS256";
+
+        (jwt.verify as jest.Mock).mockReturnValue(payload);
+        
+        const token1 = genToken(payload, secret, duration, algorithm1);
+        const token2 = genToken(payload, secret, duration, algorithm2);
+        const token3 = genToken(payload, secret, duration, algorithm3);
+
+        const decoded1 = jwt.verify(token1, secret, { algorithms: [algorithm1] });
+        const decoded2 = jwt.verify(token2, secret, { algorithms: [algorithm2] });
+        const decoded3 = jwt.verify(token3, secret, { algorithms: [algorithm3] });
+
+        const check = decoded1 === decoded2 && decoded2 === decoded3 && decoded3 === payload;
+        expect(check).toBe(true);
+    });
+
+    
 })
 
 describe('decodeAndVerifyToken', () => {
@@ -45,7 +71,7 @@ describe('decodeAndVerifyToken', () => {
         // Assert
         expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
         expect(result).toEqual(payload);
-    })
+    });
 
     it('should return null if the token invalid', () => {
         // Arrange
@@ -61,7 +87,7 @@ describe('decodeAndVerifyToken', () => {
         // Assert
         expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
         expect(result).toBeNull();
-    })
+    });
 
     it('should return null if token is null', () => {
         // Arrange
@@ -72,7 +98,7 @@ describe('decodeAndVerifyToken', () => {
 
         // Assert
         expect(result).toBeNull();
-    })
+    });
 })
 
 jest.mock('../../src/connections', () => ({
@@ -112,7 +138,7 @@ describe('isTokenInvalidated', () => {
         
         // Assert
         expect(result).toBe(true);
-    })
+    });
 
     it('return true if redis return data', async () => {
         // Arrange
@@ -125,7 +151,7 @@ describe('isTokenInvalidated', () => {
         
         // Assert
         expect(result).toBe(true);
-    })
+    });
 
     it('return false if redis fail to return data', async () => {
         // Arrange
@@ -138,5 +164,5 @@ describe('isTokenInvalidated', () => {
         
         // Assert
         expect(result).toBe(true);
-    })
+    });
 })
