@@ -3,10 +3,27 @@ import jwt from "jsonwebtoken";
 import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
 import {redisClient} from "../../src/connections";
 
+jest.mock('jsonwebtoken'); 
 
+describe('genToken', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+    })
 
-jest.mock('jsonwebtoken');
-jest.mock('../../src/connections');
+    it('should return a valid token', async () => {
+        const payload: UserAccountJwtPayload = {
+            userAccountId: 1,
+        };
+        const secret = "this is a secret string.. shush";
+        const duration = "5hours";
+
+        (jwt.verify as jest.Mock).mockReturnValue(payload);
+
+        const token = genToken(payload, secret, duration);
+        const decoded = jwt.verify(token, secret);
+        expect(decoded).toEqual(payload);
+    })
+})
 
 describe('decodeAndVerifyToken', () => {
     const publicKey = "mockPubKey";
@@ -58,7 +75,7 @@ describe('decodeAndVerifyToken', () => {
     })
 })
 
-jest.mock('../../src/connections/redis/redis-client', () => ({
+jest.mock('../../src/connections', () => ({
     redisClient: {
         isOpen: false,
         connect: jest.fn(),
