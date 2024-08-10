@@ -87,4 +87,21 @@ describe('isTokenInvalidated', () => {
         expect(result).toBe(true);
     })
 
+    it('return true if redis return data', async () => {
+        Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
+        (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
+        (redisClient.get as jest.Mock).mockResolvedValue('data');
+
+        const result = await isTokenInvalidated('testToken');
+        expect(result).toBe(true);
+    })
+
+    it('return false if redis fail to return data', async () => {
+        Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
+        (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
+        (redisClient.get as jest.Mock).mockResolvedValue(undefined);
+
+        const result = await isTokenInvalidated('testToken');
+        expect(result).toBe(true);
+    })
 })
