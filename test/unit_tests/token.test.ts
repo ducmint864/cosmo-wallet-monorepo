@@ -182,7 +182,7 @@ describe('isTokenInvalidated', () => {
         (redisClient.get as jest.Mock).mockResolvedValue(undefined);
 
         // Act
-        const result = await isTokenInvalidated('testToken');
+        const result = await isTokenInvalidated('invalidatedToken');
         
         // Assert
         expect(result).toBe(true);
