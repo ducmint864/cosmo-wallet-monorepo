@@ -38,43 +38,34 @@ describe('genToken', () => {
         expect(jwt.verify(badToken, "pubKey2")).not.toEqual(payload)
     });
 
-    // it('return a valid token with provided decode algorithms', async () => {
-    //     const payload: UserAccountJwtPayload = {
-    //         userAccountId: 2,
-    //     };
-    //     const secret = "wakanda forever";
-    //     const duration = "1hours";
-    //     const algorithm1: Algorithm = "RS256";
-    //     const algorithm2: Algorithm = "PS256";
-    //     const algorithm3: Algorithm = "HS256";
+    it('return a valid token with provided decode algorithms', async () => {
+        /**
+         * @note not a very good test
+         * @dev but this test that the function will strictly work for Algorithm type 
+         * try add a string for option param and it won't run
+         */
+        const payload: UserAccountJwtPayload = {
+            userAccountId: 2,
+        };
+        const secret = "dont spill the beans";
+        const duration = "1hours";
+        const algorithm1: Algorithm = "RS256";
+        const algorithm2: Algorithm = "PS256";
+
+        (jwt.verify as jest.Mock).mockImplementation((token: string, pubKey: string, options: { algorithms: Algorithm[]}) => {
+            if(secret == "dont spill the beans" && pubKey == "BEAN")
+                return payload;
+        })
         
-    //     const token1 = genToken(payload, secret, duration, algorithm1);
-    //     const token2 = genToken(payload, secret, duration, algorithm2);
-    //     const token3 = genToken(payload, secret, duration, algorithm3);
+        const token1 = genToken(payload, secret, duration, algorithm1);
+        const token2 = genToken(payload, secret, duration, algorithm2);
 
-    //     const decoded1 = jwt.verify(token1, secret, { algorithms: [algorithm1] });
-    //     const decoded2 = jwt.verify(token2, secret, { algorithms: [algorithm2] });
-    //     const decoded3 = jwt.verify(token3, secret, { algorithms: [algorithm3] });
+        const decoded1 = jwt.verify(token1, "BEAN", { algorithms: [algorithm1] });
+        const decoded2 = jwt.verify(token2, "BEAN", { algorithms: [algorithm2] });
 
-    //     expect(decoded1).toEqual(payload);
-    //     expect(decoded2).toEqual(payload);
-    //     expect(decoded3).toEqual(payload);
-    // });
-
-    // it('should not return the payload with wrong token', ()=> {
-    //     const payload: UserAccountJwtPayload = {
-    //         userAccountId: 3,
-    //     };
-    //     const secret = "okay";
-    //     const duration = "10minutes";
-
-    //     const rightToken = genToken(payload, secret, duration);
-    //     const wrongToken = "this is the wrong token";
-
-    //     expect(jwt.verify(wrongToken, secret)).not.toBe(payload);
-    //     expect(jwt.verify(rightToken, secret)).toBe(payload);
-    // })
-    
+        expect(decoded1).toEqual(payload);
+        expect(decoded2).toEqual(payload);
+    });
 })
 
 describe('decodeAndVerifyToken', () => {
