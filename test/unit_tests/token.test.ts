@@ -1,10 +1,12 @@
-import { decodeAndVerifyToken, isTokenInvalidated } from "../../src/general/helpers/jwt-helper";
+import { decodeAndVerifyToken, isTokenInvalidated, genToken } from "../../src/general/helpers/jwt-helper";
 import jwt from "jsonwebtoken";
 import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
 import {redisClient} from "../../src/connections";
 
-jest.mock("jsonwebtoken");
-jest.mock("../../src/connections");
+
+
+jest.mock('jsonwebtoken');
+jest.mock('../../src/connections');
 
 describe('decodeAndVerifyToken', () => {
     const publicKey = "mockPubKey";
@@ -70,38 +72,54 @@ describe('isTokenInvalidated', () => {
     });
 
     it('will connect to redis if redis is not already open', async () => {
+        // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
         (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
         (redisClient.get as jest.Mock).mockResolvedValue(null);
 
+        // Act
         await isTokenInvalidated('testToken');
+
+        //Assert
         expect(redisClient.connect).toHaveBeenCalledTimes(1);
     });
     
     it('should return true when received an error', async () => {
+        // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
         (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
         (redisClient.get as jest.Mock).mockRejectedValue(new Error('this is an error'));
 
+        // Act
         const result = await isTokenInvalidated('testToken');
+        
+        // Assert
         expect(result).toBe(true);
     })
 
     it('return true if redis return data', async () => {
+        // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
         (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
         (redisClient.get as jest.Mock).mockResolvedValue('data');
 
+        // Act
         const result = await isTokenInvalidated('testToken');
+        
+        // Assert
         expect(result).toBe(true);
     })
 
     it('return false if redis fail to return data', async () => {
+        // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
         (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
         (redisClient.get as jest.Mock).mockResolvedValue(undefined);
 
+        // Act
         const result = await isTokenInvalidated('testToken');
+        
+        // Assert
         expect(result).toBe(true);
     })
 })
