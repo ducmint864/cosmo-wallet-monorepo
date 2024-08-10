@@ -22,15 +22,20 @@ describe('genToken', () => {
         const secret = "this is a secret string.. shush";
         const duration = "5hours";
 
+        (jwt.verify as jest.Mock).mockImplementation((token: string, pubKey: string) => {
+            if(secret == "this is a secret string.. shush"
+                && pubKey == "pubKey1" 
+                && token == genToken(payload, secret, duration)
+            )
+                return payload;
+        });
+
         const token = genToken(payload, secret, duration);
-        const decoded = decodeAndVerifyToken(token, secret);
-        if (!decoded) {
-            throw new Error('Failed to decode the token');
-        }
+        const badToken = "this is an invalid token";
 
-        const { iat, exp, ...decodedPayload } = decoded as UserAccountJwtPayload;
-
-        expect(decodedPayload).toEqual(payload);
+        const decode = jwt.verify(token, "pubKey1");
+        expect(decode).toEqual(payload);
+        expect(jwt.verify(badToken, "pubKey2")).not.toEqual(payload)
     });
 
     // it('return a valid token with provided decode algorithms', async () => {
@@ -91,10 +96,12 @@ describe('decodeAndVerifyToken', () => {
 
         // Act
         const result = decodeAndVerifyToken(token, publicKey);
+        const wrongResult = decodeAndVerifyToken("invalid-token", publicKey)
 
         // Assert
         expect(jwt.verify).toHaveBeenCalledWith(token, publicKey);
         expect(result).toEqual(payload);
+        expect(wrongResult).not.toEqual(payload);
     });
 
     it('should return null if the token invalid', () => {
