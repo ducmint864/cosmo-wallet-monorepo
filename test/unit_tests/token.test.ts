@@ -1,8 +1,9 @@
-import { genToken, decodeAndVerifyToken, isTokenInvalidated } from "../../src/general/helpers/jwt-helper";
+import { genToken, decodeAndVerifyToken, isTokenInvalidated, invalidateToken } from "../../src/general/helpers/jwt-helper";
 import jwt, { Algorithm } from "jsonwebtoken";
 import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
 import {redisClient} from "../../src/connections";
 import { decode } from "punycode";
+import exp from "constants";
 
 jest.mock('jsonwebtoken', () => ({
     verify: jest.fn(),
@@ -65,7 +66,7 @@ describe('genToken', () => {
         expect(decoded1).toEqual(payload);
         expect(decoded2).toEqual(payload);
     });
-})
+});
 
 describe('decodeAndVerifyToken', () => {
 
@@ -168,14 +169,14 @@ describe('decodeAndVerifyToken', () => {
 
         expect(result).toEqual(_result);
     })
-
-})
+});
 
 jest.mock('../../src/connections', () => ({
     redisClient: {
         isOpen: false,
         connect: jest.fn(),
         get: jest.fn(),
+        set: jest.fn(),
     },
 }));
 
@@ -235,4 +236,20 @@ describe('isTokenInvalidated', () => {
         // Assert
         expect(result).toBe(true);
     });
-})
+});
+
+describe('invalidateToken', () => {
+    beforeEach(()=>{
+        jest.clearAllMocks();
+    });
+
+    it('should throw an error when catch an error', async () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 162, exp: 1200}
+        const token: string = "valid-token"; 
+
+        Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
+        (redisClient.set as jest.Mock).mockRejectedValue(new Error('this is an error'));
+
+        await expect(() => invalidateToken(token, payload)).rejects.toThrow('this is an error');
+    })
+});
