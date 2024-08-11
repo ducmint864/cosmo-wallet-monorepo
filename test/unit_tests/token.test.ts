@@ -2,6 +2,7 @@ import { genToken, decodeAndVerifyToken, isTokenInvalidated } from "../../src/ge
 import jwt, { Algorithm } from "jsonwebtoken";
 import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
 import {redisClient} from "../../src/connections";
+import { decode } from "punycode";
 
 jest.mock('jsonwebtoken', () => ({
     verify: jest.fn(),
@@ -123,20 +124,34 @@ describe('decodeAndVerifyToken', () => {
 
     it('should not be case sensitive for token', () => {
         const payload: UserAccountJwtPayload = {userAccountId: 72}
-        const validToken = "lqk96we2uiso1sd3ufdpo19asd78";
-        const invalidToken = "lqk96wE2UIso1sd3ufdpo19Asd78";
+        const validToken: string = "lqk96we2uiso1sd3ufdpo19asd78";
+        const invalidToken: string = "lqk96wE2UIso1sd3ufdpo19Asd78";
 
         (jwt.verify as jest.Mock).mockImplementation((token: string) => {
-            if (token = validToken)
-                return payload;
+            if (token = validToken) return payload;
         })
 
         const result = decodeAndVerifyToken(validToken, publicKey);
-        const wrongResult = decodeAndVerifyToken(invalidToken, publicKey);
+        const _result = decodeAndVerifyToken(invalidToken, publicKey);
 
-        expect(result).toEqual(wrongResult);
+        expect(result).toEqual(_result);
     })
 
+    it('should not be case sensitive for public key', () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 892}
+        const key1: string = "0xa1b2c3d4e5f6g7h";
+        const _key1: string = "0xA1b2C3d4e5F6g7h";
+        const validToken: string = "AccessGranted";
+
+        (jwt.verify as jest.Mock).mockImplementation((publicKey: string) => {
+            if (publicKey = key1) return payload;
+        })
+
+        const result = decodeAndVerifyToken(validToken, key1);
+        const _result = decodeAndVerifyToken(validToken, _key1);
+
+        expect(result).toEqual(_result);
+    })
 })
 
 jest.mock('../../src/connections', () => ({
