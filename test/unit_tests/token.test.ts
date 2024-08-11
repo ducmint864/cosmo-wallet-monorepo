@@ -2,8 +2,6 @@ import { genToken, decodeAndVerifyToken, isTokenInvalidated } from "../../src/ge
 import jwt, { Algorithm } from "jsonwebtoken";
 import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
 import {redisClient} from "../../src/connections";
-import { verify } from "crypto";
-import exp from "constants";
 
 jest.mock('jsonwebtoken', () => ({
     verify: jest.fn(),
@@ -99,8 +97,9 @@ describe('decodeAndVerifyToken', () => {
         // Arrange
         const token = "invalid-token";
         
-        (jwt.verify as jest.Mock).mockImplementation(() => {
-            throw new Error("Invalid token");
+        (jwt.verify as jest.Mock).mockImplementation((token: string) => {
+            if (token != "valid-token")
+                throw new Error("Invalid token");
           });
         
         // Act
@@ -121,6 +120,23 @@ describe('decodeAndVerifyToken', () => {
         // Assert
         expect(result).toBeNull();
     });
+
+    it('should not be case sensitive for token', () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 72}
+        const validToken = "lqk96we2uiso1sd3ufdpo19asd78";
+        const invalidToken = "lqk96wE2UIso1sd3ufdpo19Asd78";
+
+        (jwt.verify as jest.Mock).mockImplementation((token: string) => {
+            if (token = validToken)
+                return payload;
+        })
+
+        const result = decodeAndVerifyToken(validToken, publicKey);
+        const wrongResult = decodeAndVerifyToken(invalidToken, publicKey);
+
+        expect(result).toEqual(wrongResult);
+    })
+
 })
 
 jest.mock('../../src/connections', () => ({
