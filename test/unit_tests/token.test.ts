@@ -68,7 +68,6 @@ describe('genToken', () => {
 })
 
 describe('decodeAndVerifyToken', () => {
-    const publicKey = "mockPubKey";
 
     beforeEach(() => {
         jest.clearAllMocks();
@@ -76,6 +75,7 @@ describe('decodeAndVerifyToken', () => {
 
     it('should return the payload if the token is valid', () => {
         // Arrange
+        const publicKey = "mockPubKey";
         const token = "valid-token";
         const payload: UserAccountJwtPayload = {userAccountId: 123};
         
@@ -96,6 +96,7 @@ describe('decodeAndVerifyToken', () => {
 
     it('should return null if the token invalid', () => {
         // Arrange
+        const publicKey = "mockPubKey";
         const token = "invalid-token";
         
         (jwt.verify as jest.Mock).mockImplementation((token: string) => {
@@ -111,19 +112,34 @@ describe('decodeAndVerifyToken', () => {
         expect(result).toBeNull();
     });
 
-    it('should return null if token is null', () => {
+    it('should return null if token is an empty string', () => {
         // Arrange
-        const token = "";
+        const publicKey = "mockPubKey";
 
         // Act
-        const result = decodeAndVerifyToken(token, publicKey);
+        const result = decodeAndVerifyToken("", publicKey);
 
         // Assert
         expect(result).toBeNull();
     });
 
+    it('should return null if no public key is an empty string', ()=> {
+        const token = "valid-token";
+
+        const result = decodeAndVerifyToken(token, "");
+
+        expect(result).toBeNull();
+    })
+
+    it('should return null if both params is an empty string', ()=> {
+        const result = decodeAndVerifyToken("", "");
+        
+        expect(result).toBeNull();
+    })
+
     it('should not be case sensitive for token', () => {
         const payload: UserAccountJwtPayload = {userAccountId: 72}
+        const publicKey = "mockPubKey";
         const validToken: string = "lqk96we2uiso1sd3ufdpo19asd78";
         const invalidToken: string = "lqk96wE2UIso1sd3ufdpo19Asd78";
 
@@ -152,6 +168,7 @@ describe('decodeAndVerifyToken', () => {
 
         expect(result).toEqual(_result);
     })
+
 })
 
 jest.mock('../../src/connections', () => ({
