@@ -273,5 +273,18 @@ describe('invalidateToken', () => {
             .rejects.toThrow("Token payload doesn't have expiry field");
     })
 
-   
+    it('should calculate remainingTTL of a token when called and set it in redis', async () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 1700000000}
+        const token: string = "valid-token";
+
+        jest.spyOn(Date, 'now').mockImplementation(() => 1699999000000);
+        const redisSetMock = jest.spyOn(redisClient, 'set').mockResolvedValue('OK');
+       
+        await invalidateToken(token, payload);
+        const expectedTTL = payload.exp - Math.floor(Date.now() / 1000); // if an error raised, ignore it! exp is declared
+
+        expect(redisSetMock).toHaveBeenCalledWith(token, "invalidated", { EX: expectedTTL });
+    }) 
+
+    
 });
