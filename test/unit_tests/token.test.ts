@@ -278,7 +278,8 @@ describe('invalidateToken', () => {
         const token: string = "valid-token";
 
         jest.spyOn(Date, 'now').mockImplementation(() => 1699999000000);
-        const redisSetMock = jest.spyOn(redisClient, 'set').mockResolvedValue('OK');
+        const redisSetMock = jest.spyOn(redisClient, 'set')
+            .mockResolvedValue('OK');
        
         await invalidateToken(token, payload);
         const expectedTTL = payload.exp - Math.floor(Date.now() / 1000); // if an error raised, ignore it! exp is declared
@@ -286,5 +287,11 @@ describe('invalidateToken', () => {
         expect(redisSetMock).toHaveBeenCalledWith(token, "invalidated", { EX: expectedTTL });
     }) 
 
-    
+    it('should do throw error if token is an empty string', async () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 120000000000}
+        const token: string = "";
+
+        await invalidateToken(token, payload);
+        expect(redisClient.set).not.toHaveBeenCalled();
+    })
 });
