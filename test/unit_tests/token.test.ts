@@ -22,12 +22,13 @@ describe('genToken', () => {
         const secret = "this is a secret string.. shush";
         const duration = "5hours";
 
-        (jwt.verify as jest.Mock).mockImplementation((token: string, pubKey: string) => {
-            if(secret == "this is a secret string.. shush"
-                && pubKey == "pubKey1" 
-                && token == genToken(payload, secret, duration)
-            )
-                return payload;
+        (jwt.verify as jest.Mock)
+            .mockImplementation((token: string, pubKey: string) => {
+                if(secret == "this is a secret string.. shush"
+                    && pubKey == "pubKey1" 
+                    && token == genToken(payload, secret, duration)
+                )
+                    return payload;
         });
 
         const token = genToken(payload, secret, duration);
@@ -52,9 +53,11 @@ describe('genToken', () => {
         const algorithm1: Algorithm = "RS256";
         const algorithm2: Algorithm = "PS256";
 
-        (jwt.verify as jest.Mock).mockImplementation((token: string, pubKey: string, options: { algorithms: Algorithm[]}) => {
-            if(secret == "dont spill the beans" && pubKey == "BEAN")
-                return payload;
+        (jwt.verify as jest.Mock)
+            .mockImplementation((token: string, pubKey: string, options: { algorithms: Algorithm[]}) => {
+                if(secret == "dont spill the beans" 
+                        && pubKey == "BEAN")
+                    return payload;
         })
         
         const token1 = genToken(payload, secret, duration, algorithm1);
@@ -80,9 +83,10 @@ describe('decodeAndVerifyToken', () => {
         const token = "valid-token";
         const payload: UserAccountJwtPayload = {userAccountId: 123};
         
-        (jwt.verify as jest.Mock).mockImplementation((token: string) => {
-            if(token == "valid-token")
-                return payload;
+        (jwt.verify as jest.Mock)
+            .mockImplementation((token: string) => {
+                if(token == "valid-token")
+                    return payload;
         });
 
         // Act
@@ -100,10 +104,11 @@ describe('decodeAndVerifyToken', () => {
         const publicKey = "mockPubKey";
         const token = "invalid-token";
         
-        (jwt.verify as jest.Mock).mockImplementation((token: string) => {
-            if (token != "valid-token")
-                throw new Error("Invalid token");
-          });
+        (jwt.verify as jest.Mock)
+            .mockImplementation((token: string) => {
+                if (token != "valid-token")
+                    throw new Error("Invalid token");
+        });
         
         // Act
         const result = decodeAndVerifyToken(token, publicKey);
@@ -138,20 +143,21 @@ describe('decodeAndVerifyToken', () => {
         expect(result).toBeNull();
     })
 
-    it('should not be case sensitive for token', () => {
+    it('should be case sensitive for token', () => {
         const payload: UserAccountJwtPayload = {userAccountId: 72}
         const publicKey = "mockPubKey";
         const validToken: string = "lqk96we2uiso1sd3ufdpo19asd78";
         const invalidToken: string = "lqk96wE2UIso1sd3ufdpo19Asd78";
 
-        (jwt.verify as jest.Mock).mockImplementation((token: string) => {
-            if (token = validToken) return payload;
+        (jwt.verify as jest.Mock)
+            .mockImplementation((token: string) => {
+                if (token == validToken) return payload;
         })
 
         const result = decodeAndVerifyToken(validToken, publicKey);
         const _result = decodeAndVerifyToken(invalidToken, publicKey);
 
-        expect(result).toEqual(_result);
+        expect(result).not.toEqual(_result);
     })
 
     it('should not be case sensitive for public key', () => {
@@ -161,7 +167,7 @@ describe('decodeAndVerifyToken', () => {
         const validToken: string = "AccessGranted";
 
         (jwt.verify as jest.Mock).mockImplementation((publicKey: string) => {
-            if (publicKey = key1) return payload;
+            if (publicKey == key1) return payload;
         })
 
         const result = decodeAndVerifyToken(validToken, key1);
@@ -188,8 +194,10 @@ describe('isTokenInvalidated', () => {
     it('will connect to redis if redis is not already open', async () => {
         // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
-        (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
-        (redisClient.get as jest.Mock).mockResolvedValue(null);
+        (redisClient.connect as jest.Mock)
+            .mockResolvedValue(undefined);
+        (redisClient.get as jest.Mock)
+            .mockResolvedValue(null);
 
         // Act
         await isTokenInvalidated('testToken');
@@ -201,8 +209,10 @@ describe('isTokenInvalidated', () => {
     it('should return true when received an error', async () => {
         // Arrange
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
-        (redisClient.connect as jest.Mock).mockResolvedValue(undefined);
-        (redisClient.get as jest.Mock).mockRejectedValue(new Error('this is an error'));
+        (redisClient.connect as jest.Mock)
+            .mockResolvedValue(undefined);
+        (redisClient.get as jest.Mock)
+            .mockRejectedValue(new Error('this is an error'));
 
         // Act
         const result = await isTokenInvalidated('testToken');
@@ -248,8 +258,20 @@ describe('invalidateToken', () => {
         const token: string = "valid-token"; 
 
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
-        (redisClient.set as jest.Mock).mockRejectedValue(new Error('this is an error'));
+        (redisClient.set as jest.Mock)
+            .mockRejectedValue(new Error('this is an error'));
 
-        await expect(() => invalidateToken(token, payload)).rejects.toThrow('this is an error');
+        await expect(() => invalidateToken(token, payload))
+            .rejects.toThrow('this is an error');
+    });
+
+    it("should throw an error when token payload doesn't have a expiry feild", async () => {
+        const payload: UserAccountJwtPayload = {userAccountId: 326};
+        const token: string = "valid-token";
+
+        await expect(() => invalidateToken(token, payload))
+            .rejects.toThrow("Token payload doesn't have expiry field");
     })
+
+   
 });
