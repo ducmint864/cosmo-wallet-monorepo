@@ -7,8 +7,8 @@ import { chainRpcConfig } from "../../../../../config";
 import { Selector } from "../../../types/Selector";
 
 export class BlockchainApiNodeManager extends HttpNodeManager {
-	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.rpcRest.minNodes;
-	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.rpcRest.maxNodes;
+	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.blockchainApp.minNodes;
+	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.blockchainApp.maxNodes;
 
 	protected constructor(selector: Selector) {
 		super(selector);

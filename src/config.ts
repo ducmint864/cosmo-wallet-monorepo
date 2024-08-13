@@ -70,12 +70,12 @@ const cryptoConfig = {
 
 const chainRpcConfig = {
 	http: {
-		rpcRest: {
+		blockchainApp: {
 			minNodes: 1,
 			maxNodes: 50,
-			endpoints: envCollection.RPC_REST_ENDPOINTS,
+			endpoints: envCollection.BLOCKCHAIN_APP_HTTP_ENDPOINTS,
 		},
-		cometBftHttp: {
+		cometBft: {
 			minNodes: 1,
 			maxNodes: 20,
 			endpoints: envCollection.COMET_BFT_HTTP_ENDPOINTS,

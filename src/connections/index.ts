@@ -31,7 +31,7 @@ CometHttpNodeManager.init(selector);
 const cometHttpNodeMan = CometHttpNodeManager.instance;
 registerHttpNodes(
 	cometHttpNodeMan,
-	...chainRpcConfig.http.cometBftHttp.endpoints
+	...chainRpcConfig.http.cometBft.endpoints
 ).then();
 
 // Init RpcRestManager singleton instance
@@ -39,7 +39,7 @@ BlockchainApiNodeManager.init(selector);
 const blockchainApiNodeMan = BlockchainApiNodeManager.instance;
 registerHttpNodes(
 	blockchainApiNodeMan,
-	...chainRpcConfig.http.rpcRest.endpoints
+	...chainRpcConfig.http.blockchainApp.endpoints
 ).then();
 
 async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[]): Promise<void> {

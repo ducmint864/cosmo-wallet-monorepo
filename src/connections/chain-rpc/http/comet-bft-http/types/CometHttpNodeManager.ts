@@ -8,8 +8,8 @@ import { chainRpcConfig } from "../../../../../config";
 import { Selector } from "../../../types/Selector";
 
 export class CometHttpNodeManager extends HttpNodeManager {
-	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.cometBftHttp.minNodes;
-	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.cometBftHttp.maxNodes;
+	public static readonly MIN_NODE_COUNT: number = chainRpcConfig.http.cometBft.minNodes;
+	public static readonly MAX_NODE_COUNT: number = chainRpcConfig.http.cometBft.maxNodes;
 
 	protected constructor(selector: Selector) {
 		super(selector);
