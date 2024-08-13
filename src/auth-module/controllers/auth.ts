@@ -198,8 +198,18 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 }
 
 
-// Issues new access token
+// Issues new access token ()
 async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+	// Refusal of service when access token is present and still viable
+	const accessToken: string = req.cookies["accessToken"];
+	const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, authConfig.token.accessToken.publicKey);
+	if (accessTokenPayload !== null) {
+		res.status(409).json({
+			message: "Access token is still viable, no new token issued",
+		});
+	}
+
+	// decodedRefreshTokenPayload property is injected into request body by the 'requireRefreshToken' middleware
 	const refreshTokenPayload: UserAccountJwtPayload = req.body["decodedRefreshTokenPayload"];
 	const newTokenPayload: UserAccountJwtPayload = {
 		userAccountId: refreshTokenPayload.userAccountId,
