@@ -81,22 +81,35 @@ describe('getDerivedAcccount', () => {
 });
 
 
-const saltLength: number = 32;
-describe('encrypt', () => {
-})
+describe('encrypt and decrypt', () => {
+    /**
+     * @dev variables arrange for the tests
+     */
+    const saltLength: number = 32;
+    const mnemonic: string = "test test test test test test test test test test test junk";
+    const _email: string = "thisisanemail@gmail.com";
+    const _username: string = "User";
+    const _password: string = "password";
+    const _pbkdf2Salt: Buffer = Buffer.concat([Buffer.from
+            (`${_email}${_username}`), randomBytes(saltLength)]);
+    
+    
+    describe('encrypt', () => {
+        it('should encrypt the mnemonic', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const encryptedMnemonic = encrypt(mnemonic, encryptionKey);
 
-
-describe('getEncryptionKey', () => {
-    it('should return an encryption key', async () => {
-        const _email: string = "lmao@troll.com";
-        const _username: string = "GoodByeWorld";
-        const _password: string = "password12345";
-        const _pbkdf2Salt: Buffer = Buffer.concat(
-			[Buffer.from(`${_email}${_username}`),
-			randomBytes(saltLength)]
-		);
-
-        const encryptionKey = await getEncryptionKey(_password, _pbkdf2Salt);
-        expect(encryptionKey).not.toBeNull();
+            expect(encryptedMnemonic).not.toBeNull();
+            expect(encryptedMnemonic.encrypted.toString())
+                .not.toBe(mnemonic);
+        })
+    })
+            
+            
+    describe('getEncryptionKey', () => {
+        it('should return an encryption key', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            expect(encryptionKey).not.toBeNull();
+        })
     })
 })
