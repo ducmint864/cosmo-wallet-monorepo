@@ -51,5 +51,13 @@ describe('getDerivedAcccount', () => {
         const expectedAccount_address: string = 'thasa1ca600p6lwp84dzvrwxmyyjmwda3j34l64eusxv';
 
         expect(derivedAccount.address).toBe(expectedAccount_address);  
+    });
+
+    it('should return an error when using an invalid mnemonic', async () => {
+        const mnemonic: string = "test test test test test test test test test test test test";
+        const hdPath: HdPath = stringToHdPath("m/44'/0'/0'/0/0");
+
+        await expect(() => getDerivedAccount(mnemonic, hdPath))
+            .rejects.toThrow("Invalid mnemonic checksum");
     })
 })
