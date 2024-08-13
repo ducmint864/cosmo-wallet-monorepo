@@ -1,9 +1,10 @@
-import {makeHDPath, getDerivedAccount} from "../../src/general/helpers/crypto-helper"
+import {makeHDPath, getDerivedAccount, encrypt, getEncryptionKey} from "../../src/general/helpers/crypto-helper"
 import {HdPath} from "@cosmjs/crypto"
 import { cryptoConfig } from "../../src/config"
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import { accessSync } from "fs";
 import { DiffieHellmanGroup } from "crypto";
+import { randomBytes } from "crypto";
 
 describe('makeHDPath', ()=> {
     it('should return a HD path with provided index', async () =>{
@@ -76,5 +77,26 @@ describe('getDerivedAcccount', () => {
 
         await expect(() => getDerivedAccount(mnemonic, hdPath))
             .rejects.toThrow("Invalid mnemonic format");
+    });
+});
+
+
+const saltLength: number = 32;
+describe('encrypt', () => {
+})
+
+
+describe('getEncryptionKey', () => {
+    it('should return an encryption key', async () => {
+        const _email: string = "lmao@troll.com";
+        const _username: string = "GoodByeWorld";
+        const _password: string = "password12345";
+        const _pbkdf2Salt: Buffer = Buffer.concat(
+			[Buffer.from(`${_email}${_username}`),
+			randomBytes(saltLength)]
+		);
+
+        const encryptionKey = await getEncryptionKey(_password, _pbkdf2Salt);
+        expect(encryptionKey).not.toBeNull();
     })
 })
