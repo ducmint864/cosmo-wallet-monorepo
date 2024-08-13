@@ -1,4 +1,4 @@
-import {makeHDPath, getDerivedAccount, encrypt, getEncryptionKey} from "../../src/general/helpers/crypto-helper"
+import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey} from "../../src/general/helpers/crypto-helper"
 import {HdPath} from "@cosmjs/crypto"
 import { cryptoConfig } from "../../src/config"
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
@@ -105,7 +105,7 @@ describe('encrypt and decrypt', () => {
                 .not.toBe(mnemonic);
         });
 
-        it('should not give the same encypted for the same test-key pair', async () => {
+        it('should not give the same encrypted and iv for the same test-key pair', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
             const plaintext: string = "hello_world";
 
@@ -114,10 +114,21 @@ describe('encrypt and decrypt', () => {
 
             expect(encrypted1.encrypted.toString())
                 .not.toEqual(encrypted2.encrypted.toString());
+            expect(encrypted1.iv.toString())
+                .not.toEqual(encrypted2.iv.toString());
         });
-
     })
-            
+    
+    describe('decrypt', () => {
+        it('should decrypt the mnemonic', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+
+            const encryptedMnemonic = encrypt(mnemonic, encryptionKey);
+            const decryptedMnemonic = decrypt(encryptedMnemonic.encrypted, encryptionKey, encryptedMnemonic.iv);
+
+            expect(decryptedMnemonic).toEqual(mnemonic);
+        })
+    })
             
     describe('getEncryptionKey', () => {
         it('should return an encryption key', async () => {
