@@ -6,7 +6,7 @@ import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { authConfig } from "../../config";
 import createHttpError from "http-errors";
 
-export async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function requireAccessToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const accessToken: string = req.cookies.accessToken;
 	const publicKey: string = authConfig.token.accessToken.publicKey;
 
@@ -32,7 +32,7 @@ export async function requireAccessToken(req: Request, res: Response, next: Next
 	}
 }
 
-export async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+async function requireRefreshToken(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const refreshToken: string = req.cookies.refreshToken;
 	const publicKey: string = authConfig.token.refreshToken.publicKey;
 	try {
@@ -56,4 +56,10 @@ export async function requireRefreshToken(req: Request, res: Response, next: Nex
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
+}
+
+
+export {
+	requireAccessToken,
+	requireRefreshToken,
 }
