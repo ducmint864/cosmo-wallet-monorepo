@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { httpNodesRouter } from "./routes/http-nodes";
+import { httpNodesRouter } from "./http-nodes";
 
 const manageRouter = Router();
 

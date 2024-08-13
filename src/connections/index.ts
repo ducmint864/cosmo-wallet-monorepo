@@ -8,8 +8,7 @@ import { BlockchainApiNodeManager } from "./chain-rpc/http/blockchain-app-api/ty
 import { Selector } from "./chain-rpc/types/Selector";
 import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
-import { manageRouter } from "./manage";
-import { Router } from "express";
+import { connectionsRouter } from "./routes";
 
 // Init singleton selector
 const selector: Selector = new RandomSelector();
@@ -58,11 +57,6 @@ async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[
 		}
 	}
 }
-
-// Define module-level router for connections module
-const connectionsRouter = Router();
-connectionsRouter.use("/manage", manageRouter);
-connectionsRouter.use("/health", (req, res, next) => res.send("Im alive"));
 
 export {
 	prisma,
