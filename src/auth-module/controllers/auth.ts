@@ -3,7 +3,7 @@ import { ThasaHdWallet } from "../../types/ThasaHdWallet";
 import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../connections";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { invalidateToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
+import { invalidateToken, decodeAndVerifyToken, isTokenInvalidated } from "../../general/helpers/jwt-helper";
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
@@ -143,6 +143,11 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
+		// Invalidate client's old tokens if they have any (do it in silence)
+		try {
+			await _invalidateCurrentTokens(req, res);
+		} catch (_) { };
+
 		// Send access token and refresh token
 		const payload: UserAccountJwtPayload = {
 			userAccountId: userAccount.user_account_id,
@@ -174,7 +179,6 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			secure: true,
 			maxAge: authConfig.token.refreshToken.durationMinutes * 60 * 1000 //  Convert minutes to milisecs
 		});
-
 
 		// Send csrf-token
 		const csrfToken: string = genCsrfToken(payload);
@@ -307,41 +311,67 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 }
 
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const accessToken: string = req.cookies["accessToken"];
-	const refreshToken: string = req.cookies["refreshToken"];
+	/** This middelware comes after requireAccessToken(...)
+	 * -> Guarateeed availability of decoded access-token payload
+	 *    Meanwhile, access to refresh-token is not guaranteed
+	 * */
+	let invalidationError: Error;
+	try {
+		console.log(req.cookies["accessToken"]);
+		console.log(req.cookies["refreshToken"]);
+		await _invalidateCurrentTokens(req, res);
+	} catch (err) {
+		invalidationError = err;
+	}
 
 	try {
-		/** This middelware comes after requireAccessToken(...)
-		 * -> Guarateeed availability of decoded access-token payload
-		 *    Meanwhile, access to refresh-token is not guaranteed
-		 * */
-
-		// Invalidate access-token
-		const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
-		await invalidateToken(accessToken, accessTokenPayload);
-
-		// Invalidate refresh token (if available)
-		if (refreshToken) {
-			const refreshPublicKey: string = authConfig.token.refreshToken.publicKey;
-			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshPublicKey);
-			await invalidateToken(refreshToken, refreshTokenPayload)
+		if (invalidationError) {
+			throw createHttpError(
+				500,
+				`logout(): cannot invalidate tokens\n${invalidationError}`,
+				invalidationError
+			)
 		}
-
-		// Instruct clients to remove obsolete token cookies
-		res.clearCookie("accessToken"); // Add domain options later
-		res.clearCookie("refreshToken");
-		res.clearCookie("csrfToken");
 
 		res.status(200).json({
 			message: "Logout successful"
 		})
-
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
 }
 
-export { 
+// Private utility function to clear all of the user's tokens (Potentially throw an error)
+async function _invalidateCurrentTokens(req: Request, res: Response): Promise<void> {
+	const accessToken: string = req.cookies["accessToken"];
+	const refreshToken: string = req.cookies["refreshToken"];
+
+	// Invalidate access-token (if available)
+	if (accessToken) {
+		let accessTokenPayload: UserAccountJwtPayload;
+		accessTokenPayload =
+			req.body["decodedAccessTokenPayload"] ??
+			decodeAndVerifyToken(accessToken, authConfig.token.accessToken.publicKey);
+		await invalidateToken(accessToken, accessTokenPayload);
+	}
+
+	// Invalidate refresh token (if available)
+	if (refreshToken) {
+		let refreshTokenPayload: UserAccountJwtPayload;
+		refreshTokenPayload =
+			req.body["decodedRefreshTokenPayload"] ??
+			decodeAndVerifyToken(refreshToken, authConfig.token.refreshToken.publicKey);
+		await invalidateToken(refreshToken, refreshTokenPayload)
+	}
+
+	// Instruct clients to remove obsolete token cookies
+	res.clearCookie("accessToken"); // Add domain options later
+	res.clearCookie("refreshToken");
+	res.clearCookie("csrfToken");
+}
+
+
+export {
 	login,
 	register,
 	logout,
