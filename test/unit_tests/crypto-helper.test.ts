@@ -69,4 +69,12 @@ describe('getDerivedAcccount', () => {
         const derivedAcc = await getDerivedAccount(mnemonic, hdPath);
         expect(derivedAcc).not.toBeNull();
     });
+
+    it('should catch format error when mnemonic is an empty string', async () => {
+        const mnemonic = "";
+        const hdPath: HdPath = stringToHdPath("m/44'/0'/0'/0/0");
+
+        await expect(() => getDerivedAccount(mnemonic, hdPath))
+            .rejects.toThrow("Invalid mnemonic format");
+    })
 })
