@@ -97,12 +97,25 @@ describe('encrypt and decrypt', () => {
     describe('encrypt', () => {
         it('should encrypt the mnemonic', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            
             const encryptedMnemonic = encrypt(mnemonic, encryptionKey);
 
             expect(encryptedMnemonic).not.toBeNull();
             expect(encryptedMnemonic.encrypted.toString())
                 .not.toBe(mnemonic);
-        })
+        });
+
+        it('should not give the same encypted for the same test-key pair', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const plaintext: string = "hello_world";
+
+            const encrypted1 = encrypt(plaintext, encryptionKey);
+            const encrypted2 = encrypt(plaintext, encryptionKey);
+
+            expect(encrypted1.encrypted.toString())
+                .not.toEqual(encrypted2.encrypted.toString());
+        });
+
     })
             
             
@@ -110,6 +123,6 @@ describe('encrypt and decrypt', () => {
         it('should return an encryption key', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
             expect(encryptionKey).not.toBeNull();
-        })
+        });
     })
 })
