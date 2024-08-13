@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { getStringFromRequestBody } from "../../../general/helpers/request-parser";
-import { cometHttpNodeMan } from "../../index";
+import { blockchainApiNodeMan, cometHttpNodeMan } from "../../index";
 import { HttpNodeManagerError, HttpNodeManagerErrorCode } from "../../chain-rpc/http/types/HttpNodeManagerError";
 import { errorHandler } from "../../../errors/middlewares/error-handler";
+import { NodeTypeEnum } from "../../chain-rpc/http/types/NodeTypeEnum";
 import createHttpError from "http-errors";
 
 async function registerNode(
@@ -22,10 +23,16 @@ async function registerNode(
 			throw createHttpError(400, "registerNode(): please specify request type");
 		}
 
-		if (nodeType !== "comet" && nodeType !== "application") {
-			throw createHttpError(400, "registerNode(): invalid node type (choose either 'comet' or 'application'");
+		switch (nodeType) {
+			case NodeTypeEnum.comet:
+				await cometHttpNodeMan.registerNode(url);
+				break;
+			case NodeTypeEnum.application:
+				await blockchainApiNodeMan.registerNode(url);
+				break;
+			default:
+				throw createHttpError(400, `registerNode(): invalid node type ${nodeType} (choose either 'comet' or 'application'`);
 		}
-		await cometHttpNodeMan.registerNode(url);
 
 		// Successful
 		res.status(201).json({
