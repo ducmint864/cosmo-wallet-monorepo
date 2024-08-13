@@ -107,7 +107,7 @@ const securityConfig = {
 		policies: {
 			directives: {
 				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // res.locals.cspPolicy = helmet.contentSecurityPolicy(helmetCspOptionsUnsafe-eval is not recommended in production, change it!
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval, unsafe-inline unsafe in production, change it!
 				styleSrc: ["'self'", "'unsafe-inline'"], // Unsafe for production
 				imageSrc: ["'self'"],
 				connectSrc: ["'self'"],
