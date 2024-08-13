@@ -22,5 +22,13 @@ describe('makeHDPath', ()=> {
             expect(hdPathToString(HD_Path)).toBe(expectedPath);
         }
     })
+
+    it('should return null when receive a negative index', () => {
+        const accIndex: number = -1;
+
+        const HD_Path: HdPath = makeHDPath(accIndex);
+        
+        expect(HD_Path).toBeNull();
+    })
 })
 
