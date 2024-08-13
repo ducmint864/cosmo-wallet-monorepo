@@ -13,4 +13,14 @@ describe('makeHDPath', ()=> {
 
         expect(hdPathToString(HD_Path)).toBe(expectedPath);
     })
+
+    it('should be able to derive path with increment index', async ()=> {
+        for(let index: number = 0; index < 3; index++){
+            const HD_Path: HdPath = makeHDPath(index);
+            const expectedPath: string = `m/44'/0'/${index}'/0/0`
+
+            expect(hdPathToString(HD_Path)).toBe(expectedPath);
+        }
+    })
 })
+
