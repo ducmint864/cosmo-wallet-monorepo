@@ -319,7 +319,7 @@ describe('invalidateToken', () => {
        
         // Act
         await invalidateToken(token, payload);
-        const expectedTTL = payload.exp - Math.floor(Date.now() / 1000); // if an error raised, ignore it! exp is declared
+        const expectedTTL = payload.exp - Math.floor(Date.now() / 1000); // if an error raised, ignore it! payload.exp is declared
 
         // Assert
         expect(redisSetMock).toHaveBeenCalledWith(token, "invalidated", { EX: expectedTTL });
