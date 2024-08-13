@@ -7,8 +7,8 @@ import { requireCsrfToken } from "../../../security/middlewares/csrf";
 
 const httpNodesRouter = Router();
 
-// Path param :type -> either 'comet' or 'application'
-httpNodesRouter.route("/:nodetype/register-node/").post(
+// Path param : nodeTYpe is either 'comet' or 'application'
+httpNodesRouter.route("/:nodeType/register-node/").post(
 	requireAccessToken,
 	requireUserTypeAdmin,
 	requireCsrfToken,

@@ -12,7 +12,7 @@ async function registerNode(
 ): Promise<void> {
 	// Register new entry in the node Manager
 	const url: string = getStringFromRequestBody(req, "url");
-	const nodeType: string = req.params["nodetype"] ?? "";
+	const nodeType: string = req.params["nodeType"] ?? "";
 
 	try {
 		if (!url) {
