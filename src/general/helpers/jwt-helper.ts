@@ -32,9 +32,12 @@ function genToken(
 	return token;
 }
 
-function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload {
+export function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload | null {
 	try {
 		const decoded = <UserAccountJwtPayload>jwt.verify(token, publicKey);
+		if (!decoded) {
+			return null;
+		}
 		return decoded;
 	} catch (err) {
 		return null;
