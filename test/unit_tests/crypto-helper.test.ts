@@ -3,6 +3,7 @@ import {HdPath} from "@cosmjs/crypto"
 import { cryptoConfig } from "../../src/config"
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import { accessSync } from "fs";
+import { DiffieHellmanGroup } from "crypto";
 
 describe('makeHDPath', ()=> {
     it('should return a HD path with provided index', async () =>{
@@ -53,11 +54,19 @@ describe('getDerivedAcccount', () => {
         expect(derivedAccount.address).toBe(expectedAccount_address);  
     });
 
-    it('should return an error when using an invalid mnemonic', async () => {
+    it('should catch checksum error when using an invalid mnemonic', async () => {
         const mnemonic: string = "test test test test test test test test test test test test";
         const hdPath: HdPath = stringToHdPath("m/44'/0'/0'/0/0");
 
         await expect(() => getDerivedAccount(mnemonic, hdPath))
             .rejects.toThrow("Invalid mnemonic checksum");
-    })
+    });
+
+    it('should return null when using an invalid HD path', async () => {
+        const mnemonic: string = "test test test test test test test test test test test junk";
+        const hdPath: HdPath = stringToHdPath("m/44'/0'/0'/0/1");
+
+        const derivedAcc = await getDerivedAccount(mnemonic, hdPath);
+        expect(derivedAcc).not.toBeNull();
+    });
 })
