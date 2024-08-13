@@ -21,7 +21,7 @@ export function genToken(
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload | null {
+function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload | null {
 	try {
 		const decoded = <UserAccountJwtPayload>jwt.verify(token, publicKey);
 		if (!decoded) {
