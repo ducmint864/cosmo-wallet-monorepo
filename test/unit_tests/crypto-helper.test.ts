@@ -42,4 +42,14 @@ describe('getDerivedAcccount', () => {
 
         expect(derivedAccount.address).toBe(expectedAccount_address); 
     });
+
+    it('should derive an account with a 24-word mnemonic', async () => {
+        const mnemonic: string = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art";
+        const hdPath: HdPath = stringToHdPath("m/44'/0'/0'/0/0");
+
+        const derivedAccount = await getDerivedAccount(mnemonic, hdPath);
+        const expectedAccount_address: string = 'thasa1ca600p6lwp84dzvrwxmyyjmwda3j34l64eusxv';
+
+        expect(derivedAccount.address).toBe(expectedAccount_address);  
+    })
 })
