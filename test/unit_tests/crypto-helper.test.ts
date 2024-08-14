@@ -177,11 +177,24 @@ describe('encrypt and decrypt', () => {
 
             const encrypted = encrypt(mnemonic, encryptionKey);
             const decrypted = decrypt(encrypted.encrypted, encryptionKey, iv);
-
+            
+            expect(iv.toString()).not.toEqual(encrypted.iv.toString());
             expect(mnemonic).not.toEqual(decrypted);
         });
 
-        
+        it('should throw an error object when decrypt with a corrupted encrypted buffer', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+
+            const encrypted = encrypt(mnemonic, encryptionKey);
+            encrypted.encrypted = Buffer.alloc(32, 0x00);
+
+            try {
+                decrypt(encrypted.encrypted, encryptionKey, encrypted.iv);
+            } catch (error) {
+                expect(error.reason).toBe('bad decrypt');
+                expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
+            }
+        });
     })
             
     describe('multi user testing', () => {
