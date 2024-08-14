@@ -124,6 +124,18 @@ describe('encrypt and decrypt', () => {
             expect(encrypted1.iv.toString())
                 .not.toEqual(encrypted2.iv.toString());
         });
+
+        it('should not encrypt an empty string', async() => {
+            /**
+             * @dev fail test
+             * @todo encrypt is strictly use for mnemonic, it should not be encrypted everything
+             */
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+
+            const encrypted = encrypt("", encryptionKey);
+
+            expect(encrypted).toBeNull();
+        })
     })
     
     describe('decrypt', () => {
