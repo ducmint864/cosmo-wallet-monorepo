@@ -135,7 +135,7 @@ describe('encrypt and decrypt', () => {
             const encrypted = encrypt("", encryptionKey);
 
             expect(encrypted).toBeNull();
-        })
+        });
     })
     
     describe('decrypt', () => {
@@ -146,7 +146,7 @@ describe('encrypt and decrypt', () => {
             const decryptedMnemonic = decrypt(encryptedMnemonic.encrypted, encryptionKey, encryptedMnemonic.iv);
 
             expect(decryptedMnemonic).toEqual(mnemonic);
-        })
+        });
 
         it('should return the same mnemonic when encrypt the same mnemonic', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
@@ -158,7 +158,7 @@ describe('encrypt and decrypt', () => {
             const decrypted2 = decrypt(encrypted2.encrypted, encryptionKey, encrypted2.iv);
             
             expect(decrypted1).toEqual(decrypted2);
-        })
+        });
 
         it('should not return the same mnemonic when encrypt the same mnemonic but given different iv buffer', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
@@ -169,7 +169,19 @@ describe('encrypt and decrypt', () => {
             const decrypted = decrypt(encrypted1.encrypted, encryptionKey, encrypted2.iv);
 
             expect(decrypted).not.toEqual(mnemonic);
-        })
+        });
+
+        it('should not return the same mnemonic with injected iv buffer', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const iv = Buffer.alloc(16, 0x00);
+
+            const encrypted = encrypt(mnemonic, encryptionKey);
+            const decrypted = decrypt(encrypted.encrypted, encryptionKey, iv);
+
+            expect(mnemonic).not.toEqual(decrypted);
+        });
+
+        
     })
             
     describe('multi user testing', () => {
@@ -192,7 +204,7 @@ describe('encrypt and decrypt', () => {
             const decrypted2 = decrypt(encrypted2.encrypted, encryptionKey2, encrypted2.iv);
 
             expect(decrypted1).toEqual(decrypted2);
-        })
+        });
 
         it('should throw an error object when decrypt user A mnemonic if using user B key', async () => {
             /**
@@ -211,9 +223,9 @@ describe('encrypt and decrypt', () => {
                 expect(error.reason).toBe('bad decrypt');
                 expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
             }
-        })
+        });
 
-        it('should not decrypt user A mnemonic if using user B iv', async () => {
+        it('should not decrypt user A mnemonic if using user B iv buffer', async () => {
             const encryptionKey1: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
             const encryptionKey2: Buffer = await getEncryptionKey(_pw, salt);
 
@@ -223,6 +235,8 @@ describe('encrypt and decrypt', () => {
             const decrypted = decrypt(encrypted.encrypted, encryptionKey1, encrypted2.iv);
 
             expect(decrypted).not.toEqual(mnemonic);
-        })
+        });
+
+        
     })
 })
