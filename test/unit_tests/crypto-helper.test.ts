@@ -107,10 +107,9 @@ describe('encrypt and decrypt', () => {
 
         it('should not give the same encrypted and iv for the same test-key pair', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
-            const plaintext: string = "hello_world";
 
-            const encrypted1 = encrypt(plaintext, encryptionKey);
-            const encrypted2 = encrypt(plaintext, encryptionKey);
+            const encrypted1 = encrypt(mnemonic, encryptionKey);
+            const encrypted2 = encrypt(mnemonic, encryptionKey);
 
             expect(encrypted1.encrypted.toString())
                 .not.toEqual(encrypted2.encrypted.toString());
@@ -128,6 +127,20 @@ describe('encrypt and decrypt', () => {
 
             expect(decryptedMnemonic).toEqual(mnemonic);
         })
+
+        it('should return the same mnemonic when encrypt the same mnemonic', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+
+            const encrypted1 = encrypt(mnemonic, encryptionKey);
+            const encrypted2 = encrypt(mnemonic, encryptionKey);
+
+            const decrypted1 = decrypt(encrypted1.encrypted, encryptionKey, encrypted1.iv);
+            const decrypted2 = decrypt(encrypted2.encrypted, encryptionKey, encrypted2.iv);
+            
+            expect(decrypted1).toEqual(decrypted2);
+        })
+
+        
     })
             
     describe('getEncryptionKey', () => {
