@@ -206,9 +206,25 @@ describe('encrypt and decrypt', () => {
                 expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
             }
         });
+
+        it('should not return the mnemonic if the encryption key if corrupted', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const salt: Buffer = Buffer.from(_pbkdf2Salt);
+            salt[0] ^= 0xFF;
+            const corruptedEncryptionKey = await getEncryptionKey(_password, salt);
+            
+            const encrypted = encrypt(mnemonic, encryptionKey);
+
+            try {
+                decrypt(encrypted.encrypted, corruptedEncryptionKey, encrypted.iv);
+            } catch (error) {
+                expect(error.reason).toBe('bad decrypt');
+                expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
+            }
+        })
     })
             
-    describe('multi user testing', () => {
+    describe('multi users testing', () => {
 
         const mnemonic2: string = "veteran voyage antique rule kit sample possible ceiling tank dismiss runway shadow";
         const _user2: string = "AwesomeGuy";
