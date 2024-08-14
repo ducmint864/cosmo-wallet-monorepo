@@ -140,7 +140,16 @@ describe('encrypt and decrypt', () => {
             expect(decrypted1).toEqual(decrypted2);
         })
 
-        
+        it('should not return the same mnemonic when encrypt the same mnemonic but given different iv buffer', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+
+            const encrypted1 = encrypt(mnemonic, encryptionKey);
+            const encrypted2 = encrypt(mnemonic, encryptionKey);
+
+            const decrypted = decrypt(encrypted1.encrypted, encryptionKey, encrypted2.iv);
+
+            expect(decrypted).not.toEqual(mnemonic);
+        })
     })
             
     describe('getEncryptionKey', () => {
