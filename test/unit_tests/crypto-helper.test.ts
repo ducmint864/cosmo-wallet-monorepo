@@ -5,6 +5,7 @@ import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "
 import { accessSync } from "fs";
 import { DiffieHellmanGroup } from "crypto";
 import { randomBytes } from "crypto";
+import { buffer } from "stream/consumers";
 
 describe('makeHDPath', ()=> {
     it('should return a HD path with provided index', async () =>{
@@ -93,7 +94,14 @@ describe('encrypt and decrypt', () => {
     const _pbkdf2Salt: Buffer = Buffer.concat([Buffer.from
             (`${_email}${_username}`), randomBytes(saltLength)]);
     
+    describe('getEncryptionKey', () => {
+        it('should return an encryption key', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            expect(encryptionKey).not.toBeNull();
+        });
+    })
     
+
     describe('encrypt', () => {
         it('should encrypt the mnemonic', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
@@ -105,7 +113,7 @@ describe('encrypt and decrypt', () => {
                 .not.toBe(mnemonic);
         });
 
-        it('should not give the same encrypted and iv for the same test-key pair', async () => {
+        it('should return different encrypted information even same test-key pair', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
 
             const encrypted1 = encrypt(mnemonic, encryptionKey);
@@ -152,10 +160,26 @@ describe('encrypt and decrypt', () => {
         })
     })
             
-    describe('getEncryptionKey', () => {
-        it('should return an encryption key', async () => {
-            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
-            expect(encryptionKey).not.toBeNull();
-        });
+    describe('multi user testing', () => {
+
+        const mnemonic2: string = "veteran voyage antique rule kit sample possible ceiling tank dismiss runway shadow";
+        const _user2: string = "AwesomeGuy";
+        const user2mail: string = "thisIsAwsome@gmail.com";
+        const _pw: string = "confidential";
+        const salt: Buffer = Buffer.concat([Buffer.from
+            (`${user2mail},${_user2}`), randomBytes(saltLength)])
+
+        it('should return the same mnemonic even using different key', async () => {
+            const encryptionKey1: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const encryptionKey2: Buffer = await getEncryptionKey(_pw, salt);
+
+            const encrypted1 = encrypt(mnemonic, encryptionKey1);
+            const encrypted2 = encrypt(mnemonic, encryptionKey2);
+
+            const decrypted1 = decrypt(encrypted1.encrypted, encryptionKey1, encrypted1.iv);
+            const decrypted2 = decrypt(encrypted2.encrypted, encryptionKey2, encrypted2.iv);
+
+            expect(decrypted1).toEqual(decrypted2);
+        })
     })
 })
