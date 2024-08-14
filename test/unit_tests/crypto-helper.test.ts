@@ -147,6 +147,15 @@ describe('encrypt and decrypt', () => {
 
             expect(encrypted).toBeNull();
         });
+
+        it('should be able to re-encrypt', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const encrypted = encrypt(mnemonic, encryptionKey);
+
+            const re_encrypted = encrypt(encrypted.encrypted.toString(), encryptionKey);
+
+            expect(re_encrypted.encrypted.toString()).not.toBeNull;
+        })
     })
     
     describe('decrypt', () => {
@@ -207,7 +216,7 @@ describe('encrypt and decrypt', () => {
             }
         });
 
-        it('should not return the mnemonic if the encryption key if corrupted', async () => {
+        it('should throw an error when the decrypt with key that got corrupted salt', async () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
             const salt: Buffer = Buffer.from(_pbkdf2Salt);
             salt[0] ^= 0xFF;
