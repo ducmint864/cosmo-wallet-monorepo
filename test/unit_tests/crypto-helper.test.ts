@@ -193,5 +193,24 @@ describe('encrypt and decrypt', () => {
 
             expect(decrypted1).toEqual(decrypted2);
         })
+
+        it('should not decrypt user A mnemonic if using user B key', async () => {
+            /**
+             * @dev encrypt and decrypt are sync function not async
+             * Therefore, test for expected error must not handle with .rejects
+             */
+            
+            const encryptionKey1: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const encryptionKey2: Buffer = await getEncryptionKey(_pw, salt);
+
+            const encrypted = encrypt(mnemonic, encryptionKey1);
+
+            try {
+                decrypt(encrypted.encrypted, encryptionKey2, encrypted.iv);
+            } catch (error) {
+                expect(error.reason).toBe('bad decrypt');
+                expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
+            }
+        })
     })
 })
