@@ -231,6 +231,24 @@ describe('encrypt and decrypt', () => {
                 expect(error.code).toBe('ERR_OSSL_BAD_DECRYPT');
             }
         })
+
+        it('should not be able to decrypt a 2 layer encrypted', async () => {
+            const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
+            const encrypted = encrypt(mnemonic, encryptionKey);
+            const re_encrypted = encrypt(encrypted.encrypted.toString(), encryptionKey);
+            const decrypted = decrypt(re_encrypted.encrypted, encryptionKey, re_encrypted.iv);
+            const decryptedToBuffer = Buffer.from(decrypted, 'utf-8');
+            // const second_decrypted = decrypt(decryptedToBuffer, encryptionKey, encrypted.iv);
+            
+            // expect(second_decrypted).toEqual(mnemonic);
+            try {
+                decrypt(decryptedToBuffer, encryptionKey, encrypted.iv);
+            } catch (error) {
+                console.log(error);
+                expect(error.reason).toBe('wrong final block length');
+                expect(error.code).toBe('ERR_OSSL_WRONG_FINAL_BLOCK_LENGTH');
+            }
+        });
     })
             
     describe('multi users testing', () => {
