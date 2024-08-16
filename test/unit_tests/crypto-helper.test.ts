@@ -363,5 +363,14 @@ describe('getSinger', () => {
 
         await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
                 .rejects.toThrow("Invalid word count in mnemonic");
-    })
+    });
+
+    it('should return 0 account when given an empty hdPath array', async () => {
+        const hdPathStrings: string[] = [];
+
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
+        const accounts = Signer.getAccounts();
+        
+        expect((await accounts).length).toBe(0);
+    });
 })
