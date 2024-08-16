@@ -300,18 +300,27 @@ describe('getSinger', () => {
     const mnemonic: string = "test test test test test test test test test test test junk";
     const bip39Password: string = "supersecurepasswordthatonlygodknow";
     
-    it('it should return a signer', async () => {
+    it('should return a signer', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
         const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
 
         expect(Signer).toBeDefined();
     });
 
-    it('it should return a signer without a bip39 password', async () => {
+    it('should return a signer without a bip39 password', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
         const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings);
 
         expect(Signer).toBeDefined();
     });
 
+    it('should be able to get all accounts according to provided hd paths', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0", "m/44'/0'/1'/0/0", "m/44'/0'/2'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
+
+        const accounts = await Signer.getAccounts();
+        
+        expect(accounts).toBeDefined();
+        expect(accounts).toHaveLength(3);
+    });
 })
