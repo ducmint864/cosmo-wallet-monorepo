@@ -401,8 +401,70 @@ describe('getSinger', () => {
         const hdPathStrings: string[] = [];
 
         const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
-        const accounts = Signer.getAccounts();
+        const accounts = await Signer.getAccounts();
         
-        expect((await accounts).length).toBe(0);
+        expect(accounts).toHaveLength(0);
     });
+
+    it('should derive the same account like getDerivedAccount function if not using bip39password', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings);
+        const accounts = await Signer.getAccounts();
+
+        const derivedAcc = await getDerivedAccount(mnemonic, stringToHdPath(hdPathStrings[0]));
+
+        expect(accounts[0].address).toEqual(derivedAcc.address);
+    })
+
+    it('should not derive the same account like getDerivedAccount function if using bip39password', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
+        const accounts = await Signer.getAccounts();
+
+        const derivedAcc = await getDerivedAccount(mnemonic, stringToHdPath(hdPathStrings[0]));
+
+        expect(accounts[0].address).not.toEqual(derivedAcc.address);
+    })
+})
+
+describe('FINAL TEST', () => {
+    it('SHOULD BE WORKING', async () => {
+        const mnemonic: string = "elder advance goddess fabric obtain machine reopen escape nation oppose narrow keep";
+        const bip39Password: string = "onlygodknow";
+        const hdPathStrings: string[] = [];
+        
+        for(let index: number = 0; index < 3; index++) {
+            hdPathStrings.push(hdPathToString(makeHDPath(0)));
+        }
+
+        const username: string = "human";
+        const password: string = "notrobot";
+        const email: string = "iamhuman@gmail.com";
+        const saltLength: number = 32;
+        const pbkdf2Salt: Buffer = Buffer.concat([Buffer.from
+            (`${email}${username}`), randomBytes(saltLength)]);
+
+        const encryptionKey: Buffer = await getEncryptionKey(password, pbkdf2Salt);    
+        const encrypted_mnemonic = encrypt(mnemonic, encryptionKey);
+
+        const decrypted = decrypt(encrypted_mnemonic.encrypted, encryptionKey, encrypted_mnemonic.iv);
+        
+        const acc1 = await getDerivedAccount(decrypted, stringToHdPath(hdPathStrings[1]));
+
+        const signer: OfflineDirectSigner = await getSigner(decrypted, bip39Password, ...hdPathStrings);
+        const accounts = await signer.getAccounts();
+
+        const _signer: OfflineDirectSigner = await getSigner(decrypted, undefined, ...hdPathStrings);
+        const _accounts = await _signer.getAccounts();
+
+        expect(decrypted).toEqual(mnemonic);
+        expect(signer).toBeDefined();
+        expect(accounts).toBeDefined();
+        expect(accounts).toHaveLength(3);
+        expect(acc1).toBeDefined();
+        expect(acc1.address.startsWith("thasa")).toBe(true);
+        expect(accounts[0].address.startsWith("thasa")).toBe(true);
+        expect(acc1.address).not.toEqual(accounts[1].address);
+        expect(acc1.address).toEqual(_accounts[1].address);
+    })
 })
