@@ -356,4 +356,12 @@ describe('getSinger', () => {
         expect(accounts[0].address.startsWith("thasa")).toBe(true);
         expect(accounts[1].address.startsWith("thasa")).toBe(true);
     });
+    
+    it('should not work with invalid mnemonic', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const invalid_mnemonic: string = "this string made by a human";
+
+        await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
+                .rejects.toThrow("Invalid word count in mnemonic");
+    })
 })
