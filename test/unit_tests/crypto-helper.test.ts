@@ -357,12 +357,20 @@ describe('getSinger', () => {
         expect(accounts[1].address.startsWith("thasa")).toBe(true);
     });
     
-    it('should not work with invalid mnemonic', async () => {
+    it('should return an error when provide an invalid length mnemonic', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
         const invalid_mnemonic: string = "this string made by a human";
 
         await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
                 .rejects.toThrow("Invalid word count in mnemonic");
+    });
+
+    it('should return error when provide a mnmonic that contain an invalid word', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const invalid_mnemonic: string = "strategy hub faith gospel put stupid under spray elite fetch veteran image";
+
+        await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
+                .rejects.toThrow("Mnemonic contains invalid word");
     });
 
     it('should return 0 account when given an empty hdPath array', async () => {
