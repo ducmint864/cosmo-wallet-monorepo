@@ -100,17 +100,6 @@ describe('encrypt and decrypt', () => {
             const encryptionKey: Buffer = await getEncryptionKey(_password, _pbkdf2Salt);
             expect(encryptionKey).not.toBeNull();
         });
-
-        it('should not return an encryption key with a corrupted salt', async () => {
-            /**
-             * @dev altering salt can still resolve value
-             */
-            const corruptedSalt: Buffer = Buffer.from(_pbkdf2Salt);
-            corruptedSalt[0] ^= 0xFF;
-            
-            await expect(() => getEncryptionKey(_password, corruptedSalt))
-                .rejects.toThrow("Invalid salt");
-        });
     })
     
 
