@@ -1,5 +1,6 @@
-import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey} from "../../src/general/helpers/crypto-helper"
-import {HdPath} from "@cosmjs/crypto"
+import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../src/general/helpers/crypto-helper"
+import {HdPath} from "@cosmjs/crypto";
+import { DirectSecp256k1HdWallet, OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { cryptoConfig } from "../../src/config"
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import { accessSync } from "fs";
@@ -304,4 +305,18 @@ describe('encrypt and decrypt', () => {
             expect(decrypted).not.toEqual(mnemonic);
         });  
     })
+});
+
+describe('getSinger', () => {
+    const mnemonic: string = "test test test test test test test test test test test junk";
+    const bip39Password: string = "supersecurepasswordthatonlygodknow";
+    
+    it('it should work without a bip39 password', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings)
+
+        expect(Signer).toBeDefined();
+    })
+
+
 })
