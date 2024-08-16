@@ -64,13 +64,21 @@ describe('getDerivedAcccount', () => {
         expect(derivedAccount.address.startsWith("thasa")).toBe(true);
     })
 
-    it('should catch checksum error when using an invalid mnemonic', async () => {
+    it('should throw error when using a mnemonic that contain checksum error', async () => {
         const mnemonic: string = "test test test test test test test test test test test test";
         const HD_Path: HdPath = makeHDPath(0);
 
         await expect(() => getDerivedAccount(mnemonic, HD_Path))
             .rejects.toThrow("Invalid mnemonic checksum");
     });
+
+    it('should throw error when using a mnemonic that contain invalid word', async () => {
+        const mnemonic: string = "test test test test test stupid test test test test test invalid";
+        const HD_Path: HdPath = makeHDPath(0);
+
+        await expect(() => getDerivedAccount(mnemonic, HD_Path))
+            .rejects.toThrow("Mnemonic contains invalid word");
+    })  
 
     it('should return null when using an invalid HD path', async () => {
         const mnemonic: string = "test test test test test test test test test test test junk";
