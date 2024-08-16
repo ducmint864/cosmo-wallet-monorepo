@@ -300,12 +300,18 @@ describe('getSinger', () => {
     const mnemonic: string = "test test test test test test test test test test test junk";
     const bip39Password: string = "supersecurepasswordthatonlygodknow";
     
-    it('it should work without a bip39 password', async () => {
+    it('it should return a signer', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
-        const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings)
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
 
         expect(Signer).toBeDefined();
-    })
+    });
 
+    it('it should return a signer without a bip39 password', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings);
+
+        expect(Signer).toBeDefined();
+    });
 
 })
