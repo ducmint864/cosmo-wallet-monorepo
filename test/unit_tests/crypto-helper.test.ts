@@ -78,7 +78,7 @@ describe('getDerivedAcccount', () => {
 
         await expect(() => getDerivedAccount(mnemonic, HD_Path))
             .rejects.toThrow("Mnemonic contains invalid word");
-    })  
+    });
 
     it('should throw error when using a mnemonic that have length error', async () => {
         const mnemonic: string = "test test test test test";
@@ -86,7 +86,7 @@ describe('getDerivedAcccount', () => {
         
         await expect(() => getDerivedAccount(mnemonic, HD_Path))
             .rejects.toThrow("Invalid word count in mnemonic")
-    })
+    });
 
     it('should return null when using an invalid HD path', async () => {
         const mnemonic: string = "test test test test test test test test test test test junk";
@@ -373,7 +373,7 @@ describe('getSinger', () => {
         expect(accounts[1].address.startsWith("thasa")).toBe(true);
     });
     
-    it('should return an error when provide an invalid length mnemonic', async () => {
+    it('should throw an error when provide an invalid length mnemonic', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
         const invalid_mnemonic: string = "this string made by a human";
 
@@ -381,12 +381,20 @@ describe('getSinger', () => {
                 .rejects.toThrow("Invalid word count in mnemonic");
     });
 
-    it('should return error when provide a mnmonic that contain an invalid word', async () => {
+    it('should throw error when provide a mnmonic that contain an invalid word', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0"];
         const invalid_mnemonic: string = "strategy hub faith gospel put stupid under spray elite fetch veteran image";
 
         await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
                 .rejects.toThrow("Mnemonic contains invalid word");
+    });
+
+    it('should throw an error when provide a mnemonic with a checksum error', async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const invalid_mnemonic: string = "strategy hub faith gospel put test under spray elite fetch veteran image";
+        
+        await expect(() => getSigner(invalid_mnemonic, bip39Password, ...hdPathStrings))
+                .rejects.toThrow("Invalid mnemonic checksum");
     });
 
     it('should return 0 account when given an empty hdPath array', async () => {
