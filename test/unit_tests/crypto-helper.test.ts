@@ -80,6 +80,14 @@ describe('getDerivedAcccount', () => {
             .rejects.toThrow("Mnemonic contains invalid word");
     })  
 
+    it('should throw error when using a mnemonic that have length error', async () => {
+        const mnemonic: string = "test test test test test";
+        const HD_Path: HdPath = makeHDPath(0);
+        
+        await expect(() => getDerivedAccount(mnemonic, HD_Path))
+            .rejects.toThrow("Invalid word count in mnemonic")
+    })
+
     it('should return null when using an invalid HD path', async () => {
         const mnemonic: string = "test test test test test test test test test test test junk";
         const HD_Path: HdPath = makeHDPath(0);
