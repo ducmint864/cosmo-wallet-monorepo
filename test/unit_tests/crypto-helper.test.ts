@@ -314,6 +314,14 @@ describe('getSinger', () => {
         expect(Signer).toBeDefined();
     });
 
+    it("should get account that have 'thasa' prefix", async () => {
+        const hdPathStrings = ["m/44'/0'/0'/0/0"];
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
+
+        const accounts = await Signer.getAccounts();
+        expect(accounts[0].address.startsWith("thasa")).toBe(true);
+    });
+    
     it('should be able to get all accounts according to provided hd paths', async () => {
         const hdPathStrings = ["m/44'/0'/0'/0/0", "m/44'/0'/1'/0/0", "m/44'/0'/2'/0/0"];
         const Signer: OfflineDirectSigner = await getSigner(mnemonic, bip39Password, ...hdPathStrings);
@@ -322,5 +330,8 @@ describe('getSinger', () => {
         
         expect(accounts).toBeDefined();
         expect(accounts).toHaveLength(3);
+        expect(accounts[0].address.startsWith("thasa")).toBe(true);
+        expect(accounts[1].address.startsWith("thasa")).toBe(true);
+        expect(accounts[2].address.startsWith("thasa")).toBe(true);
     });
 })
