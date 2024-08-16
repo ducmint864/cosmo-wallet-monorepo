@@ -341,4 +341,19 @@ describe('getSinger', () => {
         expect(accounts[1].address.startsWith("thasa")).toBe(true);
         expect(accounts[2].address.startsWith("thasa")).toBe(true);
     });
+
+    it('should work with hd path make from makeHDPath', async () => {
+        const hdPathStrings: string[] = [];
+        hdPathStrings.push(hdPathToString(makeHDPath(0)));
+        hdPathStrings.push(hdPathToString(makeHDPath(1)));
+
+        const Signer: OfflineDirectSigner = await getSigner(mnemonic, undefined, ...hdPathStrings);
+
+        const accounts = await Signer.getAccounts();
+
+        expect(accounts).toBeDefined();
+        expect(accounts).toHaveLength(2);
+        expect(accounts[0].address.startsWith("thasa")).toBe(true);
+        expect(accounts[1].address.startsWith("thasa")).toBe(true);
+    });
 })
