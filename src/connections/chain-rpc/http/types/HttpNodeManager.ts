@@ -119,7 +119,6 @@ export abstract class HttpNodeManager {
 
 		// Update CSP to trust new nodes
 		const cspDirectives: Record<string, string[]> = await getCspDirectivesInRedis()
-		console.log("CSP DIRECTIVE IS:\n ", cspDirectives);
 		cspDirectives["connectSrc"].push(url);
 		await setCspDirectivesInRedis(cspDirectives);
 	}

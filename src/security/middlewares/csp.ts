@@ -33,17 +33,14 @@ async function setCspDirectivesInRedis(directives: object) {
 	if (!directives) {
 		return;
 	}
-	console.log("IM HERE")
 	await redisClient.SET(
 		cspDirectivesRedisKey,
 		JSON.stringify(directives, null, 4)
 	)
-	console.log("IM HERE 2")
 	await redisClient.SET(
 		cspDirectivesChangedRedisKey,
 		"true"
 	);
-	console.log("IM HERE 2")
 }
 
 // (XSS) Instruct browsers to display/execute resources from these trusted sources only:
@@ -56,7 +53,6 @@ async function applyContentSecurityPolicy(
 	const strValue: string | null = await redisClient.GET(cspDirectivesChangedRedisKey);
 	const directivesChanged: boolean = Boolean(strValue);
 
-	console.log("DEBUG: directives changed ?: ", directivesChanged);
 	if (!directivesChanged) {
 		return;
 	}
@@ -64,7 +60,6 @@ async function applyContentSecurityPolicy(
 	cspDirectives = await getCspDirectivesInRedis();
 
 	// Apply CSP policies
-	console.log("Debug: csp directives:\n", cspDirectives);
 	contentSecurityPolicy({
 		directives: cspDirectives,
 	})(req, res, next);
