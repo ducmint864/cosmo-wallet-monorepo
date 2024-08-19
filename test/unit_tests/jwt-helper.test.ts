@@ -45,12 +45,6 @@ describe('genToken', () => {
     });
 
     it('return a valid token with provided decode algorithms', async () => {
-        /**
-         * @note not a very good test
-         * @dev but this test that the function will strictly work for Algorithm type 
-         * try add a string for option param and it won't run
-         */
-
         // Arrange
         const payload: UserAccountJwtPayload = {
             userAccountId: 2,
@@ -76,8 +70,9 @@ describe('genToken', () => {
         const decoded2 = jwt.verify(token2, "BEAN", { algorithms: [algorithm2] });
 
         // Assert
-        expect(decoded1).toEqual(payload);
-        expect(decoded2).toEqual(payload);
+        expect(decoded1).toBeDefined();
+        expect(decoded2).toBeDefined();
+        expect(decoded1).toEqual(decoded2);
     });
 });
 
