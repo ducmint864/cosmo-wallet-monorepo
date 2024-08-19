@@ -10,37 +10,12 @@ import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
 import { connectionsRouter } from "./routes";
 
-// Init singleton selector
-const selector: Selector = new RandomSelector();
 
-// Init singleton ws manager
-CometWsManager.init(selector);
-const cometWsManager = CometWsManager.instance;
-
-for (const endpoint of chainRpcConfig.cometBftWebSocket.endpoints) {
-	try {
-		cometWsManager.addClient(endpoint);
-	} catch (err) {
-		console.error(`Trouble connecting to '${endpoint}': ${err}`);
-		process.exit(1);
-	}
-}
-
-// Init CometHttpManager singleton instance
-CometHttpNodeManager.init(selector);
-const cometHttpNodeMan = CometHttpNodeManager.instance;
-registerHttpNodes(
-	cometHttpNodeMan,
-	...chainRpcConfig.http.cometBft.endpoints
-).then();
-
-// Init RpcRestManager singleton instance
-BlockchainApiNodeManager.init(selector);
-const blockchainApiNodeMan = BlockchainApiNodeManager.instance;
-registerHttpNodes(
-	blockchainApiNodeMan,
-	...chainRpcConfig.http.blockchainApp.endpoints
-).then();
+// Define managers
+let selector: Selector;
+let cometWsManager: CometWsManager;
+let cometHttpNodeMan: CometHttpNodeManager;
+let blockchainApiNodeMan: BlockchainApiNodeManager;
 
 async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[]): Promise<void> {
 	for (const endpoint of endpoints) {
@@ -57,6 +32,43 @@ async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[
 		}
 	}
 }
+
+async function initManagers() {
+	// Init singleton selector
+	selector = new RandomSelector();
+
+	// Init singleton ws manager
+	CometWsManager.init(selector);
+	cometWsManager = CometWsManager.instance;
+
+	for (const endpoint of chainRpcConfig.cometBftWebSocket.endpoints) {
+		try {
+			cometWsManager.addClient(endpoint);
+		} catch (err) {
+			console.error(`Trouble connecting to '${endpoint}': ${err}`);
+			process.exit(1);
+		}
+	}
+
+	// Init CometHttpManager singleton instance
+	CometHttpNodeManager.init(selector);
+	cometHttpNodeMan = CometHttpNodeManager.instance;
+	await registerHttpNodes(
+		cometHttpNodeMan,
+		...chainRpcConfig.http.cometBft.endpoints
+	);
+
+	// Init RpcRestManager singleton instance
+	BlockchainApiNodeManager.init(selector);
+	const blockchainApiNodeMan = BlockchainApiNodeManager.instance;
+	await registerHttpNodes(
+		blockchainApiNodeMan,
+		...chainRpcConfig.http.blockchainApp.endpoints
+	);
+}
+
+// Init managers
+initManagers();
 
 export {
 	prisma,
