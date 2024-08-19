@@ -1,6 +1,7 @@
 import { Selector } from "../../types/Selector";
 import { redisClient } from "../../../redis/redis-client";
 import { HttpNodeManagerError, HttpNodeManagerErrorCode } from "./HttpNodeManagerError";
+import { getCspDirectivesInRedis, setCspDirectivesInRedis } from "../../../../security/middlewares/csp";
 
 /**
  * Manage blockchain nodes
@@ -10,7 +11,7 @@ export abstract class HttpNodeManager {
 
 	protected _selector: Selector;
 
-	protected abstract get classRedisKey(): string; // Retrieve class's persistent states from redis with this key
+	public abstract get classRedisKey(): string; // Retrieve class's persistent states from redis with this key
 
 	protected get redisKeyCollection(): {
 		registeredNodesKey: string
@@ -115,6 +116,12 @@ export abstract class HttpNodeManager {
 				HttpNodeManagerErrorCode.ERR_ALREADY_REGISTERED
 			);
 		}
+
+		// Update CSP to trust new nodes
+		const cspDirectives: Record<string, string[]> = await getCspDirectivesInRedis()
+		console.log("CSP DIRECTIVE IS:\n ", cspDirectives);
+		cspDirectives["connectSrc"].push(url);
+		await setCspDirectivesInRedis(cspDirectives);
 	}
 
 	/**

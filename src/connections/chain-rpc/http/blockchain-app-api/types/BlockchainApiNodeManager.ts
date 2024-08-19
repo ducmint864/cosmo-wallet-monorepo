@@ -15,7 +15,7 @@ export class BlockchainApiNodeManager extends HttpNodeManager {
 	}
 
 	// Must override (abstract method)
-	protected override get classRedisKey(): string {
+	public override get classRedisKey(): string {
 		return BlockchainApiNodeManager.name;
 	}
 
