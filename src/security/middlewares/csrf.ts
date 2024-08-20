@@ -4,7 +4,7 @@ import createHttpError from "http-errors";
 import { authConfig, cryptoConfig, securityConfig } from "../../config";
 import { errorHandler } from "../../errors/middlewares/error-handler";
 import { isValidCsrfToken } from "../helpers/csrf-helper";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 
 
 function sendCsrfToken(req: Request, res: Response, next: NextFunction): void {

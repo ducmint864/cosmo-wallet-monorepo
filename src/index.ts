@@ -4,11 +4,12 @@ import { authRouter } from "./auth-module";
 import { queryRouter } from "./query-module";
 import { transactionRouter } from "./transaction-module";
 import { join } from "path";
+import { applyContentSecurityPolicy } from "./security/middlewares/csp";
+import { connectionsRouter } from "./connections";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
 import cors from "cors";
-import helmet from "helmet";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -41,16 +42,9 @@ const corsOptions = {
 	credentials: true, // Allow credentials to be attached to reponse
 }
 
-// (XSS) Instruct browsers to display/execute resources from these trusted sources only:
-const helmetCspOptions = {
-	directives: {
-		scriptSrc: ["'self'", "'unsafe-eval'"], // Unsafe-eval is not recommended in production, change it!
-	}
-}
-
 // Middlewares
 app.use(cors(corsOptions));
-app.use(helmet.contentSecurityPolicy(helmetCspOptions));
+app.use(applyContentSecurityPolicy);
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.static(frontendPath));
@@ -58,6 +52,7 @@ app.use(express.static(frontendPath));
 app.use(`${root}/auth`, authRouter);
 app.use(`${root}/query`, queryRouter);
 app.use(`${root}/transaction`, transactionRouter);
+app.use(`${root}/connections`, connectionsRouter);
 app.get('/', (req, res) => {
 	res.sendFile(join(frontendPath, "index.html"));	 // Serve the front-end GUI
 })

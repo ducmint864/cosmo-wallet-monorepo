@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { prisma } from "../../connections";
@@ -8,28 +8,9 @@ import { decrypt, getEncryptionKey, getSigner } from "../../general/helpers/cryp
 import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../general/helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";
 import { writeFile } from "fs"
-import { webSocketClientManager } from "../../connections";
+import { cometWsManager, cometHttpNodeMan } from "../../connections";
 import WebSocket from "ws";
 import createHttpError from "http-errors";
-
-const nodeWsUrl = "ws://localhost:26657/websocket";
-
-const { 
-	client: wsClient,
-	id: wsClietnId,
-} = webSocketClientManager.initClient(nodeWsUrl);
-
-wsClient.on("open", () => {
-	console.log("Connected to node's websocket server");
-});
-
-wsClient.on("close", () => {
-	console.log("Disconnected from node's websocket server")
-});
-
-wsClient.on("error", (err) => {
-	console.log("Webscoket client error:", err);
-})
 
 async function sendCoin(
 	req: Request,
@@ -113,9 +94,9 @@ async function sendCoin(
 		const accounts = await signer.getAccounts();
 		console.log(accounts);
 
-		const url = "http://localhost:26657";
+		const cometHttpUrl: string = await cometHttpNodeMan.getNode();
 		const client: SigningStargateClient = await SigningStargateClient.connectWithSigner(
-			url,
+			cometHttpUrl,
 			signer,
 			{ gasPrice: GasPrice.fromString("0.001stake") }
 		);
@@ -132,7 +113,9 @@ async function sendCoin(
 		writeFile("./DeliverTxResponse.json", JSON.stringify(obj, null, 2), undefined, () => ("DeliverTxResponse written to disk"));
 
 		console.log("Broadcasted tranaction, waiiting for it to finish...");
-		const success: boolean = await isTxSuccessful(txHash, client, wsClient, toAddress);
+		const cometWsClient: WebSocket = await cometWsManager.getClient();
+		const success: boolean = await isTxSuccessful(txHash, client, cometWsClient, toAddress);
+
 		if (success) {
 			res.status(200).json({
 				message: "Transaction completed successfully",
@@ -152,15 +135,15 @@ async function sendCoin(
 async function isTxSuccessful(
 	txHash: string,
 	stargateClient: StargateClient,
-	wsClient: WebSocket,
+	cometWsClient: WebSocket,
 	receiverAddress: string,
 ): Promise<boolean> {
-	if (wsClient.readyState !== WebSocket.OPEN) {
+	if (cometWsClient.readyState !== WebSocket.OPEN) {
 		throw new Error("WebSocket connection is not open");
 	}
 
 	// Subscribe to transaction events
-	wsClient.send(JSON.stringify({
+	cometWsClient.send(JSON.stringify({
 		jsonrpc: "2.0",
 		method: "subscribe",
 		id: "1",
@@ -174,6 +157,7 @@ async function isTxSuccessful(
 		const handleMessage = async (data: WebSocket.Data) => {
 			try {
 				const message = JSON.parse(data.toString());
+				console.log("Websocket tx data: " + message);
 				if (message.id === "1") {
 					console.log("Received transaction notification!");
 
@@ -181,21 +165,21 @@ async function isTxSuccessful(
 					resolve(tx.code === 0); // Transaction success if code is 0
 
 					// Unsubscribe from events
-					wsClient.send(JSON.stringify({
+					cometWsClient.send(JSON.stringify({
 						jsonrpc: "2.0",
 						method: "unsubscribe",
 						id: "1",
 						params: []
 					}));
 
-					wsClient.removeListener("message", handleMessage);
+					cometWsClient.removeListener("message", handleMessage);
 				}
 			} catch (error) {
 				reject(error);
 			}
 		};
 
-		wsClient.on("message", handleMessage);
+		cometWsClient.on("message", handleMessage);
 	});
 
 	return await transactionStatus;

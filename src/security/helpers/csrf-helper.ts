@@ -1,6 +1,6 @@
 import { randomBytes, createHmac } from "crypto";
 import { cryptoConfig, securityConfig } from "../../config";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import createHttpError from "http-errors";
 
 function genCsrfToken(

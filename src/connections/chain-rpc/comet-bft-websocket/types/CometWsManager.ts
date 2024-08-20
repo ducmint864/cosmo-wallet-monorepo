@@ -1,51 +1,64 @@
 import WebSocket from "ws";
-import { webSocketConfig } from "../../config";
+import { chainRpcConfig } from "../../../../config";
 import {
-	WebSocketClientManagerError,
-	WebSocketClientManagerErrorCode
-} from "./WebSocketClientManagerError";
+	CometWsManagerError,
+	CometWsManagerErrorCode
+} from "./CometWsManagerError";
+import { Selector } from "../../types/Selector";
 
 /**
  * WebSocketClientManager class.
  * 
  * Manages a pool of WebSocket clients, providing methods to initialize, retrieve, and close clients.
  */
-export class WebSocketClientManager {
+export class CometWsManager {
 	/**
 	 * Minimum client count.
 	 * 
 	 * The minimum number of clients that can be connected at any given time.
 	 */
-	public static readonly MIN_CLIENT_COUNT: number = webSocketConfig.client.minClientCount;
+	public static readonly MIN_CLIENT_COUNT: number = chainRpcConfig.cometBftWebSocket.minNodes;
 
 	/**
 	 * Maximum client count.
 	 * 
 	 * The maximum number of clients that can be connected at any given time.
 	 */
-	public static readonly MAX_CLIENT_COUNT: number = webSocketConfig.client.maxClientCount;
+	public static readonly MAX_CLIENT_COUNT: number = chainRpcConfig.cometBftWebSocket.maxNodes;;
 
 	/**
 	 * Map of client IDs to WebSocket clients.
 	 * 
 	 * A private map that stores WebSocket clients by their IDs.
 	 */
-	protected _idToClient: Map<number, WebSocket>;
+	// protected _idToClient: Map<number, WebSocket>;
+	protected _clients: WebSocket[];
+	protected _selector: Selector;
 
 	/**
 	 * Singleton instance.
 	 * 
 	 * The singleton instance of the WebSocketClientManager.
 	 */
-	private static _instance: WebSocketClientManager;
+	private static _instance: CometWsManager;
 
 	/**
 	 * Private constructor to prevent direct instantiation.
 	 * 
 	 * Initializes the WebSocketClientManager instance.
 	 */
-	private constructor() {
-		this._idToClient = new Map<number, WebSocket>();
+	private constructor(selector: Selector) {
+		// this._idToClient = new Map<number, WebSocket>();
+		this._clients = [];
+		this._selector = selector;
+	}
+
+	public static init(selector: Selector): void {
+		if (CometWsManager._instance) {
+			throw new Error("WebSocketClientManager's instance already initialized");
+		}
+
+		CometWsManager._instance = new CometWsManager(selector);
 	}
 
 	/**
@@ -55,12 +68,12 @@ export class WebSocketClientManager {
 	 * 
 	 * @returns The singleton instance of the WebSocketClientManager.
 	 */
-	public static get instance(): WebSocketClientManager {
-		if (!WebSocketClientManager._instance) {
-			WebSocketClientManager._instance = new WebSocketClientManager();
+	public static get instance(): CometWsManager {
+		if (!CometWsManager._instance) {
+			throw new Error("WebSocketClientManager not initialized");
 		}
 
-		return WebSocketClientManager._instance;
+		return CometWsManager._instance;
 	}
 
 	/**
@@ -80,9 +93,20 @@ export class WebSocketClientManager {
 	 *   console.log(`Client with ID 1 not found`);
 	 * }
 	 */
-	public getClient(id: number): WebSocket | undefined {
-		return this._idToClient.get(id);
+	public async getClient(): Promise<WebSocket> {
+		if (this._clients.length === 0) {
+			throw new CometWsManagerError(
+				CometWsManagerErrorCode.ERR_CLIENT_NOT_FOUND
+			);
+		}
+
+		const client: WebSocket = await this._selector.selectCometWs(
+			this._clients
+		);
+
+		return client;
 	}
+
 
 	/**
 	 * Gets the current client count.
@@ -96,7 +120,7 @@ export class WebSocketClientManager {
 	 * console.log(`Current client count: ${clientManager.clientCount}`);
 	 */
 	public get clientCount(): number {
-		return this._idToClient.size;
+		return this._clients.length;
 	}
 
 	/**
@@ -113,28 +137,37 @@ export class WebSocketClientManager {
 	 * const { client, id } = clientManager.initClient('ws://example.com/ws');
 	 * console.log(`New client with ID ${id} connected to ${client.url}`);
 	 */
-	public initClient(url: string): { client: WebSocket, id: number } {
-		if (this.clientCount >= webSocketConfig.client.maxClientCount) {
-			throw new WebSocketClientManagerError(
-				WebSocketClientManagerErrorCode.ERR_MAX_CLIENTS_REACHED
+	public addClient(url: string): WebSocket {
+		if (this.clientCount >= CometWsManager.MAX_CLIENT_COUNT) {
+			throw new CometWsManagerError(
+				CometWsManagerErrorCode.ERR_MAX_CLIENTS_REACHED
 			);
 		}
 
-		if (!url) {
-			throw new WebSocketClientManagerError(
-				WebSocketClientManagerErrorCode.ERR_INVALID_URL
+		let client: WebSocket;
+		try {
+			client = new WebSocket(url);
+		} catch (err) {
+			throw new CometWsManagerError(
+				CometWsManagerErrorCode.ERR_ADD_CLIENT_FAILED,
+				err.message
 			);
 		}
 
-		const client: WebSocket = new WebSocket(url);
+		client.on("open", () => {
+			console.log("WS client init successful");
+		});
 
-		let id: number = this.clientCount + 1;
-		while (this.getClient(id) != null) { // Acceptable runtime for small client counts.
-			id++;
-		}
-		this.setClient(id, client);
+		client.on("close", () => {
+			console.log("WS client closed")
+		});
 
-		return { id: id, client: client }
+		client.on("error", (err) => {
+			console.error("WS client error:", err);
+		})
+
+		this._clients.push(client);
+		return client;
 	}
 
 	/**
@@ -142,7 +175,7 @@ export class WebSocketClientManager {
 	 * 
 	 * Closes a WebSocket client and removes it from the client map.
 	 * 
-	 * @param id Client ID.
+	 * @param index Client ID.
 	 * @throws `Error` if the client is not found, or if the minimum client count is reached.
 	 * 
 	 * @example
@@ -150,41 +183,31 @@ export class WebSocketClientManager {
 	 * clientManager.closeClient(1);
 	 * console.log(`Client with ID 1 disconnected`);
 	 */
-	public closeClient(id: number): void {
-		if (this.clientCount <= WebSocketClientManager.MIN_CLIENT_COUNT) {
-			throw new WebSocketClientManagerError(
-				WebSocketClientManagerErrorCode.ERR_MIN_CLIENTS_REACHED
+	public removeClient(client: WebSocket): void {
+		if (this.clientCount <= CometWsManager.MIN_CLIENT_COUNT) {
+			throw new CometWsManagerError(
+				CometWsManagerErrorCode.ERR_MIN_CLIENTS_REACHED
 			);
 		}
 
-		if (!id) {
-			throw new WebSocketClientManagerError(
-				WebSocketClientManagerErrorCode.ERR_INVALID_ID
-			);
-		}
+		const index: number = this._clients.indexOf(client);
 
-		const client: WebSocket = this.getClient(id);
-		if (!client) {
-			throw new WebSocketClientManagerError(
-				WebSocketClientManagerErrorCode.ERR_CLIENT_NOT_FOUND
+		if (index < 0) {
+			throw new CometWsManagerError(
+				CometWsManagerErrorCode.ERR_CLIENT_NOT_FOUND
 			);
 		}
 
 		client.removeAllListeners();
 		client.close();
-		this._idToClient.delete(id);
+		this._clients.splice(index, 1);
 	}
 
-	/**
-	 * Sets a WebSocket client by ID.
-	 * 
-	 * Sets a WebSocket client by its ID in the internal map.
-	 * 
-	 * @param id Client ID.
-	 * @param client WebSocket client.
-	 * @protected
-	 */
-	protected setClient(id: number, client: WebSocket): void {
-		this._idToClient.set(id, client);
+	public get selectorClass(): string {
+		return this._selector.constructor.name;
+	}
+
+	public get urls(): string[] {
+		return this._clients.map(client => client.url);
 	}
 }

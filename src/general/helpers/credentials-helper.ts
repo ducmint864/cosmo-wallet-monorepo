@@ -1,6 +1,6 @@
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
-import createError from "http-errors";
+import createHttpError from "http-errors";
 import { prisma } from "../../connections";
 import { randomBytes } from "crypto";
 import { authConfig } from "../../config";
@@ -29,7 +29,7 @@ function checkPasswordAndThrow(password: string) {
 	}) as any[];
 
 	if (result.length > 0) {
-		throw createError(400,
+		throw createHttpError(400,
 			"Invalid password:\n" +
 			result
 				.map((criteria) => { return criteria.message; })
@@ -40,7 +40,7 @@ function checkPasswordAndThrow(password: string) {
 
 function checkEmailAndThrow(email: string) {
 	if (!emailValidator.validate(email)) {
-		throw createError(400, "Invalid email");
+		throw createHttpError(400, "Invalid email");
 	}
 }
 
@@ -66,7 +66,7 @@ function checkUsernameAndThrow(username: string) {
 	}
 
 	if (symbolErr || lengthErr || letterErr) {
-		throw createError(400,
+		throw createHttpError(400,
 			"Invalid username:\n"
 			+ (lengthErr ? `Username must be between ${usernameMinLength}  -  ${usernameMaxLength} characters\n` : "")
 			+ (symbolErr ? "Username can only contain alphanumerics and underscores\n" : "")
@@ -98,7 +98,7 @@ async function genUsername(): Promise<string> {
 
 function checkNicknameAndThrow(nickname: string) {
 	if (!(nickname.length >= 1 && nickname.length <= 16)) {
-		throw createError(400, `Invalid nickname: Nickname must be between ${nicknameMinLength} - ${nicknameMaxLength} characters`);
+		throw createHttpError(400, `Invalid nickname: Nickname must be between ${nicknameMinLength} - ${nicknameMaxLength} characters`);
 	}
 }
 

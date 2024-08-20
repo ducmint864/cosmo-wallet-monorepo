@@ -49,6 +49,7 @@ model user_accounts {
   crypto_mnemonic    Bytes             @unique(map: "base_account_mnemonic_key")
   crypto_pbkdf2_salt Bytes
   crypto_iv          Bytes
+  user_type          user_type_enum    @default(normal)
   wallet_accounts    wallet_accounts[]
 }
 
@@ -75,4 +76,9 @@ enum tx_type_enum {
   token_transfer
   nft_transfer
   others
+}
+
+enum user_type_enum {
+  normal
+  admin
 }

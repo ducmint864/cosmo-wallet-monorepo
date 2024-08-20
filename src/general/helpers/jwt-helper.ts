@@ -1,10 +1,22 @@
 import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
+import { user_type_enum } from "@prisma/client";
+import { authConfig } from "../../config";
 import "dotenv/config";
-import { authConfig, cryptoConfig } from "../../config";
 
-export function genToken(
+function genAndTimestampPayload(inputUserAccountId: number, inputUserType: user_type_enum): UserAccountJwtPayload {
+	// Manually set the timestamp to ensure integrity across modules that use UserAccountJwtPayload
+	const argTimestamp: number = Math.floor(Date.now() / 1000);
+	const payload: UserAccountJwtPayload = {
+		userAccountId: inputUserAccountId,
+		userType: inputUserType,
+		iat: argTimestamp,
+	}
+	return payload;
+}
+
+function genToken(
 	payload: UserAccountJwtPayload,
 	secret: string,
 	duration: string,
@@ -21,7 +33,7 @@ export function genToken(
 	return token;
 }
 
-export function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload | null {
+function decodeAndVerifyToken(token: string, publicKey: string): UserAccountJwtPayload | null {
 	try {
 		const decoded = <UserAccountJwtPayload>jwt.verify(token, publicKey);
 		if (!decoded) {
@@ -38,30 +50,39 @@ export function decodeAndVerifyToken(token: string, publicKey: string): UserAcco
  * @param token: Raw token string
  * @returns 
  */
-export async function isTokenInvalidated(token: string): Promise<boolean> {
+async function isTokenInvalidated(token: string): Promise<boolean> {
 	try {
 		if (!redisClient.isOpen) {
 			redisClient.connect();
 		}
+
 		const data = await redisClient.get(token);
 		return data !== null;
 	} catch (err) {
-		console.log(err);
-		return true;
+		return false;
 	}
 }
 
-export async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void>	 {
-	if (!tokenPayload.exp) {
-		throw new Error("Token payload doesn't have expiry field");
+async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void> {
+	// Unix timestamp in seconds
+	let expiryTimestamp: number = tokenPayload.iat;
+
+	if (!expiryTimestamp) {
+		// Asign expiry to the timestamp of n seconds from now, where n is the duration of refresh token
+		const nSeconds: number = authConfig.token.refreshToken.durationMinutes * 60;
+		expiryTimestamp = Date.now() / 1000 + nSeconds;
 	}
 
-	try {
-		const remainingTTL: number = tokenPayload.exp - Math.floor(Date.now() / 1000);
-		await redisClient.set(token, "invalidated", {
-			EX: remainingTTL,
-		});
-	} catch (err) {
-		throw err;
-	}
+	const remainingTTL: number = expiryTimestamp - Math.floor(Date.now() / 1000);
+	await redisClient.set(token, "invalidated", {
+		EX: remainingTTL,
+	});
+}
+
+export {
+	decodeAndVerifyToken,
+	genToken,
+	invalidateToken,
+	isTokenInvalidated,
+	genAndTimestampPayload,
 }

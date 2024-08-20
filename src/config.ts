@@ -1,21 +1,21 @@
 import { BinaryToTextEncoding } from "crypto";
 import { Algorithm } from "jsonwebtoken";
-import "dotenv/config";
+import { envCollection } from "./env";
 
 type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
 const authConfig = {
 	token: {
 		accessToken: {
-			privateKey: process.env.ACCESS_TOKEN_PRIVATE_KEY,
-			publicKey: process.env.ACCESS_TOKEN_PUBLIC_KEY,
+			privateKey: envCollection.ACCESS_TOKEN_PRIVATE_KEY,
+			publicKey: envCollection.ACCESS_TOKEN_PUBLIC_KEY,
 			durationStr: "5m",
 			durationMinutes: 5,
 			signingAlgo: "ES256" as Algorithm,
 		},
 		refreshToken: {
-			privateKey: process.env.REFRESH_TOKEN_PRIVATE_KEY,
-			publicKey: process.env.REFRESH_TOKEN_PUBLIC_KEY,
+			privateKey: envCollection.REFRESH_TOKEN_PRIVATE_KEY,
+			publicKey: envCollection.REFRESH_TOKEN_PUBLIC_KEY,
 			durationStr: "4h",
 			durationMinutes: 60 * 4,
 			signingAlgo: "ES384" as Algorithm,
@@ -68,16 +68,24 @@ const cryptoConfig = {
 	}
 }
 
-const webSocketConfig = {
-	client: {
-		minClientCount: 0,
-		maxClientCount: 5,
-	}
-}
-
-const chainNodeConfig = {
-	minNodeCount: 0,
-	maxNodeCount: 100,
+const chainRpcConfig = {
+	http: {
+		blockchainApp: {
+			minNodes: 1,
+			maxNodes: 50,
+			endpoints: envCollection.BLOCKCHAIN_APP_HTTP_ENDPOINTS,
+		},
+		cometBft: {
+			minNodes: 1,
+			maxNodes: 20,
+			endpoints: envCollection.COMET_BFT_HTTP_ENDPOINTS,
+		}
+	},
+	cometBftWebSocket: {
+		minNodes: 1,
+		maxNodes: 5,
+		endpoints: envCollection.COMET_BFT_WEBSOCKET_ENDPOINTS,
+	},
 }
 
 const requestDataConfig = {
@@ -90,18 +98,28 @@ const securityConfig = {
 	xss: {},
 	csrf: {
 		csrfToken: {
-			secret: process.env.CSRF_TOKEN_SECRET,
+			secret: envCollection.CSRF_TOKEN_SECRET,
 			length: 16,
 			durationMinutes: 60 * 4,
 		},
 	},
+	csp: {
+		policies: {
+			directives: {
+				defaultSrc: ["'self'"],
+				scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // unsafe-eval, unsafe-inline unsafe in production, change it!
+				styleSrc: ["'self'", "'unsafe-inline'"], // Unsafe for production
+				imageSrc: ["'self'"],
+				connectSrc: ["'self'"],
+			}
+		},
+	}
 }
 
 export {
 	cryptoConfig,
 	authConfig,
-	webSocketConfig,
-	chainNodeConfig,
+	chainRpcConfig,
 	requestDataConfig,
 	securityConfig,
 };

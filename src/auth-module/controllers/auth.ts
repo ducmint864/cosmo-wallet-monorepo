@@ -3,8 +3,8 @@ import { ThasaHdWallet } from "../../types/ThasaHdWallet";
 import { HdPath, stringToPath, pathToString } from "@cosmjs/crypto";
 import { prisma } from "../../connections";
 import { errorHandler } from "../../errors/middlewares/error-handler";
-import { invalidateToken, decodeAndVerifyToken } from "../../general/helpers/jwt-helper";
-import { UserAccountJwtPayload } from "../../types/BaseAccountJwtPayload";
+import { invalidateToken, decodeAndVerifyToken, isTokenInvalidated } from "../../general/helpers/jwt-helper";
+import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
 import * as credentialHelper from "../../general/helpers/credentials-helper";
@@ -22,14 +22,14 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 
 		let {
 			// eslint-disable-next-line
-			email: _email,
-			username: _username,
-			password: _password
+			email: inputEmail,
+			username: inputUsername,
+			password: inputPassword
 		} = req.body;
 
-		const hasEmail: boolean = (_email != null);
-		const hasUsername: boolean = (_username != null);
-		const hasPassword: boolean = (_password != null);
+		const hasEmail: boolean = (inputEmail != null);
+		const hasUsername: boolean = (inputUsername != null);
+		const hasPassword: boolean = (inputPassword != null);
 
 		// Check if request contains required params
 		if (!(hasEmail && hasPassword)) {
@@ -37,14 +37,14 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		}
 
 		// Validate credentials format
-		credentialHelper.checkEmailAndThrow(_email);
-		credentialHelper.checkPasswordAndThrow(_password);
+		credentialHelper.checkEmailAndThrow(inputEmail);
+		credentialHelper.checkPasswordAndThrow(inputPassword);
 
 		// Generate usrename if not provided
 		if (hasUsername) {
-			credentialHelper.checkUsernameAndThrow(_username);
+			credentialHelper.checkUsernameAndThrow(inputUsername);
 		} else {
-			_username = await credentialHelper.genUsername();
+			inputUsername = await credentialHelper.genUsername();
 		}
 
 		// Encrypt mnemonic
@@ -53,27 +53,27 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 			hdPaths: [stringToPath(cryptoConfig.bip44.defaultHdPath)]
 		});
 
-		const _pbkdf2Salt = Buffer.concat(
-			[Buffer.from(`${_email}${_username}`),
+		const argPbkdf2Salt = Buffer.concat(
+			[Buffer.from(`${inputEmail}${inputUsername}`),
 			randomBytes(cryptoConfig.pbkdf2.saltLength)]
 		);
-		const encryptionKey = await cryptoHelper.getEncryptionKey(_password, _pbkdf2Salt);
+		const encryptionKey = await cryptoHelper.getEncryptionKey(inputPassword, argPbkdf2Salt);
 		const {
-			encrypted: _mnemonic,
-			iv: _iv
+			encrypted: argMnemonic,
+			iv: argIv
 		} = cryptoHelper.encrypt(wallet.mnemonic, encryptionKey);
 
 		// Password-hashing
-		_password = await bcrypt.hash(_password, cryptoConfig.bcrypt.saltRounds);
+		const hashedPassword: string = await bcrypt.hash(inputPassword, cryptoConfig.bcrypt.saltRounds);
 
 		const userAccount = await prisma.user_accounts.create({
 			data: {
-				email: _email,
-				username: _username,
-				password: _password,
-				crypto_mnemonic: _mnemonic,
-				crypto_iv: _iv,
-				crypto_pbkdf2_salt: _pbkdf2Salt,
+				email: inputEmail,
+				username: inputUsername,
+				password: hashedPassword,
+				crypto_mnemonic: argMnemonic,
+				crypto_iv: argIv,
+				crypto_pbkdf2_salt: argPbkdf2Salt,
 			}
 		});
 
@@ -82,10 +82,10 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		}
 
 		// Derive the default (main) wallet account for the user account
-		const { address: _address } = (await wallet.getAccounts())[0];
+		const { address: argAddress } = (await wallet.getAccounts())[0];
 		const walletAccount = await prisma.wallet_accounts.create({
 			data: {
-				address: _address,
+				address: argAddress,
 				crypto_hd_path: cryptoConfig.bip44.defaultHdPath,
 				nickname: "Account 0",
 				wallet_order: 1, // User's first wallet
@@ -110,14 +110,14 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 		const {
-			email: _email,
-			username: _username,
-			password: _password
+			email: inputEmail,
+			username: inputUsername,
+			password: inputPassword
 		} = req.body;
 
-		const hasEmail: boolean = (_email != null);
-		const hasUsername: boolean = (_username != null);
-		const hasPassword: boolean = (_password != null);
+		const hasEmail: boolean = (inputEmail != null);
+		const hasUsername: boolean = (inputUsername != null);
+		const hasPassword: boolean = (inputPassword != null);
 
 		if (!(hasEmail || hasUsername) && hasPassword) {
 			throw createHttpError(400, "Missing credentials information");
@@ -125,36 +125,33 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 
 		// Validate credentials format
 		if (hasEmail) {
-			credentialHelper.checkEmailAndThrow(_email);
+			credentialHelper.checkEmailAndThrow(inputEmail);
 		} else if (hasUsername) {
-			credentialHelper.checkUsernameAndThrow(_username);
+			credentialHelper.checkUsernameAndThrow(inputUsername);
 		}
-		credentialHelper.checkPasswordAndThrow(_password);
+		credentialHelper.checkPasswordAndThrow(inputPassword);
 
-		const userAccount =
-			hasEmail
-				? await prisma.user_accounts.findUnique({
-					where: {
-						email: _email
-					}
-				})
-				: await prisma.user_accounts.findUnique({
-					where: {
-						username: _username
-					}
-				});
+		const userAccount = await prisma.user_accounts.findUnique({
+			where: hasEmail ? { email: inputEmail } : { username: inputUsername }
+		})
 
 		if (!userAccount) {
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
-		if (!(await credentialHelper.isValidPassword(_password, userAccount.password))) {
+		if (!(await credentialHelper.isValidPassword(inputPassword, userAccount.password))) {
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
+		// Invalidate client's old tokens if they have any (do it in silence)
+		try {
+			await _invalidateCurrentTokens(req, res);
+		} catch (_) { };
+
 		// Send access token and refresh token
-		const payload = <UserAccountJwtPayload>{
+		const payload: UserAccountJwtPayload = {
 			userAccountId: userAccount.user_account_id,
+			userType: userAccount.user_type,
 		};
 		const accessToken: string = genToken(
 			payload,
@@ -183,7 +180,6 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			maxAge: authConfig.token.refreshToken.durationMinutes * 60 * 1000 //  Convert minutes to milisecs
 		});
 
-
 		// Send csrf-token
 		const csrfToken: string = genCsrfToken(payload);
 		res.cookie("csrfToken", csrfToken, {
@@ -202,17 +198,28 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 }
 
 
-// Issues new access token
+// Issues new access token ()
 async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedRefreshTokenPayload;
-	const payload = <UserAccountJwtPayload>{
-		userAccountId: _userAccountId
+	// Refusal of service when access token is present and still viable
+	const accessToken: string = req.cookies["accessToken"];
+	const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, authConfig.token.accessToken.publicKey);
+	if (accessTokenPayload !== null) {
+		res.status(409).json({
+			message: "Access token is still viable, no new token issued",
+		});
 	}
+
+	// decodedRefreshTokenPayload property is injected into request body by the 'requireRefreshToken' middleware
+	const refreshTokenPayload: UserAccountJwtPayload = req.body["decodedRefreshTokenPayload"];
+	const newTokenPayload: UserAccountJwtPayload = {
+		userAccountId: refreshTokenPayload.userAccountId,
+		userType: refreshTokenPayload.userType,
+	};
 
 	try {
 		// Generate a new access token using the payload
 		const accessToken: string = genToken(
-			payload,
+			newTokenPayload,
 			authConfig.token.accessToken.privateKey,
 			authConfig.token.accessToken.durationStr
 		);
@@ -225,9 +232,8 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 			maxAge: authConfig.token.accessToken.durationMinutes * 60 * 1000 // Convert minutes to  milliseconds
 		});
 
-
 		// Generate new csrf-token
-		const csrfToken: string = genCsrfToken(payload);
+		const csrfToken: string = genCsrfToken(newTokenPayload);
 
 		// Send the new csrf-token to client
 		res.cookie("csrfToken", csrfToken, {
@@ -247,25 +253,26 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 }
 
 async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const { userAccountId: _userAccountId } = <UserAccountJwtPayload>req.body.decodedAccessTokenPayload;
-	const { password: _password, nickname: _nickname } = req.body;
+	const { password: inputPassword, nickname: inputUsername } = req.body;
+	const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
+	const argUserAccountId: number = accessTokenPayload.userAccountId;
 
-	const hasPassword: boolean = (_password != null);
-	const hasNickname: boolean = (_nickname != null);
+	const hasPassword: boolean = (inputPassword != null);
+	const hasNickname: boolean = (inputUsername != null);
 
 	try {
 		if (!hasPassword) {
 			throw createHttpError(400, "Missing password");
 		}
-		credentialHelper.checkPasswordAndThrow(_password);
+		credentialHelper.checkPasswordAndThrow(inputPassword);
 
 		if (hasNickname) {
-			credentialHelper.checkNicknameAndThrow(_nickname);
+			credentialHelper.checkNicknameAndThrow(inputUsername);
 		}
 
 		const userAccount = await prisma.user_accounts.findUnique({
 			where: {
-				user_account_id: _userAccountId,
+				user_account_id: argUserAccountId,
 			}
 		});
 
@@ -273,29 +280,29 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 			throw createHttpError(404, "Base account not found");
 		}
 
-		const isValidPassword: boolean = await credentialHelper.isValidPassword(_password, userAccount.password);
+		const isValidPassword: boolean = await credentialHelper.isValidPassword(inputPassword, userAccount.password);
 		if (!isValidPassword) {
 			throw createHttpError(401, "Incorrect credentials");
 		}
 
-		const encryptionKey: Buffer = await cryptoHelper.getEncryptionKey(_password, userAccount.crypto_pbkdf2_salt);
+		const encryptionKey: Buffer = await cryptoHelper.getEncryptionKey(inputPassword, userAccount.crypto_pbkdf2_salt);
 		const mnemonic: string = cryptoHelper.decrypt(userAccount.crypto_mnemonic, encryptionKey, userAccount.crypto_iv);
 
 		// eslint-disable-next-line
-		const result = <Array<any>>(await prisma.$queryRaw`SELECT get_wallet_count_of_user(${userAccount.user_account_id}::INT)`);
-		const newAccIndex: number = result[0]["get_wallet_count_of_user"];
+		const sqlResult: any[] = await prisma.$queryRaw`SELECT get_wallet_count_of_user(${userAccount.user_account_id}::INT)`;
+		const newAccIndex: number = sqlResult[0]["get_wallet_count_of_user"];
 		const newHdPath: HdPath = makeHDPath(newAccIndex);
-		const _hdPath: string = pathToString(newHdPath);
-		const _walletOrder: number = newAccIndex + 1;
-		const { address: _address } = await getDerivedAccount(mnemonic, newHdPath);
+		const argHdPath: string = pathToString(newHdPath);
+		const argWalletOrder: number = newAccIndex + 1;
+		const { address: argAddress } = await getDerivedAccount(mnemonic, newHdPath);
 
 		const walletAccount = await prisma.wallet_accounts.create({
 			data: {
-				address: _address,
-				crypto_hd_path: _hdPath,
-				nickname: _nickname || `Account ${newAccIndex}`,
-				wallet_order: _walletOrder,
-				user_account_id: _userAccountId
+				address: argAddress,
+				crypto_hd_path: argHdPath,
+				nickname: inputUsername || `Account ${newAccIndex}`,
+				wallet_order: argWalletOrder,
+				user_account_id: argUserAccountId,
 			}
 		});
 
@@ -314,41 +321,67 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 }
 
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-	const accessToken: string = req.cookies["accessToken"];
-	const refreshToken: string = req.cookies["refreshToken"];
+	/** This middelware comes after requireAccessToken(...)
+	 * -> Guarateeed availability of decoded access-token payload
+	 *    Meanwhile, access to refresh-token is not guaranteed
+	 * */
+	let invalidationError: Error;
+	try {
+		console.log(req.cookies["accessToken"]);
+		console.log(req.cookies["refreshToken"]);
+		await _invalidateCurrentTokens(req, res);
+	} catch (err) {
+		invalidationError = err;
+	}
 
 	try {
-		/** This middelware comes after requireAccessToken(...)
-		 * -> Guarateeed availability of decoded access-token payload
-		 *    Meanwhile, access to refresh-token is not guaranteed
-		 * */
-
-		// Invalidate access-token
-		const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
-		await invalidateToken(accessToken, accessTokenPayload);
-
-		// Invalidate refresh token (if available)
-		if (refreshToken) {
-			const refreshPublicKey: string = authConfig.token.refreshToken.publicKey;
-			const refreshTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(refreshToken, refreshPublicKey);
-			await invalidateToken(refreshToken, refreshTokenPayload)
+		if (invalidationError) {
+			throw createHttpError(
+				500,
+				`logout(): cannot invalidate tokens\n${invalidationError}`,
+				invalidationError
+			)
 		}
-
-		// Instruct clients to remove obsolete token cookies
-		res.clearCookie("accessToken"); // Add domain options later
-		res.clearCookie("refreshToken");
-		res.clearCookie("csrfToken");
 
 		res.status(200).json({
 			message: "Logout successful"
 		})
-
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
 }
 
-export { 
+// Private utility function to clear all of the user's tokens (Potentially throw an error)
+async function _invalidateCurrentTokens(req: Request, res: Response): Promise<void> {
+	const accessToken: string = req.cookies["accessToken"];
+	const refreshToken: string = req.cookies["refreshToken"];
+
+	// Invalidate access-token (if available)
+	if (accessToken) {
+		let accessTokenPayload: UserAccountJwtPayload;
+		accessTokenPayload =
+			req.body["decodedAccessTokenPayload"] ??
+			decodeAndVerifyToken(accessToken, authConfig.token.accessToken.publicKey);
+		await invalidateToken(accessToken, accessTokenPayload);
+	}
+
+	// Invalidate refresh token (if available)
+	if (refreshToken) {
+		let refreshTokenPayload: UserAccountJwtPayload;
+		refreshTokenPayload =
+			req.body["decodedRefreshTokenPayload"] ??
+			decodeAndVerifyToken(refreshToken, authConfig.token.refreshToken.publicKey);
+		await invalidateToken(refreshToken, refreshTokenPayload)
+	}
+
+	// Instruct clients to remove obsolete token cookies
+	res.clearCookie("accessToken"); // Add domain options later
+	res.clearCookie("refreshToken");
+	res.clearCookie("csrfToken");
+}
+
+
+export {
 	login,
 	register,
 	logout,
