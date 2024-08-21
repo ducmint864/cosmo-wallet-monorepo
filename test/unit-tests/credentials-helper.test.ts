@@ -7,22 +7,27 @@ import { compare as bcryptCompare } from "bcrypt";
 import { checkPasswordAndThrow } from "../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
-    // it('should return nothing if the password met the requirement', async () => {
-    //     const password: string = "th1sIs_p@ssword";
+    it('should return nothing if the password met the requirement', async () => {
+        // Arrange
+        const password: string = "th1sIs_p@ssword";
 
-    //     const result = checkPasswordAndThrow(password);
+        // Act
+        const result = checkPasswordAndThrow(password);
 
-    //     expect(result).toBeUndefined();
-    // });
+        // Assert
+        expect(result).toBeUndefined();
+    });
 
-    // it('should throw an error if the password is too short', async () => {
-    //     const password: string = "1@abc";
+    it('should throw an error if the password is too short', async () => {
+        // Arrange
+        const password: string = "1@aBc";
 
-    //     try{
-    //         checkPasswordAndThrow(password)
-    //     } catch (error) {
-    //         expect(error).toHaveBeenCalledWith(400);
-    //         expect(error).toHaveBeenCalledWith({message: "Invalid password"})
-    //     }
-    // });
-})
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (error) {
+            expect(error.message).toContain("Invalid password:");
+            expect(error.message).toContain("Password must be between 8 - 32 characters");   
+        }
+    });
+});
