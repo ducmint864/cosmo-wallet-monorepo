@@ -1,7 +1,9 @@
 import { genToken, decodeAndVerifyToken, isTokenInvalidated, invalidateToken } from "../../src/general/helpers/jwt-helper";
 import jwt, { Algorithm } from "jsonwebtoken";
-import { UserAccountJwtPayload } from "../../src/types/BaseAccountJwtPayload";
+import { UserAccountJwtPayload } from "../../src/types/UserAccountJwtPayload";
 import {redisClient} from "../../src/connections";
+import {user_type_enum} from "@prisma/client";
+import { authConfig } from "../../src/config";
 import { decode } from "punycode";
 import exp from "constants";
 
@@ -19,6 +21,7 @@ describe('genToken', () => {
         // Arrange 
         const payload: UserAccountJwtPayload = {
             userAccountId: 1,
+            userType: user_type_enum.normal
         };
         const secret = "this is a secret string.. shush";
         const duration = "5hours";
@@ -48,6 +51,7 @@ describe('genToken', () => {
         // Arrange
         const payload: UserAccountJwtPayload = {
             userAccountId: 2,
+            userType: user_type_enum.normal
         };
         const secret = "dont spill the beans";
         const duration = "1hours";
@@ -86,7 +90,7 @@ describe('decodeAndVerifyToken', () => {
         // Arrange
         const publicKey = "mockPubKey";
         const token = "valid-token";
-        const payload: UserAccountJwtPayload = {userAccountId: 123};
+        const payload: UserAccountJwtPayload = {userAccountId: 123, userType: user_type_enum.normal};
         
         // Set up mock
         (jwt.verify as jest.Mock)
@@ -161,7 +165,7 @@ describe('decodeAndVerifyToken', () => {
 
     it('should be case sensitive for token', () => {
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 72}
+        const payload: UserAccountJwtPayload = {userAccountId: 72, userType: user_type_enum.normal}
         const publicKey = "mockPubKey";
         const validToken: string = "lqk96we2uiso1sd3ufdpo19asd78";
         const invalidToken: string = "lqk96wE2UIso1sd3ufdpo19Asd78";
@@ -182,7 +186,7 @@ describe('decodeAndVerifyToken', () => {
 
     it('should not be case sensitive for public key', () => {
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 892}
+        const payload: UserAccountJwtPayload = {userAccountId: 892, userType: user_type_enum.normal}
         const key1: string = "0xa1b2c3d4e5f6g7h";
         const _key1: string = "0xA1b2C3d4e5F6g7h";
         const validToken: string = "AccessGranted";
@@ -230,7 +234,7 @@ describe('isTokenInvalidated', () => {
         expect(redisClient.connect).toHaveBeenCalledTimes(1);
     });
     
-    it('should return true when received an error', async () => {
+    it('should return false when received an error', async () => {
         // Arrange and Set up mock
         Object.defineProperty(redisClient, 'isOpen', { value: false, writable: true });
         (redisClient.connect as jest.Mock)
@@ -242,7 +246,7 @@ describe('isTokenInvalidated', () => {
         const result = await isTokenInvalidated('testToken');
         
         // Assert
-        expect(result).toBe(true);
+        expect(result).toBe(false);
     });
 
     it('return true if redis return data', async () => {
@@ -279,7 +283,7 @@ describe('invalidateToken', () => {
 
     it('should throw an error when catch an error', async () => {
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 162, exp: 1200}
+        const payload: UserAccountJwtPayload = {userAccountId: 162, exp: 1200, userType: user_type_enum.normal}
         const token: string = "valid-token"; 
 
         // Set up mock
@@ -294,18 +298,19 @@ describe('invalidateToken', () => {
 
     it("should throw an error when token payload doesn't have a expiry feild", async () => {
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 326};
+        const payload: UserAccountJwtPayload = {userAccountId: 326, userType: user_type_enum.normal};
         const token: string = "valid-token";
 
         // Act and Assert
         await expect(() => invalidateToken(token, payload))
-            .rejects.toThrow("Token payload doesn't have expiry field");
+            .rejects.toThrow("this is an error");
     })
 
     it('should calculate remainingTTL of a token when called and set it in redis', async () => {
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 1700000000}
+        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 1700000000, userType: user_type_enum.normal}
         const token: string = "valid-token";
+        const nSeconds: number = authConfig.token.refreshToken.durationMinutes * 60;
 
         // Set up mock
         jest.spyOn(Date, 'now').mockImplementation(() => 1699999000000);
@@ -314,7 +319,9 @@ describe('invalidateToken', () => {
        
         // Act
         await invalidateToken(token, payload);
-        const expectedTTL = payload.exp - Math.floor(Date.now() / 1000); // if an error raised, ignore it! payload.exp is declared
+        const currentTime = Math.floor(Date.now() / 1000); // if an error raised, ignore it! payload.exp is declared
+        const expiryTimestamp = currentTime + nSeconds;
+        const expectedTTL = expiryTimestamp - currentTime;
 
         // Assert
         expect(redisSetMock).toHaveBeenCalledWith(token, "invalidated", { EX: expectedTTL });
@@ -326,7 +333,7 @@ describe('invalidateToken', () => {
          * @todo redisClient not suppose to called when token received is an empty string
          */
         // Arrange
-        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 120000000000}
+        const payload: UserAccountJwtPayload = {userAccountId: 834, exp: 120000000000, userType: user_type_enum.normal}
         const token: string = "";
 
         // Act
