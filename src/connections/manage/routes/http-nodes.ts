@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerNode } from "../controllers/http-nodes";
+import { registerNode, removeNode } from "../controllers/http-nodes";
 import { requireAccessToken } from "../../../auth-module/middlewares/user-auth";
 import { requireUserTypeAdmin } from "../../../admin/middlewares/admin-privilege";
 import { requireCsrfToken } from "../../../security/middlewares/csrf";
@@ -14,6 +14,13 @@ httpNodesRouter.route("/:nodeType/register-node/").post(
 	requireCsrfToken,
 	registerNode
 );
+
+httpNodesRouter.route("/:nodeType/remove-node").post(
+	requireAccessToken,
+	requireUserTypeAdmin,
+	requireCsrfToken,
+	removeNode
+)
 
 // httpNodesRouter.use("/health", (req, res) => res.send("I'm alive"));
 

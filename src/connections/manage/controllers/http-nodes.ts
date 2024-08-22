@@ -98,4 +98,5 @@ async function removeNode(
 
 export {
 	registerNode,
+	removeNode,
 }
