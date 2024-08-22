@@ -47,14 +47,12 @@ async function registerNode(
 				case HttpNodeManagerErrorCode.ERR_MAX_NODES_REACHED:
 					err = createHttpError(400, "maximum number of nodes reached");
 					break;
-				case HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED:
-					err = createHttpError(400, "minimum number of nodes reached");
-					break;
 			}
 		}
 		errorHandler(err, req, res, next);
 	}
 }
+
 
 
 export {
