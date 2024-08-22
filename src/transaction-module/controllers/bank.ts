@@ -70,7 +70,6 @@ async function sendCoin(
 		if (!walletAccount) {
 			throw createHttpError(404, "Wallet account not found / isn't owned by user / might have been deleted");
 		}
-		console.log(walletAccount);
 
 		// Decrypt mnemonic
 		const encryptionKey: Buffer = await getEncryptionKey(
@@ -82,8 +81,6 @@ async function sendCoin(
 			encryptionKey,
 			userAccount.crypto_iv
 		);
-
-		console.log(mnemonic);
 
 		// Sign and broadcast transaction 
 		const signer: OfflineDirectSigner = await getSigner(
