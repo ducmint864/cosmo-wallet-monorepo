@@ -53,7 +53,7 @@ describe('checkPasswordAndThrow', () => {
             checkPasswordAndThrow(password);
         } catch (error) {
             expect(error.message).toContain("Invalid password:");
-            expect(error.message).toContain("Password must contain at least one lowercase letter");
+            expect(error.message).toContain("Password must contains lowercase letter(s)");
         }
     });
 
