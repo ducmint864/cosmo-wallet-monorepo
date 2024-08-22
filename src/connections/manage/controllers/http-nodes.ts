@@ -82,7 +82,7 @@ async function removeNode(
 
 		// Successful
 		res.status(201).json({
-			message: "Node registered",
+			message: "Node removed",
 		});
 	} catch (err) {
 		if (err instanceof HttpNodeManagerError) {
