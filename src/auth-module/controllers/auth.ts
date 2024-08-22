@@ -7,16 +7,28 @@ import { invalidateToken, decodeAndVerifyToken, isTokenInvalidated } from "../..
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import { genToken } from "../../general/helpers/jwt-helper";
 import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-helper";
-import * as credentialHelper from "../../general/helpers/credentials-helper";
-import * as cryptoHelper from "../../general/helpers/crypto-helper";
 import { authConfig, cryptoConfig, securityConfig } from "../../config";
 import { randomBytes } from "crypto";
 import { genCsrfToken } from "../../security/helpers/csrf-helper";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import "dotenv/config";
+import * as credentialHelper from "../../general/helpers/credentials-helper";
+import * as cryptoHelper from "../../general/helpers/crypto-helper";
 
-
+/**
+ * Registers a new user account.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ *
+ * @example
+ * curl -X POST \
+  http://localhost:3000/api/version/auth/register \
+  -H 'Content-Type: application/json' \
+  -d '{"email": "user@example.com", "username": "username", "password": "password"}'
+ */
 async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 
@@ -107,6 +119,19 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 	}
 }
 
+/**
+ * Logs in an existing user account.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ *
+ * @example
+ * curl -X POST \
+  http://localhost:3000/api/version/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email": "user@example.com", "password": "password"}'
+ */
 async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
 		const {
@@ -198,7 +223,19 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 }
 
 
-// Issues new access token ()
+/**
+ * Refreshes an existing access token.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ *
+ * @example
+ * curl -X POST \
+  http://localhost:3000/api/version/auth/refresh-session \
+  -H 'Content-Type: application/json' \
+  -d '{"refreshToken": "refresh-token-value"}'
+ */
 async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
 	// Refusal of service when access token is present and still viable
 	const accessToken: string = req.cookies["accessToken"];
@@ -253,6 +290,19 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 	}
 }
 
+/**
+ * Creates a new wallet account for an existing user.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ *
+ * @example
+ * curl -X POST \
+  http://localhost:3000/api/version/auth/create-wallet-account \
+  -H 'Content-Type: application/json' \
+  -d '{"password": "password", "nickname": "crypto-chad"}'
+ */
 async function createWalletAccount(req: Request, res: Response, next: NextFunction): Promise<void> {
 	const { password: inputPassword, nickname: inputUsername } = req.body;
 	const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"];
@@ -321,6 +371,17 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
 	}
 }
 
+/**
+ * Logs out an existing user account.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ *
+ * @example
+ * curl -X POST \
+  http://localhost:3000/api/version/auth/logout
+ */
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
 	/** This middelware comes after requireAccessToken(...)
 	 * -> Guarateeed availability of decoded access-token payload
@@ -352,7 +413,15 @@ async function logout(req: Request, res: Response, next: NextFunction): Promise<
 	}
 }
 
-// Private utility function to clear all of the user's tokens (Potentially throw an error)
+/**
+ * Private utility function to clear all of the user's tokens.
+ *
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ *
+ * @example
+ * // This function is not intended to be called directly by clients.
+ */
 async function _invalidateCurrentTokens(req: Request, res: Response): Promise<void> {
 	const accessToken: string = req.cookies["accessToken"];
 	const refreshToken: string = req.cookies["refreshToken"];
