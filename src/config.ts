@@ -116,10 +116,19 @@ const securityConfig = {
 	}
 }
 
+const txConfig = {
+	bank: {
+		db: {
+			saveTxDbTimeoutMilisecs: 105000,
+		}
+	}
+}
+
 export {
 	cryptoConfig,
 	authConfig,
 	chainRpcConfig,
 	requestDataConfig,
 	securityConfig,
+	txConfig,
 };
