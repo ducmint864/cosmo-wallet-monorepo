@@ -53,7 +53,48 @@ async function registerNode(
 	}
 }
 
+async function removeNode(
+	req: Request,
+	res: Response,
+	next: NextFunction
+): Promise<void> {
+	const url: string = getStringFromRequestBody(req, "url");
+	const nodeType: string = req.params["nodeType"] ?? "";
 
+	try {
+		if (!url) {
+			throw createHttpError(400, "invalid URL");
+		}
+		if (!nodeType) {
+			throw createHttpError(400, "please specify request type");
+		}
+
+		switch (nodeType) {
+			case NodeTypeEnum.comet:
+				await cometHttpNodeMan.removeNode(url);
+				break;
+			case NodeTypeEnum.application:
+				await blockchainApiNodeMan.removeNode(url);
+				break;
+			default:
+				throw createHttpError(400, `invalid node type ${nodeType} (choose either 'comet' or 'application'`);
+		}
+
+		// Successful
+		res.status(201).json({
+			message: "Node registered",
+		});
+	} catch (err) {
+		if (err instanceof HttpNodeManagerError) {
+			switch (err.code) {
+				case HttpNodeManagerErrorCode.ERR_MIN_NODES_REACHED:
+					err = createHttpError(400, "minimum number of nodes reached");
+					break;
+			}
+		}
+		errorHandler(err, req, res, next);
+	}
+}
 
 export {
 	registerNode,
