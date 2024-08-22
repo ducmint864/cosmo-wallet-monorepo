@@ -4,7 +4,7 @@ import createError from "http-errors";
 import {randomBytes} from "crypto"
 import { authConfig } from "../../src/config";
 import { compare as bcryptCompare } from "bcrypt";
-import { checkPasswordAndThrow } from "../../src/general/helpers/credentials-helper";
+import { checkPasswordAndThrow, checkEmailAndThrow } from "../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
     it('should return nothing if the password met the requirement', async () => {
@@ -29,5 +29,83 @@ describe('checkPasswordAndThrow', () => {
             expect(error.message).toContain("Invalid password:");
             expect(error.message).toContain("Password must be between 8 - 32 characters");   
         }
+    });
+
+    it("should throw an error if the password is too long", async () => {
+        // Arrange
+        const password: string = "qwertyuiOPasdfghjkl;'zxcvbnm,.25okay";
+        
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (err) {
+            expect(err.message).toContain("Invalid password:");
+            expect(err.message).toContain("Password must be between 8 - 32 characters");
+        }
+    });
+
+    it("should throw an error if the password doesn't have a lowercase letter", async () => {
+        // Arrange
+        const password: string = "QWERTYUIOPASDFGHJKLZXCV@123";
+
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (error) {
+            expect(error.message).toContain("Invalid password:");
+            expect(error.message).toContain("Password must contain at least one lowercase letter");
+        }
+    });
+
+    it("should throw an error if the password doesn't have a uppercase letter", async () => {
+        // Arrange
+        const password: string = "p@ssw0rd";
+
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (err) {
+            expect(err.message).toContain("Invalid password:");
+            expect(err.message).toContain("Password must contains uppercase letter(s)");
+        }
+    })
+
+    it("should throw an error if the password doesn't have a digit", async () => {
+        // Arrange
+        const password: string = "p@sswOrd";
+
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (err) {
+            expect(err.message).toContain("Invalid password:");
+            expect(err.message).toContain("Password must contains digit(s)");
+        }
+    });
+
+    it("should throw an error if the password doesn't have a symbol/ special character", async () =>{
+        // Arrange
+        const password: string = "p4sswOrd";
+
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (err) {
+            expect(err.message).toContain("Invalid password:");
+            expect(err.message).toContain("Password must contains at least 1 symbol")
+        }
+    })
+});
+
+describe('checkEmailAndThrow', () => {
+    it('should return nothing if the email met the requirements', async () => {
+        // Arrange
+        const email: string = "test@example.com";
+
+        // Act
+        const result = checkEmailAndThrow(email);
+
+        // Assert
+        expect(result).toBeUndefined();
     });
 });

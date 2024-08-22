@@ -32,7 +32,7 @@ describe('makeHDPath', ()=> {
         }
     });
 
-    it('should return null when receive a negative index', () => {
+    it('should return null when receive a negative index', async () => {
         // Arrange
         const accIndex: number = -1;
 
