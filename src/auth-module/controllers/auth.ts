@@ -207,6 +207,7 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 		res.status(409).json({
 			message: "Access token is still viable, no new token issued",
 		});
+		return;
 	}
 
 	// decodedRefreshTokenPayload property is injected into request body by the 'requireRefreshToken' middleware
