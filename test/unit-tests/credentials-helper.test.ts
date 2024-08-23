@@ -1,6 +1,7 @@
 import PasswordValidator from "password-validator";
 import emailValidator from "email-validator";
 import createError from "http-errors";
+import { prisma } from "../../src/connections";
 import {randomBytes} from "crypto"
 import { authConfig } from "../../src/config";
 import { compare as bcryptCompare } from "bcrypt";
@@ -230,3 +231,79 @@ describe('checkUsernameAndThrow', () => {
         }
     });
 });
+
+jest.mock("../../src/connections", () => ({
+  prisma: {
+    user_accounts: {
+      findUnique: jest.fn(), 
+    },
+  },
+}));
+
+describe('genUsername', () => {
+    it('should return a valid username', async () => {
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockResolvedValue(null);
+
+        // Act
+        const username = await genUsername();
+
+        // Assert
+        expect(username).toBeDefined();
+    });
+
+    it('should work on multiple call', async () => {
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockResolvedValue(null);
+
+        // Act 
+        const user1name = await genUsername();
+        const user2name = await genUsername();
+        const user3name = await genUsername();
+
+        // Assert
+        expect(user1name).toBeDefined();
+        expect(user2name).toBeDefined();
+        expect(user3name).toBeDefined();
+    });
+
+    it('should return a string value', async () => {
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockResolvedValue(null);
+        
+        // Act
+        const username = await genUsername();
+
+        //Assert
+        expect(typeof username).toBe("string");
+    });
+
+    it('should return a username that between 6  -  16 characters', async () => {
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockResolvedValue(null);
+        
+        // Act
+        const username = await genUsername();
+
+        //Assert
+        expect(username.length).toBeGreaterThanOrEqual(8);
+        expect(username.length).toBeLessThanOrEqual(16);
+    });
+
+    it('should return a username that only contain alphanumerics and underscores', async () => {
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockResolvedValue(null);
+        
+        // Act
+        const username = await genUsername();
+
+        //Assert
+        expect(username).toMatch(/^[a-zA-Z0-9_]+$/);
+    });
+});
+
