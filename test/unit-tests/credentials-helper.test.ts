@@ -4,7 +4,7 @@ import createError from "http-errors";
 import {randomBytes} from "crypto"
 import { authConfig } from "../../src/config";
 import { compare as bcryptCompare } from "bcrypt";
-import { checkPasswordAndThrow, checkEmailAndThrow } from "../../src/general/helpers/credentials-helper";
+import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername } from "../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
     it('should return nothing if the password met the requirement', async () => {
@@ -147,6 +147,86 @@ describe('checkEmailAndThrow', () => {
             checkEmailAndThrow(email);
         } catch (err) {
             expect(err.message).toContain("Invalid email");
+        }
+    });
+});
+
+describe('checkUsernameAndThrow', () => {
+    it('should return nothing if the username met the requirements', async () => {
+        // Arrange
+        const username: string = "testUsername";
+
+        // Act
+        const result = checkUsernameAndThrow(username);
+
+        // Assert
+        expect(result).toBeUndefined();
+    })
+
+    it('should throw an error if the username too short', async() => {
+        // Arrange
+        const username: string = "ab";
+        
+        // Act and Assert
+        try {
+            checkUsernameAndThrow(username);
+        } catch (err) {
+            expect(err.message).toContain("Invalid username:");
+            expect(err.message).toContain("Username must be between 6  -  16 characters");
+        }
+    });
+
+    it('should throw an error if the username too long', async() => {
+        // Arrange
+        const username: string = "QWERTYUIOIPASDFGHJKLZXCVBNM_ASDGHFUIWYE1234567890";
+        
+        // Act and Assert
+        try {
+            checkUsernameAndThrow(username);
+        } catch (err) {
+            expect(err.message).toContain("Invalid username:");
+            expect(err.message).toContain("Username must be between 6  -  16 characters");
+        }
+    });
+
+    it('should throw an error if the username contain special character/ symbol', async () => {
+        // Arrange
+        const username: string = "testUser!@#";
+
+        // Act and Assert
+        try {
+            checkUsernameAndThrow(username);
+        } catch (err) {
+            expect(err.message).toContain("Invalid username:");
+            expect(err.message).toContain("Username can only contain alphanumerics and underscores");
+        }
+    });
+    
+    it("should throw an error if the username don't have a letter", async () => {
+        // Arrange
+        const username: string = "1234567890";
+
+        // Act and Assert
+        try {
+            checkUsernameAndThrow(username);
+        } catch (err) {
+            expect(err.message).toContain("Invalid username:");
+            expect(err.message).toContain("Username must contain at least 1 letter");
+        }
+    });
+
+    it('should throw an error if the username is an empty string', async () => {
+        // Arrange
+        const username: string = "";
+
+        // Act and Assert
+        try {
+            checkUsernameAndThrow(username);
+        } catch (err) {
+            expect(err.message).toContain("Invalid username:");
+            expect(err.message).toContain("Username must be between 6  -  16 characters");
+            expect(err.message).toContain("Username can only contain alphanumerics and underscores");
+            expect(err.message).toContain("Username must contain at least 1 letter");
         }
     });
 });
