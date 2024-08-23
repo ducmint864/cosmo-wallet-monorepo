@@ -94,6 +94,23 @@ describe('checkPasswordAndThrow', () => {
             expect(err.message).toContain("Invalid password:");
             expect(err.message).toContain("Password must contains at least 1 symbol")
         }
+    });
+
+    it('should throw an error if password is an empty string', async () => {
+        // Arrange
+        const password: string = "";
+
+        // Act and Assert
+        try {
+            checkPasswordAndThrow(password);
+        } catch (err) {
+            expect(err.message).toContain("Invalid password:");
+            expect(err.message).toContain("Password must be between 8 - 32 characters");
+            expect(err.message).toContain("Password must contains lowercase letter(s)");
+            expect(err.message).toContain("Password must contains uppercase letter(s)");
+            expect(err.message).toContain("Password must contains digit(s)");
+            expect(err.message).toContain("Password must contains at least 1 symbol");
+        }
     })
 });
 
@@ -107,5 +124,29 @@ describe('checkEmailAndThrow', () => {
 
         // Assert
         expect(result).toBeUndefined();
+    });
+
+    it('should throw error if provided email is invalid', async () => {
+        // Arrange
+        const email: string = "test@.com";
+
+        // Act and Assert
+        try {
+            checkEmailAndThrow(email);
+        } catch (err) {
+            expect(err.message).toContain("Invalid email");
+        }
+    });
+
+    it('should throw error if email is an empty string', async () => {
+        // Arrange
+        const email: string = "";
+
+        // Act and Assert
+        try {
+            checkEmailAndThrow(email);
+        } catch (err) {
+            expect(err.message).toContain("Invalid email");
+        }
     });
 });
