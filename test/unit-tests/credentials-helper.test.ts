@@ -307,3 +307,39 @@ describe('genUsername', () => {
     });
 });
 
+describe('checkNicknameAndThrow', () => {
+    it('should return nothing if nickname is valid', () => {
+        // Arrange
+        const nickname: string = 'helloworld';
+        
+        // Act 
+        const result = checkNicknameAndThrow(nickname);
+
+        // Assert
+        expect(result).toBeUndefined();
+    });
+
+    it('should throw an error if nickname is an empty string', async () => {
+        // Arrange
+        const nickname: string = '';
+
+        // Act and Assert
+        try {
+            checkNicknameAndThrow(nickname);
+        } catch (err) {
+            expect(err.message).toContain("Invalid nickname: Nickname must be between 1 - 16 characters");
+        };
+    });
+
+    it('should throw an error if nickname is too long', async () => {
+        // Arrange
+        const nickname: string = 'a'.repeat(17);
+
+        // Act and Assert
+        try {
+            checkNicknameAndThrow(nickname);
+        } catch (err) {
+            expect(err.message).toContain("Invalid nickname: Nickname must be between 1 - 16 characters");
+        };
+    });
+});
