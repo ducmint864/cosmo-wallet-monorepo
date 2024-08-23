@@ -5,7 +5,7 @@ import { prisma } from "../../src/connections";
 import {randomBytes} from "crypto"
 import { authConfig } from "../../src/config";
 import { compare as bcryptCompare } from "bcrypt";
-import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername } from "../../src/general/helpers/credentials-helper";
+import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow } from "../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
     it('should return nothing if the password met the requirement', async () => {
@@ -29,7 +29,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (error) {
             expect(error.message).toContain("Invalid password:");
             expect(error.message).toContain("Password must be between 8 - 32 characters");   
-        }
+        };
     });
 
     it("should throw an error if the password is too long", async () => {
@@ -42,7 +42,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid password:");
             expect(err.message).toContain("Password must be between 8 - 32 characters");
-        }
+        };
     });
 
     it("should throw an error if the password doesn't have a lowercase letter", async () => {
@@ -55,7 +55,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (error) {
             expect(error.message).toContain("Invalid password:");
             expect(error.message).toContain("Password must contains lowercase letter(s)");
-        }
+        };
     });
 
     it("should throw an error if the password doesn't have a uppercase letter", async () => {
@@ -68,7 +68,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid password:");
             expect(err.message).toContain("Password must contains uppercase letter(s)");
-        }
+        };
     })
 
     it("should throw an error if the password doesn't have a digit", async () => {
@@ -81,7 +81,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid password:");
             expect(err.message).toContain("Password must contains digit(s)");
-        }
+        };
     });
 
     it("should throw an error if the password doesn't have a symbol/ special character", async () =>{
@@ -94,7 +94,7 @@ describe('checkPasswordAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid password:");
             expect(err.message).toContain("Password must contains at least 1 symbol")
-        }
+        };
     });
 
     it('should throw an error if password is an empty string', async () => {
@@ -111,7 +111,7 @@ describe('checkPasswordAndThrow', () => {
             expect(err.message).toContain("Password must contains uppercase letter(s)");
             expect(err.message).toContain("Password must contains digit(s)");
             expect(err.message).toContain("Password must contains at least 1 symbol");
-        }
+        };
     })
 });
 
@@ -136,7 +136,7 @@ describe('checkEmailAndThrow', () => {
             checkEmailAndThrow(email);
         } catch (err) {
             expect(err.message).toContain("Invalid email");
-        }
+        };
     });
 
     it('should throw error if email is an empty string', async () => {
@@ -148,7 +148,7 @@ describe('checkEmailAndThrow', () => {
             checkEmailAndThrow(email);
         } catch (err) {
             expect(err.message).toContain("Invalid email");
-        }
+        };
     });
 });
 
@@ -174,7 +174,7 @@ describe('checkUsernameAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid username:");
             expect(err.message).toContain("Username must be between 6  -  16 characters");
-        }
+        };
     });
 
     it('should throw an error if the username too long', async() => {
@@ -187,7 +187,7 @@ describe('checkUsernameAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid username:");
             expect(err.message).toContain("Username must be between 6  -  16 characters");
-        }
+        };
     });
 
     it('should throw an error if the username contain special character/ symbol', async () => {
@@ -200,7 +200,7 @@ describe('checkUsernameAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid username:");
             expect(err.message).toContain("Username can only contain alphanumerics and underscores");
-        }
+        };
     });
     
     it("should throw an error if the username don't have a letter", async () => {
@@ -213,7 +213,7 @@ describe('checkUsernameAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid username:");
             expect(err.message).toContain("Username must contain at least 1 letter");
-        }
+        };
     });
 
     it('should throw an error if the username is an empty string', async () => {
@@ -228,7 +228,7 @@ describe('checkUsernameAndThrow', () => {
             expect(err.message).toContain("Username must be between 6  -  16 characters");
             expect(err.message).toContain("Username can only contain alphanumerics and underscores");
             expect(err.message).toContain("Username must contain at least 1 letter");
-        }
+        };
     });
 });
 
