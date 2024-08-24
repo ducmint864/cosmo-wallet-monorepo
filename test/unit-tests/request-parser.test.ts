@@ -136,6 +136,22 @@ describe('getBooleanQueryParam', () => {
         expect(result1).toBe(true);
         expect(result2).toBe(true);
     });
+
+    it('should be undefined if the query is empty', async () => {
+        // Arrange
+        const req = {
+            query: {
+            }
+        } as unknown as Request;
+
+        const paramName: string = "idk";
+
+        // Act
+        const result = getBooleanQueryParam(req, paramName);
+
+        // Assert
+        expect(result).toBeUndefined();
+    });
 });
 
 describe('getNumberArratQueryParam', () => {
@@ -180,6 +196,39 @@ describe('getNumberArratQueryParam', () => {
         expect(result2).toBeDefined();
         expect(result1).toStrictEqual([71]);
         expect(result2).toStrictEqual([]);
+    });
+
+    it('should be able to handle request contain large query', async () => {
+        // Arrange
+        const req = {
+            query: {
+                param: Array.from({ length: 100 }, (_, i) => i + 1).join(',')
+            }
+        } as unknown as Request;
+
+        const paramName: string = "param";
+
+        // Act
+        const result = getNumberArrayQueryParam(req, paramName);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toStrictEqual(Array.from({ length: 100 }, (_, i) => i + 1));
+    });
+
+    it('should return empty array if the request query is empty', async () => {
+        // Arrange
+        const req = {
+            query: {}
+        } as unknown as Request;
+        const paramName: string = "nothing";
+
+        // Act
+        const result = getNumberArrayQueryParam(req, paramName);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toStrictEqual([]);
     });
 });
 
