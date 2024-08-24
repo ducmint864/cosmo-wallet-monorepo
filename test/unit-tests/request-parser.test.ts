@@ -469,6 +469,23 @@ describe('getObjectFromRequestBody', () => {
             "number": 123          
         }]);
     });
+
+    it('should return an empty object if it catch an error when parsing string', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "key": "hello world"
+            }
+        } as unknown as Request;
+
+        const key: string = "key";
+
+        // Act
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toStrictEqual({});
+    });
 });
 
 describe('getObjectsFromRequestBody', () => {
@@ -491,11 +508,12 @@ describe('getObjectsFromRequestBody', () => {
                         "secret phrase": "hello world"
                     }
                 ],
-                "key4": '{"name": "Bill", "age": 44, "paid": false}'
+                "key4": '{"name": "Bill", "age": 44, "paid": false}',
+                "key5": '"string": "hello ", "another string": "world ", "another another string": "!"',
             }
         } as unknown as Request;
 
-        const keys: string[] = ['key1', 'key2', 'key3', 'key4'];
+        const keys: string[] = ['key1', 'key2', 'key3', 'key4', 'key5'];
 
         // Act
         const result = getObjectsFromRequestBody(req, ...keys);
@@ -505,7 +523,8 @@ describe('getObjectsFromRequestBody', () => {
             "key1": [{"string1": "hello", "string2": "world"}], 
             "key2": {"string": "hello_world!"}, 
             "key3": [{"age": 30, "name": "david", "paid": true, "secret phrase": "hello world"}], 
-            "key4": {"name": "Bill", "age": 44, "paid": false}
+            "key4": {"name": "Bill", "age": 44, "paid": false},
+            "key5": {}
         });
     });
 });
