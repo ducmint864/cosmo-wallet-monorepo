@@ -356,3 +356,117 @@ describe('getStringsFromRequestBody', () => {
         expect(result).toStrictEqual({"_key1": "hello-world!", "_key2": "goodbyeW0rld", "_key3": "gm_gn"});
     });
 });
+
+describe('getObjectFromRequestBody', () => {
+    it('should be able to handle request contain object', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key": [
+                    {
+                        "name": "John",
+                        "age": 30
+                    }
+                ]
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+
+        // Act
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toStrictEqual([{
+                "name": "John",
+                "age": 30
+        }]);
+    });
+
+    it('should be able to handle request contain string', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key": '{"name": "Alice", "age": 25}'
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+
+        // Act
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toStrictEqual({
+            "name": "Alice", 
+            "age": 25
+        });
+    });
+
+    it('should return empty object when key is an empty string', async () => {
+        // Arrange
+        const req = {
+            body: {
+                _key: "hello"
+            }
+        } as unknown as Request;
+
+        const key: string = "";
+       
+        // Act
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toStrictEqual({});
+    });
+
+    it('should return empty object if the request body is empty', async () => {
+        // Arrange
+        const req = {
+            body: {}
+        } as unknown as Request;
+
+        const key: string = "string";
+
+        // Act
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toStrictEqual({});
+    });
+
+    it('should be able to handle special character, white space, number and large value', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "key": [
+                    {
+                        "string": "@hello world!",
+                        "hugh_value": "a".repeat(10000),
+                        "number": 123 
+                    }
+                ],
+                "_key": '{"string": "hello_world!"}'
+            }
+        } as unknown as Request;
+
+        const _key: string = "_key";
+        const key: string = "key";
+
+        // Act
+        const _result = getObjectFromRequestBody(req, _key);
+        const result = getObjectFromRequestBody(req, key);
+
+        // Assert
+        expect(_result).toStrictEqual({
+            "string": "hello_world!"
+        });
+        expect(result).toStrictEqual([{
+            "string": "@hello world!",
+            "hugh_value": "a".repeat(10000),
+            "number": 123          
+        }]);
+    });
+});
