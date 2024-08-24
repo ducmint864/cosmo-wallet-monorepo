@@ -1,9 +1,5 @@
-import PasswordValidator from "password-validator";
-import emailValidator from "email-validator";
-import createError from "http-errors";
 import { prisma } from "../../src/connections";
-import {randomBytes} from "crypto"
-import { authConfig, cryptoConfig } from "../../src/config";
+import { cryptoConfig } from "../../src/config";
 import bcrypt from "bcrypt";
 import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow, isValidPassword } from "../../src/general/helpers/credentials-helper";
 
