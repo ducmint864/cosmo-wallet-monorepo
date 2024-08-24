@@ -1,5 +1,5 @@
 import { Request } from "express";
-import {getBooleanQueryParam, getNumberArrayQueryParam} from "../../src/general/helpers/request-parser";
+import {getBooleanQueryParam, getNumberArrayQueryParam, getStringFromRequestBody, getStringsFromRequestBody} from "../../src/general/helpers/request-parser";
 
 describe('getBooleanQueryParam', () => {
     it('should return true when param value is true', async () => {
@@ -180,5 +180,108 @@ describe('getNumberArratQueryParam', () => {
         expect(result2).toBeDefined();
         expect(result1).toStrictEqual([71]);
         expect(result2).toStrictEqual([]);
+    });
+});
+
+describe('getStringFromRequestBody', () => {
+    it('should return a string from the request body', async () => {
+        // Arrange
+        const req = {
+            body: {
+                _key: "hello"
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+       
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toBe("hello");
+    });
+
+    it('should return empty string when key is an empty string', async () => {
+        // Arrange
+        const req = {
+            body: {
+                _key: "hello"
+            }
+        } as unknown as Request;
+
+        const key: string = "";
+       
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBe("");
+    });
+
+    it('should return empty string if the request body is empty', async () => {
+        // Arrange
+        const req = {
+            body: {}
+        } as unknown as Request;
+
+        const key: string = "string";
+
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBe("");
+    });
+
+    it('should be able to handle special character', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key": "hello_world!"
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBe("hello_world!");
+    });
+
+    it('should be able to handle white space', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key": "hello world"
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBe("hello world");
+    });
+
+    it('should be able to handle request contain large string', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key": "a".repeat(10000)
+            }
+        } as unknown as Request;
+
+        const key: string = "_key";
+
+        // Act
+        const result = getStringFromRequestBody(req, key);
+
+        // Assert
+        expect(result).toBe("a".repeat(10000));
     });
 });
