@@ -3,9 +3,9 @@ import emailValidator from "email-validator";
 import createError from "http-errors";
 import { prisma } from "../../src/connections";
 import {randomBytes} from "crypto"
-import { authConfig } from "../../src/config";
-import { compare as bcryptCompare } from "bcrypt";
-import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow } from "../../src/general/helpers/credentials-helper";
+import { authConfig, cryptoConfig } from "../../src/config";
+import bcrypt from "bcrypt";
+import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow, isValidPassword } from "../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
     it('should return nothing if the password met the requirement', async () => {
@@ -341,5 +341,85 @@ describe('checkNicknameAndThrow', () => {
         } catch (err) {
             expect(err.message).toContain("Invalid nickname: Nickname must be between 1 - 16 characters");
         };
+    });
+});
+
+describe('isValidPassword', () => {
+    it('should return true if the input password is correct', async () => {
+        // Arrange
+        const password: string = 'MrP0t@to805';
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = 'MrP0t@to805';
+
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(true);
+    });
+
+    it('should return false if the input password is wrong', async () => {
+        // Arrange
+        const password: string = 'MsInf0rm@tion63';
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = "MrP0t@to805";
+
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(false);
+    });
+
+    it('should return false if the input password is null', async () => {
+        // Arrange
+        const password: string = "p@ssW0rd";
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = '';
+
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(false);
+    });
+
+    it('should be case sensitive', async () => {
+        // Arrange
+        const password: string = "MrP0t@to805";
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = "Mrp0t@tO805";
+        
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(false);
+    });
+
+    it('should not ignore whitespace', async () => {
+        // Arrange
+        const password: string = "MrP0t@to805";
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = "MrP0t@to 805";
+
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(false);
+    });
+
+    it('should handle large input', async () => {
+        // Arrange
+        const password: string = 'a'.repeat(1000);
+        const hashedPassword: string = await bcrypt.hash(password, cryptoConfig.bcrypt.saltRounds);
+        const inputPassword: string = 'a'.repeat(1000);
+
+        // Act
+        const result = await isValidPassword(inputPassword, hashedPassword);
+
+        // Assert
+        expect(result).toBe(true);
     });
 });
