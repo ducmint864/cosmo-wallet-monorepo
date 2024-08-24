@@ -1,5 +1,5 @@
 import { Request } from "express";
-import {getBooleanQueryParam, getNumberArrayQueryParam, getStringFromRequestBody, getStringsFromRequestBody} from "../../src/general/helpers/request-parser";
+import {getBooleanQueryParam, getNumberArrayQueryParam, getStringFromRequestBody, getStringsFromRequestBody, getObjectFromRequestBody, getObjectsFromRequestBody} from "../../src/general/helpers/request-parser";
 
 describe('getBooleanQueryParam', () => {
     it('should return true when param value is true', async () => {
@@ -332,5 +332,27 @@ describe('getStringFromRequestBody', () => {
 
         // Assert
         expect(result).toBe("a".repeat(10000));
+    });
+});
+
+describe('getStringsFromRequestBody', () => {
+    it('should be able to handle request contain multiple keys', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "_key1": "hello-world!",
+                "_key2": "goodbyeW0rld",
+                "_key3": "gm_gn"
+            }
+        } as unknown as Request;
+
+        const keys: string[] = ["_key1", "_key2", "_key3"];
+        
+        // Act
+        const result = getStringsFromRequestBody(req, ...keys);
+
+        // Assert
+        expect(result).toBeDefined();
+        expect(result).toStrictEqual({"_key1": "hello-world!", "_key2": "goodbyeW0rld", "_key3": "gm_gn"});
     });
 });
