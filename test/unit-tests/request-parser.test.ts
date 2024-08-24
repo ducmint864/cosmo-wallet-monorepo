@@ -154,7 +154,7 @@ describe('getBooleanQueryParam', () => {
     });
 });
 
-describe('getNumberArratQueryParam', () => {
+describe('getNumberArrayQueryParam', () => {
     it('should return a number array after parse each string from the string array', async () => {
         // Arrange
         const req = {
