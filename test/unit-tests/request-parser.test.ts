@@ -470,3 +470,42 @@ describe('getObjectFromRequestBody', () => {
         }]);
     });
 });
+
+describe('getObjectsFromRequestBody', () => {
+    it('should be able to handle array of objects', async () => {
+        // Arrange
+        const req = {
+            body: {
+                "key1": [
+                    {
+                        "string1": "hello",
+                        "string2": "world"
+                    }
+                ],
+                "key2": '{"string": "hello_world!"}',
+                "key3": [
+                    {
+                        "name": "david",
+                        "age": 30,
+                        "paid": true,
+                        "secret phrase": "hello world"
+                    }
+                ],
+                "key4": '{"name": "Bill", "age": 44, "paid": false}'
+            }
+        } as unknown as Request;
+
+        const keys: string[] = ['key1', 'key2', 'key3', 'key4'];
+
+        // Act
+        const result = getObjectsFromRequestBody(req, ...keys);
+
+        // Assert
+        expect(result).toStrictEqual({
+            "key1": [{"string1": "hello", "string2": "world"}], 
+            "key2": {"string": "hello_world!"}, 
+            "key3": [{"age": 30, "name": "david", "paid": true, "secret phrase": "hello world"}], 
+            "key4": {"name": "Bill", "age": 44, "paid": false}
+        });
+    });
+});
