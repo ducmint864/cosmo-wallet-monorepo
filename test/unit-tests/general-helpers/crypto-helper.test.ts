@@ -1,12 +1,8 @@
-import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../src/general/helpers/crypto-helper"
+import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../../src/general/helpers/crypto-helper"
 import {HdPath} from "@cosmjs/crypto";
-import { DirectSecp256k1HdWallet, OfflineDirectSigner } from "@cosmjs/proto-signing";
-import { cryptoConfig } from "../../src/config"
+import { OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
-import { accessSync } from "fs";
-import { DiffieHellmanGroup } from "crypto";
 import { randomBytes } from "crypto";
-import { buffer } from "stream/consumers";
 
 describe('makeHDPath', ()=> {
     it('should return a HD path with provided index', async () =>{

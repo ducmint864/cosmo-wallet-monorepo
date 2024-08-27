@@ -1,5 +1,5 @@
 import { Request } from "express";
-import {getBooleanQueryParam, getNumberArrayQueryParam, getStringFromRequestBody, getStringsFromRequestBody, getObjectFromRequestBody, getObjectsFromRequestBody} from "../../src/general/helpers/request-parser";
+import {getBooleanQueryParam, getNumberArrayQueryParam, getStringFromRequestBody, getStringsFromRequestBody, getObjectFromRequestBody, getObjectsFromRequestBody} from "../../../src/general/helpers/request-parser";
 
 describe('getBooleanQueryParam', () => {
     it('should return true when param value is true', async () => {

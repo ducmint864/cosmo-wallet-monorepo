@@ -1,7 +1,7 @@
-import { prisma } from "../../src/connections";
-import { cryptoConfig } from "../../src/config";
+import { prisma } from "../../../src/connections";
+import { cryptoConfig } from "../../../src/config";
 import bcrypt from "bcrypt";
-import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow, isValidPassword } from "../../src/general/helpers/credentials-helper";
+import { checkPasswordAndThrow, checkEmailAndThrow, checkUsernameAndThrow, genUsername, checkNicknameAndThrow, isValidPassword } from "../../../src/general/helpers/credentials-helper";
 
 describe('checkPasswordAndThrow', () => {
     it('should return nothing if the password met the requirement', async () => {
@@ -228,7 +228,7 @@ describe('checkUsernameAndThrow', () => {
     });
 });
 
-jest.mock("../../src/connections", () => ({
+jest.mock("../../../src/connections", () => ({
   prisma: {
     user_accounts: {
       findUnique: jest.fn(), 

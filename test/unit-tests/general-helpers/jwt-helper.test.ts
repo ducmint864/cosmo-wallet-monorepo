@@ -1,11 +1,9 @@
-import { genToken, decodeAndVerifyToken, isTokenInvalidated, invalidateToken } from "../../src/general/helpers/jwt-helper";
+import { genToken, decodeAndVerifyToken, isTokenInvalidated, invalidateToken } from "../../../src/general/helpers/jwt-helper";
 import jwt, { Algorithm } from "jsonwebtoken";
-import { UserAccountJwtPayload } from "../../src/types/UserAccountJwtPayload";
-import {redisClient} from "../../src/connections";
+import { UserAccountJwtPayload } from "../../../src/types/UserAccountJwtPayload";
+import {redisClient} from "../../../src/connections";
 import {user_type_enum} from "@prisma/client";
-import { authConfig } from "../../src/config";
-import { decode } from "punycode";
-import exp from "constants";
+import { authConfig } from "../../../src/config";
 
 jest.mock('jsonwebtoken', () => ({
     verify: jest.fn(),
@@ -205,7 +203,7 @@ describe('decodeAndVerifyToken', () => {
     })
 });
 
-jest.mock('../../src/connections', () => ({
+jest.mock('../../../src/connections', () => ({
     redisClient: {
         isOpen: false,
         connect: jest.fn(),

@@ -1,0 +1,1 @@
+import {} from "../../src/errors/middlewares/error-handler"
