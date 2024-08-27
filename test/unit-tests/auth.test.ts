@@ -4,6 +4,10 @@ import { HttpError } from "http-errors";
 import {errorHandler} from "../../src/errors/middlewares/error-handler"; 
 import {register} from '../../src/auth-module/controllers/auth'
 import { prisma } from "../../src/connections";
+import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../src/general/helpers/crypto-helper";
+import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
+import bcrypt from "bcrypt";
+import { randomBytes } from 'crypto';
 import { cryptoConfig } from '../../src/config';
 
 /**
@@ -188,7 +192,7 @@ describe('register', () => {
          */
         beforeEach(() => {
             jest.clearAllMocks();
-        })
+        });
         
         it('should throw unavailable username database error to error handler', async () => {
             // Arrange
@@ -230,12 +234,13 @@ describe('register', () => {
 
         it('should handle the database error', async () => {
             /**
+             * @dev 🔥
              * @dev we going to re-use the invalid username for this 
-             * @note fail test
              * @note error-handler was able to receive the prisma error but can not handle it
              * @todo design a method to convert prisma error to http error so that error handler can work appropriately
              */
             
+            // Arrange
             const req = ({
                 body: {
                     email: 'coolguy82@example.com',
@@ -245,7 +250,6 @@ describe('register', () => {
             }) as Request;
         
             // Set up mock
-        
             (prisma.user_accounts.create as jest.Mock)
                 .mockRejectedValueOnce({
                     code: 'P2002',
@@ -260,11 +264,9 @@ describe('register', () => {
             });
         
             // Act    
-        
             await register(req, res, mockNext);
         
             // Assert
-            
             expect(res.json).toHaveBeenCalledWith(
                 expect.objectContaining({ message: expect.any(String) })
             );
@@ -281,7 +283,6 @@ describe('register', () => {
             }) as Request;
     
             // Set up mock
-    
             (prisma.user_accounts.create as jest.Mock)
                 .mockResolvedValue({
                     data: {
@@ -307,11 +308,9 @@ describe('register', () => {
                 });  
 
             // Act
-    
             await register(req, res, mockNext);
         
             // Assert
-
             expect(res.status).toHaveBeenCalledWith(201);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Register successful"
@@ -354,6 +353,139 @@ describe('register', () => {
             expect(res.status).toHaveBeenCalledWith(500);
             expect(res.json).toHaveBeenCalledWith({
                 message: "Failed to create derived account"
+            });
+        });
+        
+        describe('using crypto-helper for data testing', () => {
+            /**
+             * @dev arrange variables for crypto-helper
+             */
+            const mnemonic: string = "elder advance goddess fabric obtain machine reopen escape nation oppose narrow keep";
+            const bip39Password: string = "onlygodknow";
+            const hdPathStrings: string[] = [];
+
+            const saltLenght: number = cryptoConfig.pbkdf2.saltLength;
+
+            beforeEach(() => {
+                jest.clearAllMocks();
+            })
+
+            it('should register user using data from crypto-helper functions', async () => {
+                // Arrange
+                const req = ({
+                    body: {
+                        email: 'coolguy82@example.com',
+                        username: 'coolguy82',
+                        password: 'P@ss_w0rd!'
+                        }
+                }) as Request;
+
+                hdPathStrings.push(hdPathToString(makeHDPath(0)));
+
+                const pkbdf2_salt: Buffer = Buffer.concat([Buffer.from
+                    (`${req.body.email}${req.body.username}`), randomBytes(saltLenght)]);
+
+                const encryptionKey: Buffer = await getEncryptionKey(req.body.password, pkbdf2_salt);
+                const encrypted = encrypt(mnemonic, encryptionKey);
+
+                const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+                // Set up mock
+                (prisma.user_accounts.create as jest.Mock)
+                .mockResolvedValue({
+                    data: {
+                        email: req.body.email,
+                        username: req.body.username,
+                        password: hashedPassword,
+                        crypto_mnemonic: mnemonic,
+                        crypto_iv: encrypted.iv,
+                        crypto_pbkdf2_salt: pkbdf2_salt
+                    }
+                });
+
+                const acc1 = await getDerivedAccount(mnemonic, stringToHdPath(hdPathStrings[0]));
+
+                (prisma.wallet_accounts.create as jest.Mock)
+                .mockResolvedValue({
+                    data: {
+                        address: acc1.address,
+                        crypto_hd_path: hdPathStrings[0],
+                        nickname: "Account 0",
+                        wallet_order: 1,
+                        is_main_wallet: true,
+                        user_account_id: 0
+                    }
+                });  
+               
+                // Act
+                await register(req, res, mockNext);
+
+                // Assert
+                expect(res.status).toHaveBeenCalledWith(201);
+                expect(res.json).toHaveBeenCalledWith({
+                    message: "Register successful"
+                });
+            });
+
+            it('should have the valid wallet data', async () => {
+                // Arrange
+                const req = ({
+                    body: {
+                        email: 'coolguy82@example.com',
+                        username: 'coolguy82',
+                        password: 'P@ss_w0rd!'
+                        }
+                }) as Request;
+
+                hdPathStrings.push(hdPathToString(makeHDPath(0)));
+
+                const pkbdf2_salt: Buffer = Buffer.concat([Buffer.from
+                    (`${req.body.email}${req.body.username}`), randomBytes(saltLenght)]);
+
+                const encryptionKey: Buffer = await getEncryptionKey(req.body.password, pkbdf2_salt);
+                const encrypted = encrypt(mnemonic, encryptionKey);
+
+                const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+                // Set up mock
+                (prisma.user_accounts.create as jest.Mock)
+                .mockResolvedValue({
+                    data: {
+                        email: req.body.email,
+                        username: req.body.username,
+                        password: hashedPassword,
+                        crypto_mnemonic: mnemonic,
+                        crypto_iv: encrypted.iv,
+                        crypto_pbkdf2_salt: pkbdf2_salt
+                    }
+                });
+
+                const acc1 = await getDerivedAccount(mnemonic, stringToHdPath(hdPathStrings[0]));
+
+                (prisma.wallet_accounts.create as jest.Mock)
+                .mockResolvedValue({
+                    data: {
+                        address: acc1.address,
+                        crypto_hd_path: hdPathStrings[0],
+                        nickname: "Account 0",
+                        wallet_order: 1,
+                        is_main_wallet: true,
+                        user_account_id: 0
+                    }
+                });  
+               
+                // Act
+                await register(req, res, mockNext);
+
+                // Assert
+                expect(res.status).toHaveBeenCalledWith(201);
+                expect(res.json).toHaveBeenCalledWith({
+                    message: "Register successful"
+                });
+
+                const _mockResolvedValue = await (prisma.wallet_accounts.create as jest.Mock).mock.results[0].value
+                expect(_mockResolvedValue.data.address.startsWith("thasa")).toBe(true);
+                expect(_mockResolvedValue.data.crypto_hd_path).toBe("m/44'/0'/0'/0/0");
             });
         });
     });

@@ -1,4 +1,4 @@
-import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../../src/general/helpers/crypto-helper"
+import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../../src/general/helpers/crypto-helper";
 import {HdPath} from "@cosmjs/crypto";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
@@ -29,6 +29,9 @@ describe('makeHDPath', ()=> {
     });
 
     it('should return null when receive a negative index', async () => {
+        /**
+         * @dev 🔥
+         */
         // Arrange
         const accIndex: number = -1;
 
@@ -185,7 +188,7 @@ describe('encrypt and decrypt', () => {
 
         it('should not encrypt an empty string', async() => {
             /**
-             * @dev fail test
+             * @dev 🔥
              * @todo encrypt is strictly use for mnemonic, it should not be encrypted everything
              */
             // Arrange
@@ -302,7 +305,7 @@ describe('encrypt and decrypt', () => {
 
         it('should be able to decrypt a 2 layer encrypted', async () => {
             /**
-             * @dev fail test
+             * @dev 🔥
              * @note the commented code will return a succesful test, uncomment it in case this test meant to fail
              */
             // Arrange
@@ -596,5 +599,5 @@ describe('FINAL TEST', () => {
 
         // Without bip39password getSigner method of derivation should be the same as getDerivedAccount
         expect(acc1.address).toEqual(_accounts[1].address);
-    })
-})
+    });
+});

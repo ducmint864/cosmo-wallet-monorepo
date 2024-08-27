@@ -140,7 +140,7 @@ describe('decodeAndVerifyToken', () => {
 
     it('should return null if public key is an empty string', () => {
         /**
-         * @dev fail test
+         * @dev 🔥
          * @todo should not return the payload if public key is an empty string
          */
         // Arrange

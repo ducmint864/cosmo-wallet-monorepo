@@ -47,6 +47,9 @@ describe('getBooleanQueryParam', () => {
     });
 
     it('should return false when param value is null', async () => {
+        /**
+         * @dev 🔥
+         */
         // Arrange
         const req = {
             query: {
