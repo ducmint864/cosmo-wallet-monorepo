@@ -30,9 +30,10 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 		const hasEmail: boolean = (inputEmail != null);
 		const hasUsername: boolean = (inputUsername != null);
 		const hasPassword: boolean = (inputPassword != null);
-
+		const credentialsProvided: boolean = hasEmail && hasPassword;
 		// Check if request contains required params
-		if (!(hasEmail && hasPassword)) {
+
+		if (!credentialsProvided) {
 			throw createHttpError(400, "Missing credentials information");
 		}
 
@@ -118,8 +119,9 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		const hasEmail: boolean = (inputEmail != null);
 		const hasUsername: boolean = (inputUsername != null);
 		const hasPassword: boolean = (inputPassword != null);
+		const credentialsProvided: boolean = (hasEmail || hasUsername) && hasPassword
 
-		if (!(hasEmail || hasUsername) && hasPassword) {
+		if (!credentialsProvided) {
 			throw createHttpError(400, "Missing credentials information");
 		}
 
@@ -139,7 +141,8 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
-		if (!(await credentialHelper.isValidPassword(inputPassword, userAccount.password))) {
+		const isValidPass: boolean = await credentialHelper.isValidPassword(inputPassword, userAccount.password);
+		if (!isValidPass) {
 			throw createHttpError(401, "Invalid login credentials");
 		}
 
