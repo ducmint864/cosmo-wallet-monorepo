@@ -9,6 +9,7 @@ import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "
 import bcrypt from "bcrypt";
 import { randomBytes } from 'crypto';
 import { cryptoConfig } from '../../src/config';
+import {user_type_enum} from "@prisma/client";
 
 /**
  * @dev error-handler mocking for register test
@@ -21,7 +22,8 @@ jest.mock('../../src/errors/middlewares/error-handler');
 jest.mock("../../src/connections", () => ({
     prisma: {
       user_accounts: {
-        create: jest.fn(), 
+        create: jest.fn(),
+        findUnique: jest.fn(),
       },
 
       wallet_accounts: {
@@ -252,24 +254,29 @@ describe('register', () => {
             // Set up mock
             (prisma.user_accounts.create as jest.Mock)
                 .mockRejectedValueOnce({
-                    code: 'P2002',
+                    statusCode: 'P2002',
                     meta: {
                         target: ['username']
-                    }
+                    },
+                    message: "email has been taken"
                 });
         
-            const mockHandleError = errorHandler as jest.Mock;
-            mockHandleError.mockImplementation((err, req, res, next) => {
-                res.status(err.statusCode).json({ message: err.message });
-            });
+            // const mockHandleError = errorHandler as jest.Mock;
+            // mockHandleError.mockImplementation((err, req, res, next) => {
+            //     res.status(err.statusCode).json({ message: err.message });
+            // });
         
             // Act    
             await register(req, res, mockNext);
         
             // Assert
-            expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({ message: expect.any(String) })
-            );
+            // expect(res.json).toHaveBeenCalledWith(
+            //     expect.objectContaining({ message: expect.any(String) })
+            // );
+            expect(res.status).toBe(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: expect.stringContaining("email has been taken")
+            });
         });
 
         it('should register a new user if all requirements are met', async () => {
@@ -596,7 +603,6 @@ describe('login', () => {
         const req = ({
             body: {
                 email: 'coolguy82@example.com',
-                username: 'CoolGuy82',
                 password: 'password'
             }
         }) as Request;
@@ -615,6 +621,143 @@ describe('login', () => {
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({
             message: expect.stringContaining("Invalid password:")
+        });
+    });
+
+    it('should handle an error where no email provided and a username is invalid', async () => {
+        // Arrange
+        const req = ({
+            body: {
+                username: 'CG2',
+                password: 'P@ssW0rd'
+            }
+        }) as Request;
+
+        // Set up mock
+        const mockHandleError = errorHandler as jest.Mock;
+        mockHandleError.mockImplementation((err, req, res, next) => {
+            res.status(err.statusCode).json({ message: err.message });
+        });
+
+        // Act
+        await login(req, res, mockNext);
+
+        // Assert
+        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith({
+            message: expect.stringContaining("Invalid username:")
+            });
+    });
+
+    describe('prisma mocking', () => {
+        beforeEach(() => { 
+            jest.clearAllMocks();
+        })
+
+        it("should throw an error 401 if user account doesn't exist", async () => {
+            // Arrange
+            const req = ({
+                body: {
+                    email: 'test@example.com',
+                    password: 'P@ssW0rd'
+                    }
+                }) as Request;
+
+            // Set up mock
+            (prisma.user_accounts.findUnique as jest.Mock)
+                .mockResolvedValue(null);
+
+            const mockHandleError = errorHandler as jest.Mock;
+            mockHandleError.mockImplementation((err, req, res, next) => {
+                res.status(err.statusCode).json({ message: err.message });
+            });
+
+            // Act
+            await login(req, res, mockNext);
+
+            // Assert
+            expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
+            expect(res.status).toHaveBeenCalledWith(401);
+            expect(res.json).toHaveBeenCalledWith({
+                message: expect.stringContaining("Invalid login credentials")
+            });
+        });
+
+        it('should throw an error an error if password incorrect', async () => {
+            // Arrange
+            const req = ({
+                body: {
+                    email: 'test@example.com',
+                    password: 'P@ssW0rd'
+                }
+            }) as Request;
+    
+            // Set up mock
+            (prisma.user_accounts.findUnique as jest.Mock)
+                .mockResolvedValue({
+                    email: 'test@example.com',
+                    password: 'this_is_the_r1ght_p@ssworD'
+            });
+            
+            const mockHandleError = errorHandler as jest.Mock;
+            mockHandleError.mockImplementation((err, req, res, next) => {
+                res.status(err.statusCode).json({ message: err.message });
+            });
+    
+           // Act
+           await login(req, res, mockNext);
+    
+           // Assert
+           expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
+           expect(res.status).toHaveBeenCalledWith(401);
+           expect(res.json).toHaveBeenCalledWith({
+                message: expect.stringContaining("Invalid login credentials")
+            });
+        });
+
+        it('should successfully login the user if satisfied all requirements', async () => {
+            // Arrange
+            const req = ({
+                body: {
+                    email: 'test@example.com',
+                    password: 'P@ssW0rd'
+                    }
+            }) as Request;
+
+            const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+            // Set up mock
+            (prisma.user_accounts.findUnique as jest.Mock)
+                .mockImplementation((params) => {
+                    if (params.where.email === 'test@example.com'){
+                        return {
+                            user_account_id: 1,
+                            email: 'test@example.com',
+                            username: 'Hello_W0rld',
+                            password: hashedPassword,
+                            crypto_mnemonic: expect.any(Buffer),
+                            crypto_pbkdf2_salt: expect.any(Buffer),
+                            crypto_iv: expect.any(Buffer),
+                            user_type: user_type_enum.normal
+                        }
+                    }
+                });
+
+            const mockHandleError = errorHandler as jest.Mock;
+            mockHandleError.mockImplementation((err, req, res, next) => {
+                res.status(err.statusCode).json({ message: err.message });
+            });
+
+            // Act
+            await login(req, res, mockNext);
+
+            // Assert
+            expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith({
+                    message: "Login successful"
+            });
         });
     });
 });
