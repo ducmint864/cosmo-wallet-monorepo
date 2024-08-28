@@ -2,7 +2,7 @@ import {describe, expect, test} from '@jest/globals';
 import { Request, Response, NextFunction } from 'express';
 import { HttpError } from "http-errors";
 import {errorHandler} from "../../src/errors/middlewares/error-handler"; 
-import {register} from '../../src/auth-module/controllers/auth'
+import { register, login } from '../../src/auth-module/controllers/auth'
 import { prisma } from "../../src/connections";
 import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSigner} from "../../src/general/helpers/crypto-helper";
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
