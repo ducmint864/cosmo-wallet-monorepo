@@ -30,7 +30,11 @@ function errorHandler(err: HttpError, req: Request, res: Response, next: NextFun
 	}
 
 	return res.status(err.statusCode || 500)
-	.json(getErrResponse(err.statusCode || 500, err.message, err.stack));
+	.json(getErrResponse(
+		err.statusCode || 500,
+		err.message || "Internal server error",
+		err.stack,
+	));
 }
 
 export { errorHandler };
