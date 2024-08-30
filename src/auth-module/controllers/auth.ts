@@ -174,7 +174,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		// Invalidate client's old tokens if they have any (do it in silence)
 		try {
 			await _invalidateCurrentTokens(req, res);
-		} catch (_) { };
+		} catch (ignored) { };
 
 		// Send access token and refresh token
 		const payload: UserAccountJwtPayload = {
