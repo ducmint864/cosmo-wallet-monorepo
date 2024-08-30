@@ -27,7 +27,6 @@ function onUniqueConstraintError(err: PrismaClientKnownRequestError, res: Respon
 
 function handlePrismaClientError(
 	err: PrismaClientKnownRequestError | PrismaClientUnknownRequestError,
-	req: Request,
 	res: Response,
 ): Response {
 	const defaultHttpCode = 500
