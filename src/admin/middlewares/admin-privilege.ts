@@ -1,4 +1,4 @@
-import { user_type_enum } from "@prisma/client";
+import { role_enum } from "@prisma/client";
 import { NextFunction } from "express";
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
 import createHttpError from "http-errors";
@@ -10,7 +10,7 @@ import { errorHandler } from "../../errors/middlewares/error-handler";
  * @param res 
  * @param next 
  */
-async function requireUserTypeAdmin(
+async function requireAdminRole(
 	req: any,
 	res: any,
 	next: NextFunction
@@ -22,7 +22,7 @@ async function requireUserTypeAdmin(
 			throw createHttpError(403, "requireUserTypeAdmin(): access-token payload not found");
 		}
 
-		if (accessTokenPayload.userType !== user_type_enum.admin) {
+		if (accessTokenPayload.userRole !== role_enum.admin) {
 			throw createHttpError(403, "requireUserTypeAdmin(): user is not an admin");
 		}
 
@@ -33,6 +33,6 @@ async function requireUserTypeAdmin(
 }
 
 export {
-	requireUserTypeAdmin,
+	requireAdminRole,
 }
 

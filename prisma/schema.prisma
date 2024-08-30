@@ -39,7 +39,7 @@ model transactions {
   sender_account_id                                              Int?
   transaction_fees                                               transaction_fees[]
   wallet_accounts_transactions_receiver_addressTowallet_accounts wallet_accounts    @relation("transactions_receiver_addressTowallet_accounts", fields: [receiver_address], references: [address], onDelete: NoAction, onUpdate: NoAction, map: "fk_receiver_address")
-  user_accounts                                                  user_accounts?      @relation(fields: [sender_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sender_account_id")
+  user_accounts                                                  user_accounts?     @relation(fields: [sender_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_sender_account_id")
   wallet_accounts_transactions_sender_addressTowallet_accounts   wallet_accounts    @relation("transactions_sender_addressTowallet_accounts", fields: [sender_address], references: [address], onDelete: NoAction, onUpdate: NoAction, map: "fk_sender_address")
 
   @@index([receiver_address], map: "fki_fk_receiver_address")
@@ -55,7 +55,7 @@ model user_accounts {
   crypto_mnemonic    Bytes             @unique(map: "base_account_mnemonic_key")
   crypto_pbkdf2_salt Bytes
   crypto_iv          Bytes
-  user_type          user_type_enum    @default(normal)
+  role               role_enum         @default(normal)
   transactions       transactions[]
   wallet_accounts    wallet_accounts[]
 }
@@ -64,14 +64,14 @@ model wallet_accounts {
   wallet_account_id                                           Int            @id(map: "derived_account_pkey") @default(autoincrement())
   nickname                                                    String?        @default("Anonymous") @db.VarChar
   address                                                     String         @unique(map: "derived_account_address_key") @db.VarChar
-  crypto_hd_path                                              String?         @db.VarChar
+  crypto_hd_path                                              String?        @db.VarChar
   user_account_id                                             Int?
   wallet_order                                                Int?
-  is_main_wallet                                              Boolean?        
+  is_main_wallet                                              Boolean?
   balances                                                    balances[]
   transactions_transactions_receiver_addressTowallet_accounts transactions[] @relation("transactions_receiver_addressTowallet_accounts")
   transactions_transactions_sender_addressTowallet_accounts   transactions[] @relation("transactions_sender_addressTowallet_accounts")
-  user_accounts                                               user_accounts?  @relation(fields: [user_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
+  user_accounts                                               user_accounts? @relation(fields: [user_account_id], references: [user_account_id], onDelete: NoAction, onUpdate: NoAction, map: "derived_account_base_acc_id_fkey")
 }
 
 enum tx_status_enum {
@@ -86,7 +86,7 @@ enum tx_type_enum {
   others
 }
 
-enum user_type_enum {
+enum role_enum {
   normal
   admin
 }

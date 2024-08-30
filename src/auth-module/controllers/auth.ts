@@ -179,7 +179,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		// Send access token and refresh token
 		const payload: UserAccountJwtPayload = {
 			userAccountId: userAccount.user_account_id,
-			userType: userAccount.user_type,
+			userRole: userAccount.role,
 		};
 		const accessToken: string = genToken(
 			payload,
@@ -254,7 +254,7 @@ async function refreshSession(req: Request, res: Response, next: NextFunction): 
 	const refreshTokenPayload: UserAccountJwtPayload = req.body["decodedRefreshTokenPayload"];
 	const newTokenPayload: UserAccountJwtPayload = {
 		userAccountId: refreshTokenPayload.userAccountId,
-		userType: refreshTokenPayload.userType,
+		userRole: refreshTokenPayload.userRole,
 	};
 
 	try {

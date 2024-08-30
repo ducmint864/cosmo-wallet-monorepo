@@ -1,16 +1,16 @@
 import jwt, { Algorithm } from "jsonwebtoken";
 import { redisClient } from "../../connections";
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
-import { user_type_enum } from "@prisma/client";
+import { role_enum } from "@prisma/client";
 import { authConfig } from "../../config";
 import "dotenv/config";
 
-function genAndTimestampPayload(inputUserAccountId: number, inputUserType: user_type_enum): UserAccountJwtPayload {
+function genAndTimestampPayload(inputUserAccountId: number, inputUserRole: role_enum): UserAccountJwtPayload {
 	// Manually set the timestamp to ensure integrity across modules that use UserAccountJwtPayload
 	const argTimestamp: number = Math.floor(Date.now() / 1000);
 	const payload: UserAccountJwtPayload = {
 		userAccountId: inputUserAccountId,
-		userType: inputUserType,
+		userRole: inputUserRole,
 		iat: argTimestamp,
 	}
 	return payload;
