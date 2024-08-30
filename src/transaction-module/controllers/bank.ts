@@ -150,7 +150,6 @@ async function sendCoin(
 				res.status(500).json({ message: "tx took too long, please come back later" });
 				await pushTxToPendingQ(redisClient as RedisClientType, txResponse.transactionHash); // Push to queue to process later	
 				break;
-
 		}
 	} catch (err) {
 		errorHandler(err, req, res, next);
@@ -282,7 +281,6 @@ async function saveTxToDb(
 			timeout: timeoutMilisecs // waits for response from getTxTimestamp for these amt. of for milisecs
 		}
 	);
-
 
 	return txStatus;
 }
