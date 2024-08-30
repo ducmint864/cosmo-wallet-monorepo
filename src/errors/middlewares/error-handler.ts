@@ -1,40 +1,41 @@
+import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "http-errors";
+import { getErrorJSON } from "../helpers/error-message";
+import { handlePrismaClientError } from "./prisma-error";
+import { handleHttpError } from "./http-error";
 
-function getErrResponse(
-	statusCode: number,
-	errMsg: string,
-	stackTrace: string | null | undefined
-): object {
-	return {
-		status: statusCode,
-		message: errMsg,
-		stack: stackTrace || ""
-	};
-}
+type SpecificHandler = (...args: any[]) => Response;
 
-function errorHandler(err: HttpError, req: Request, res: Response, next: NextFunction) {
-	if (res.headersSent) {
-		return next(err);
-	}
+// map known types of error class to their specific handler func
+const specificHandlerMapping: Record<string, SpecificHandler> = {
+	[PrismaClientKnownRequestError.name]: handlePrismaClientError, // this is a func
+	[PrismaClientUnknownRequestError.name]: handlePrismaClientError, // this is a func
+	[HttpError.name]: handleHttpError,
+};
 
-	// Handle internal server errors in detais
-	if (err.message.includes("Unique constraint failed on the fields: (`email`)")) {
-		return res.status(409)
-		.json(getErrResponse(err.statusCode, "Email has been taken", err.stack));
-	}
-
-	if (err.message.includes("Unique constraint failed on the fields: (`username`)")) {
-		return res.status(409)
-		.json(getErrResponse(err.statusCode, "Username has been taken", err.stack));
-	}
-
-	return res.status(err.statusCode || 500)
-	.json(getErrResponse(
-		err.statusCode || 500,
+function defaultSpecificHandler(err: Error, res: Response): Response {
+	return res.status(500).json(getErrorJSON(
+		500,
 		err.message || "Internal server error",
 		err.stack,
 	));
 }
+
+function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): Response | void {
+	if (res.headersSent) {
+		return next(err);
+	}
+
+	const errClassName: string = err.constructor.name;
+	const specificHandler = specificHandlerMapping[errClassName]
+
+	if (specificHandler) {
+		return specificHandler(err, req, res);
+	}
+
+	return defaultSpecificHandler(err, res)
+}
+
 
 export { errorHandler };
