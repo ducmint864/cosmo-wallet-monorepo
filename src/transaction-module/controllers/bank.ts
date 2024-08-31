@@ -137,7 +137,6 @@ async function sendCoin(
 			txConfig.bank.db.saveTxDbTimeoutMilisecs
 		);
 
-
 		switch (txStatus) {
 			case tx_status_enum.succeed:
 				res.status(200).json({ message: "Transaction completed successfully" });
@@ -215,6 +214,18 @@ async function getTxStatus(
 	return await transactionStatus;
 }
 
+/**
+ * 
+ * @param prisma 
+ * @param cometWebSocketClient 
+ * @param stargateClient 
+ * @param txResponse 
+ * @param fromAddress 
+ * @param toAddress 
+ * @param userAccountId 
+ * @param timeoutMilisecs database transaction timeout (in miliseconds)
+ * @returns 
+ */
 async function saveTxToDb(
 	prisma: PrismaClient,
 	cometWebSocketClient: WebSocket,
