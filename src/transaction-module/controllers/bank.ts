@@ -9,21 +9,14 @@ import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../gener
 import { Coin } from "thasa-wallet-interface";
 import { writeFile } from "fs"
 import { cometWsManager, cometHttpNodeMan } from "../../connections";
-import { getFeesFromTxResponse } from "../helpers/tx-ressponse";
-import { PrismaClient, tx_status_enum } from "@prisma/client";
 import { txConfig } from "../../config";
-import { redisClient } from "../../connections";
-import { RedisClientType } from "redis";
+import { pushTxToPendingQueue } from "../helpers/pending-queue";
+import { tx_status_enum } from "@prisma/client";
+import { saveTxToDb } from "../helpers/save-tx";
+import { getLiveTxStatus } from "../helpers/tx-status";
 import WebSocket from "ws";
 import createHttpError from "http-errors";
-
-const redisKeyPrefix: string = "bank"
-
-function getRedisKey(...names: string[]): string {
-	let redisKey: string = redisKeyPrefix;
-	names.forEach((name) => redisKey += name);
-	return redisKey;
-}
+import { PendingTxPayload } from "../types/PendingTxPayload";
 
 async function sendCoin(
 	req: Request,
@@ -115,7 +108,6 @@ async function sendCoin(
 		);
 		let txResponse: DeliverTxResponse = await stargateClient.sendTokens(fromAddress, toAddress, [coinToSend], "auto"); // Improve later, make more robust, handle more cases about gas-fee console.log("Tx response: " + tx); res.status(200).json(tx);
 		console.log("DeliverTxResponse:\n", txResponse)
-
 		// Logging
 		const obj = Object.entries(txResponse).map(([key, value]) => {
 			return [
@@ -125,17 +117,40 @@ async function sendCoin(
 		});
 		writeFile("./DeliverTxResponse.json", JSON.stringify(obj, null, 2), undefined, () => ("DeliverTxResponse written to disk"));
 
+		// waits til receiving websocket events about tx
 		const cometWebSocketClient: WebSocket = await cometWsManager.getClient();
-		const txStatus: tx_status_enum = await saveTxToDb(
-			prisma,
+		const txStatus: tx_status_enum = await getLiveTxStatus(
+			txResponse.transactionHash,
+			toAddress,
+			stargateClient,
 			cometWebSocketClient,
+		);
+
+
+		const pendingTxPayload: PendingTxPayload = {
+			fromAddress: fromAddress,
+			toAddress: toAddress,
+			txResponse: txResponse,
+			userAccountId: userAccountId,
+			txStatus: txStatus,
+		};
+
+		const serializablePayload: object = makeSerializable(pendingTxPayload);
+		console.log("Size of pendingTxPayload object (uncompressed):", Buffer.byteLength(JSON.stringify(serializablePayload)));
+		// console.log("Size of pendingTxPayload object (compressed):", Buffer.byteLength(JSON.stringify(pendingTxPayload)));
+
+
+		// save transaction record to db
+		await saveTxToDb(
+			prisma,
 			stargateClient,
 			txResponse,
+			txStatus,
 			fromAddress,
 			toAddress,
-			accessTokenPayload.userAccountId,
-			txConfig.bank.db.saveTxDbTimeoutMilisecs
-		);
+			userAccountId,
+			txConfig.bank.db.saveTxDbTimeoutMilisecs,
+		)
 
 		switch (txStatus) {
 			case tx_status_enum.succeed:
@@ -144,163 +159,15 @@ async function sendCoin(
 			case tx_status_enum.failed:
 				res.status(500).json({ message: "Transaction failed" });
 				break;
-			default:
-				// If txStatus remains default enum, tx has most likely been timed out
-				res.status(500).json({ message: "tx took too long, please come back later" });
-				await pushTxToPendingQ(redisClient as RedisClientType, txResponse.transactionHash); // Push to queue to process later	
-				break;
+			// default:
+			// 	// If txStatus remains default enum, tx has most likely been timed out
+			// 	res.status(500).json({ message: "tx took too long, please come back later" });
+			// 	await pushTxToPendingQueue(redisClient as RedisClientType, txResponse.transactionHash); // Push to queue to process later	
+			// 	break;
 		}
 	} catch (err) {
 		errorHandler(err, req, res, next);
 	}
-}
-
-// Get timestamp of transaction in RFC3339 format
-async function getTxTimestamp(stargateClient: StargateClient, blockHeight: number): Promise<string> {
-	const timestamp: string = (await stargateClient.getBlock(blockHeight)).header.time;
-	return timestamp;
-}
-
-async function getTxStatus(
-	txHash: string,
-	stargateClient: StargateClient,
-	cometWsClient: WebSocket,
-	receiverAddress: string,
-): Promise<tx_status_enum> {
-	if (cometWsClient.readyState !== WebSocket.OPEN) {
-		throw new Error("WebSocket connection is not open");
-	}
-
-	// Subscribe to transaction events
-	cometWsClient.send(JSON.stringify({
-		jsonrpc: "2.0",
-		method: "subscribe",
-		id: "1",
-		params: {
-			query: `tm.event='Tx' AND transfer.recipient='${receiverAddress}'`
-		}
-	}));
-
-	// Listen for transaction status
-	const transactionStatus = new Promise<tx_status_enum>((resolve, reject) => {
-		const handleMessage = async (data: WebSocket.Data) => {
-			try {
-				const message = JSON.parse(data.toString());
-				console.log("Websocket tx data: " + message);
-				if (message.id === "1") {
-					console.log("Received transaction notification!");
-
-					const tx = await stargateClient.getTx(txHash);
-					resolve(tx.code === 0 ? tx_status_enum.succeed : tx_status_enum.failed); // Transaction success if code is 0
-
-					// Unsubscribe from events
-					cometWsClient.send(JSON.stringify({
-						jsonrpc: "2.0",
-						method: "unsubscribe",
-						id: "1",
-						params: []
-					}));
-
-					cometWsClient.removeListener("message", handleMessage);
-				}
-			} catch (error) {
-				reject(error);
-			}
-		};
-
-		cometWsClient.on("message", handleMessage);
-	});
-
-	return await transactionStatus;
-}
-
-/**
- * 
- * @param prisma 
- * @param cometWebSocketClient 
- * @param stargateClient 
- * @param txResponse 
- * @param fromAddress 
- * @param toAddress 
- * @param userAccountId 
- * @param timeoutMilisecs database transaction timeout (in miliseconds)
- * @returns 
- */
-async function saveTxToDb(
-	prisma: PrismaClient,
-	cometWebSocketClient: WebSocket,
-	stargateClient: StargateClient,
-	txResponse: DeliverTxResponse,
-	fromAddress: string,
-	toAddress: string,
-	userAccountId: number,
-	timeoutMilisecs: number,
-): Promise<tx_status_enum> {
-	let txStatus: tx_status_enum; // default status
-	await prisma.$transaction(
-		async (prismaTx) => {
-			// Wait for tx to finish (fail or succeed)
-			console.log("Broadcasted tranaction, waiiting for it to finish...");
-			txStatus = tx_status_enum.pending; // default type
-			txStatus = await getTxStatus(txResponse.transactionHash, stargateClient, cometWebSocketClient, toAddress);
-
-			//  Upsert (insert an anonymous wallet account if receiver is not stored in db, otherwise do nothin)
-			try {
-				await prisma.wallet_accounts.upsert({
-					where: {
-						address: toAddress
-					},
-					create: {
-						address: toAddress
-					},
-					update: {
-						// do nothin
-					}
-				})
-			} catch (upsertE) {
-				throw createHttpError(500, "cannot process receiver wallet account", upsertE);
-			}
-
-			const savedTx = await prismaTx.transactions.create({
-				data: {
-					tx_hash: txResponse.transactionHash,
-					timestamp: new Date(await getTxTimestamp(stargateClient, txResponse.height)),
-					sender_address: fromAddress, // FK in db (nullable)
-					receiver_address: toAddress, // FK in db (nullable)
-					gas_limit: txResponse.gasWanted,
-					gas_used: txResponse.gasUsed,
-					status: txStatus,
-					sender_account_id: userAccountId, // FK in db (nullable)
-				}
-			});
-
-			const feeCoins: Coin[] = getFeesFromTxResponse(txResponse)
-			const feeData = feeCoins.map((coin) => ({
-				denom: coin.denom,
-				amount: BigInt(coin.amount),
-				tx_id: savedTx.tx_id
-			}));
-			const batch = await prismaTx.transaction_fees.createMany({
-				data: feeData
-			})
-
-			if (batch.count !== feeData.length) {
-				throw createHttpError(500, "tx finished, unexpected tx fees");
-			}
-		},
-		{
-			timeout: timeoutMilisecs // waits for response from getTxTimestamp for these amt. of for milisecs
-		}
-	);
-
-	return txStatus;
-}
-
-// Push tx to pending queue to later re-fetch and save to db
-async function pushTxToPendingQ(redisClient: RedisClientType, txHash: string) {
-	const queueName: string = tx_status_enum.pending.concat("tx");
-	const redisKey: string = getRedisKey(queueName);
-	await redisClient.LPUSH(redisKey, txHash);
 }
 
 export { sendCoin };

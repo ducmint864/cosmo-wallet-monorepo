@@ -120,7 +120,11 @@ const txConfig = {
 	bank: {
 		db: {
 			saveTxDbTimeoutMilisecs: 105000,
-		}
+		},
+		requests: {
+			maxRetries: 3,
+			timeoutMilisecs: 3000,
+		},
 	}
 }
 
