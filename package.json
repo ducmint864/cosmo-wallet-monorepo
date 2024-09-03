@@ -51,6 +51,7 @@
     "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/lodash": "^4.17.6",
+    "@types/msgpack": "^0.0.34",
     "@types/node": "^20.11.25",
     "@types/redis-mock": "^0.17.3",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
