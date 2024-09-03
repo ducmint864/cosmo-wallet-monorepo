@@ -78,8 +78,8 @@ async function getLiveTxStatus(
  * @returns 
  */
 async function getTxStatus(
-	txHash: string,
 	stargateClient: StargateClient,
+	txHash: string,
 ): Promise<tx_status_enum> {
 	try {
 		const tx = await stargateClient.getTx(txHash);
