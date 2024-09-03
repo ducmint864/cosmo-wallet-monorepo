@@ -28,9 +28,6 @@ async function sendCoin(
 	const coinToSend = <Coin>getObjectFromRequestBody(req, "coin");
 	console.log(coinToSend);
 
-	// Get user info via access token
-	const accessTokenPayload: UserAccountJwtPayload = req.body["decodedAccessTokenPayload"]
-
 	try {
 		// Runtime type-checking to see whether coinToSend obj is recognizable as instance of Coin interface
 		if (
