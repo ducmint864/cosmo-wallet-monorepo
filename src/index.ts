@@ -10,6 +10,8 @@ import "dotenv/config";
 import https from "https";
 import fs from "fs";
 import cors from "cors";
+import { initTransactionModule } from "./transaction-module/init-module";
+import { initConnectionsModule } from "./connections";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -66,3 +68,8 @@ https.createServer(
 ).listen(port, () => {
 	console.log(`Server listening on port ${port}`);
 });
+
+async function InitModules(): Promise<void> {
+	await initConnectionsModule();
+
+InitModules();
