@@ -1,15 +1,14 @@
 import { PrismaClient } from "@prisma/client";
 import { DeliverTxResponse } from "@cosmjs/stargate";
-import { StargateClient } from "@cosmjs/stargate";
 import { tx_status_enum } from "@prisma/client";
-import { getLiveTxStatus, getTxStatus } from "./tx-status";
-import { getTxTimestamp } from "./tx-status";
 import { getFeesFromTxResponse } from "./tx-ressponse";
 import { Coin } from "thasa-wallet-interface";
 import createHttpError from "http-errors";
-import WebSocket from "ws"
 
 /**
+ * Write transaction record to database with a timeout.
+ * 
+ * If timeout is exceeded, database will operation will rollback and the function throws and error
  * 
  * @param prismaClient 
  * @param cometWebSocketClient 
@@ -23,16 +22,15 @@ import WebSocket from "ws"
  */
 async function saveTxToDb(
 	prismaClient: PrismaClient,
-	stargateClient: StargateClient,
 	txResponse: DeliverTxResponse,
 	txStatus: tx_status_enum,
+	timestamp: string,
 	fromAddress: string,
 	toAddress: string,
 	userAccountId: number,
 	prismaTimeoutMilisecs: number,
 ): Promise<void> {
-	// let txStatus: tx_status_enum;
-
+	// create a database transaction (this is not a blockchain transaction)
 	await prismaClient.$transaction(
 		async (prismaTx) => {
 			// Wait for tx to finish (fail or succeed)
@@ -61,7 +59,7 @@ async function saveTxToDb(
 				data: {
 					tx_hash: txResponse.transactionHash,
 					// fix
-					timestamp: new Date(await getTxTimestamp(stargateClient, txResponse.height)),
+					timestamp: new Date(timestamp),
 					sender_address: fromAddress, // FK in db (nullable)
 					receiver_address: toAddress, // FK in db (nullable)
 					gas_limit: txResponse.gasWanted,
@@ -89,8 +87,6 @@ async function saveTxToDb(
 			timeout: prismaTimeoutMilisecs // if prisma db trans. exceeds this timeout, it will be rolled back
 		}
 	);
-
-	// return txStatus;
 }
 
 export {
