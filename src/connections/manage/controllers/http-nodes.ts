@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { getStringFromRequestBody } from "../../../general/helpers/request-parser";
-import { blockchainApiNodeMan, cometHttpNodeMan } from "../../index";
+import { getBlockchainApiNodeMan, getCometHttpNodeMan } from "../../index";
 import { HttpNodeManagerError, HttpNodeManagerErrorCode } from "../../chain-rpc/http/types/HttpNodeManagerError";
 import { errorHandler } from "../../../errors/middlewares/error-handler";
 import { NodeTypeEnum } from "../../chain-rpc/http/types/NodeTypeEnum";
@@ -25,9 +25,11 @@ async function registerNode(
 
 		switch (nodeType) {
 			case NodeTypeEnum.comet:
+				const cometHttpNodeMan = await getCometHttpNodeMan();
 				await cometHttpNodeMan.registerNode(url);
 				break;
 			case NodeTypeEnum.application:
+				const blockchainApiNodeMan = await getBlockchainApiNodeMan();
 				await blockchainApiNodeMan.registerNode(url);
 				break;
 			default:
@@ -71,9 +73,11 @@ async function removeNode(
 
 		switch (nodeType) {
 			case NodeTypeEnum.comet:
+				const cometHttpNodeMan = await getCometHttpNodeMan();
 				await cometHttpNodeMan.removeNode(url);
 				break;
 			case NodeTypeEnum.application:
+				const blockchainApiNodeMan = await getBlockchainApiNodeMan();
 				await blockchainApiNodeMan.removeNode(url);
 				break;
 			default:
