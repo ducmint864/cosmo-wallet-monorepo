@@ -116,6 +116,14 @@ const securityConfig = {
 	}
 }
 
+const codecConfig = {
+	// stringReprFormat determines how binary data is represented as a string, 
+	// with "base64" being the chosen format to prevent data corruption 
+	// when storing data as a raw buffer in Redis due to its internal 
+	// type buffer to string conversion.
+	stringReprFormat: <BufferEncoding>"base64",
+}
+
 const txConfig = {
 	bank: {
 		db: {
@@ -134,5 +142,6 @@ export {
 	chainRpcConfig,
 	requestDataConfig,
 	securityConfig,
+	codecConfig,
 	txConfig,
 };
