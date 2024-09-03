@@ -1,22 +1,17 @@
 import { Request, Response, NextFunction } from "express";
 import { errorHandler } from "../../errors/middlewares/error-handler";
 import { UserAccountJwtPayload } from "../../types/UserAccountJwtPayload";
-import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient } from "@cosmjs/stargate";
+import { DeliverTxResponse, SigningStargateClient, GasPrice, StargateClient, assertIsDeliverTxSuccess } from "@cosmjs/stargate";
 import { OfflineDirectSigner } from "@cosmjs/proto-signing";
-import { prisma } from "../../connections";
+import { getCometHttpNodeMan, prisma, redisClient } from "../../connections";
+import { RedisClientType } from "redis";
 import { decrypt, getEncryptionKey, getSigner } from "../../general/helpers/crypto-helper";
 import { getStringsFromRequestBody, getObjectFromRequestBody } from "../../general/helpers/request-parser";
 import { Coin } from "thasa-wallet-interface";
-import { writeFile } from "fs"
-import { cometWsManager, cometHttpNodeMan } from "../../connections";
-import { txConfig } from "../../config";
-import { pushTxToPendingQueue } from "../helpers/pending-queue";
+import { pushTxToStream } from "../helpers/tx-stream";
 import { tx_status_enum } from "@prisma/client";
-import { saveTxToDb } from "../helpers/save-tx";
-import { getLiveTxStatus } from "../helpers/tx-status";
-import WebSocket from "ws";
+import { SaveTxPayload, createSaveTxPayload } from "../types/SaveTxPayload";
 import createHttpError from "http-errors";
-import { PendingTxPayload } from "../types/PendingTxPayload";
 
 async function sendCoin(
 	req: Request,
@@ -100,72 +95,60 @@ async function sendCoin(
 		const accounts = await signer.getAccounts();
 		console.log(accounts);
 
+		const cometHttpNodeMan = await getCometHttpNodeMan();
 		const cometHttpUrl: string = await cometHttpNodeMan.getNode();
 		const stargateClient: SigningStargateClient = await SigningStargateClient.connectWithSigner(
 			cometHttpUrl,
 			signer,
 			{ gasPrice: GasPrice.fromString("0.001stake") }
 		);
-		let txResponse: DeliverTxResponse = await stargateClient.sendTokens(fromAddress, toAddress, [coinToSend], "auto"); // Improve later, make more robust, handle more cases about gas-fee console.log("Tx response: " + tx); res.status(200).json(tx);
-		console.log("DeliverTxResponse:\n", txResponse)
+		const txResponse: DeliverTxResponse = await stargateClient.sendTokens(fromAddress, toAddress, [coinToSend], "auto"); // Improve later, make more robust, handle more cases about gas-fee console.log("Tx response: " + tx); res.status(200).json(tx);
+		assertIsDeliverTxSuccess(txResponse);
+		// if (txResponse.code !== 0) {
+
+		// }
+
+		// console.log("DeliverTxResponse:\n", txResponse)
 		// Logging
-		const obj = Object.entries(txResponse).map(([key, value]) => {
-			return [
-				key,
-				typeof value === "bigint" ? value?.toString() : value
-			];
-		});
-		writeFile("./DeliverTxResponse.json", JSON.stringify(obj, null, 2), undefined, () => ("DeliverTxResponse written to disk"));
+		// const obj = Object.entries(txResponse).map(([key, value]) => {
+		// 	return [
+		// 		key,
+		// 		typeof value === "bigint" ? value?.toString() : value
+		// 	];
+		// });
+		// writeFile("./DeliverTxResponse.json", JSON.stringify(obj, null, 2), undefined, () => ("DeliverTxResponse written to disk"));
 
-		// waits til receiving websocket events about tx
-		const cometWebSocketClient: WebSocket = await cometWsManager.getClient();
-		const txStatus: tx_status_enum = await getLiveTxStatus(
-			txResponse.transactionHash,
-			toAddress,
-			stargateClient,
-			cometWebSocketClient,
-		);
+		const txStatus: tx_status_enum = txResponse.code === 0
+			? tx_status_enum.succeed
+			: tx_status_enum.failed;
 
-
-		const pendingTxPayload: PendingTxPayload = {
-			fromAddress: fromAddress,
-			toAddress: toAddress,
-			txResponse: txResponse,
-			userAccountId: userAccountId,
-			txStatus: txStatus,
-		};
-
-		const serializablePayload: object = makeSerializable(pendingTxPayload);
-		console.log("Size of pendingTxPayload object (uncompressed):", Buffer.byteLength(JSON.stringify(serializablePayload)));
-		// console.log("Size of pendingTxPayload object (compressed):", Buffer.byteLength(JSON.stringify(pendingTxPayload)));
-
-
-		// save transaction record to db
-		await saveTxToDb(
-			prisma,
-			stargateClient,
+		const payload: SaveTxPayload = createSaveTxPayload(
 			txResponse,
 			txStatus,
 			fromAddress,
 			toAddress,
 			userAccountId,
-			txConfig.bank.db.saveTxDbTimeoutMilisecs,
+		);
+
+		// push tx to stream so a consumer thread can read it and save to db
+		await pushTxToStream(
+			redisClient as RedisClientType,
+			payload,
 		)
 
 		switch (txStatus) {
 			case tx_status_enum.succeed:
-				res.status(200).json({ message: "Transaction completed successfully" });
+				res.status(200).json({ message: "Transaction execution successful" });
 				break;
 			case tx_status_enum.failed:
-				res.status(500).json({ message: "Transaction failed" });
+				res.status(400).json({ message: "Transaction execution failed" });
 				break;
-			// default:
-			// 	// If txStatus remains default enum, tx has most likely been timed out
-			// 	res.status(500).json({ message: "tx took too long, please come back later" });
-			// 	await pushTxToPendingQueue(redisClient as RedisClientType, txResponse.transactionHash); // Push to queue to process later	
-			// 	break;
 		}
 	} catch (err) {
+		// if an error was thrown, it is likely to be type BroadcastTxError or TimeoutError (these types can be found in @cosmos/stargate package)
+		// - in case error is BroadcastTxError, the node did not broacast tx, mostly because of CheckTx failures at such node
+		// - in case error is TimeoutError, tx took too long without being included in any block
+		// - otherwise, it is an unknown error and we handle it gracefully
 		errorHandler(err, req, res, next);
 	}
 }
