@@ -1,10 +1,12 @@
 import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError } from "@prisma/client/runtime/library";
 import { prisma } from "../../connections";
-import { Request, Response } from "express";
+import { Response } from "express";
 import { getErrorJSON } from "../helpers/error-message";
 
+const defaultHttpCode = 500
+const conflictHttpCode = 409;
+
 function onUniqueConstraintError(err: PrismaClientKnownRequestError, res: Response): Response {
-	const conflictHttpCode = 409;
 	const uniqueFields = <string[]>err?.meta?.target || []
 
 	if (uniqueFields.length < 1) {
@@ -29,8 +31,6 @@ function handlePrismaClientError(
 	err: PrismaClientKnownRequestError | PrismaClientUnknownRequestError,
 	res: Response,
 ): Response {
-	const defaultHttpCode = 500
-
 	if (err instanceof PrismaClientUnknownRequestError) {
 		res.status(defaultHttpCode).json(getErrorJSON(defaultHttpCode, "unknown storage error", err.stack))
 	}
