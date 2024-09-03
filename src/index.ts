@@ -10,6 +10,8 @@ import "dotenv/config";
 import https from "https";
 import fs from "fs";
 import cors from "cors";
+
+// init module functions
 import { initTransactionModule } from "./transaction-module/init-module";
 import { initConnectionsModule } from "./connections";
 
@@ -71,5 +73,7 @@ https.createServer(
 
 async function InitModules(): Promise<void> {
 	await initConnectionsModule();
+	await initTransactionModule();
+}
 
 InitModules();
