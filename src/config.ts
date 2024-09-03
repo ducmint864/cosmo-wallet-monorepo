@@ -1,6 +1,7 @@
 import { BinaryToTextEncoding } from "crypto";
 import { Algorithm } from "jsonwebtoken";
 import { envCollection } from "./env";
+import { getRedisKey } from "./general/helpers/redis-helper";
 
 type MnemonicLength = 12 | 15 | 18 | 21 | 24;
 
@@ -125,15 +126,26 @@ const codecConfig = {
 }
 
 const txConfig = {
+	db: {
+		timeoutMilisecs: 600,
+	},
+	requests: {
+		// maxRetries: 3,
+		timeoutMilisecs: 2000,
+	},
+	txStream: {
+		redisKey: getRedisKey("tx", "stream"),
+		name: getRedisKey("tx", "stream"),
+		txCountPerRead: 12, // how many tx payloads to read from stream at once
+		consumerThread: {
+			executableFile: "./build/transaction-module/helpers/tx-stream-consumer.js", // this path is relative the the project root
+			nameKey: "thread-name",
+			nameValue: "tx-stream-consumer",
+			idKey: "thread-id",
+		}
+	},
 	bank: {
-		db: {
-			saveTxDbTimeoutMilisecs: 105000,
-		},
-		requests: {
-			maxRetries: 3,
-			timeoutMilisecs: 3000,
-		},
-	}
+	},
 }
 
 export {
