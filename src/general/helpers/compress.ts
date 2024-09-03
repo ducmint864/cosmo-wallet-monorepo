@@ -43,7 +43,7 @@ function marshalAndCompress<T>(payload: T): Buffer {
  * @param compressed The compressed data as a Buffer.
  * @returns The decompressed and unmarshalled payload object.
  */
-function decompressAndUnmarshal<T>(compressed: Buffer): T | unknown {
+function decompressAndUnmarshal<T>(compressed: Buffer): T {
 	const decompressed = decompress(compressed); // Decompress the Buffer
 	return unmarshalPayload(decompressed);       // Unmarshal the decompressed Buffer back to an object
 }
