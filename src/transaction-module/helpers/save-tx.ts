@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { DeliverTxResponse } from "@cosmjs/stargate";
 import { tx_status_enum } from "@prisma/client";
-import { getFeesFromTxResponse } from "./tx-ressponse";
+import { getFeesFromTxResponse } from "./tx-response";
 import { Coin } from "thasa-wallet-interface";
 import createHttpError from "http-errors";
 

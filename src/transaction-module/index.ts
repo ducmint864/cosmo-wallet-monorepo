@@ -12,7 +12,7 @@ export {
 
 export {
 	getFeesFromTxResponse,
-} from "./helpers/tx-ressponse";
+} from "./helpers/tx-response";
 
 export {
 	initTransactionModule,
