@@ -77,3 +77,5 @@ async function InitModules(): Promise<void> {
 }
 
 InitModules();
+
+export { app };
