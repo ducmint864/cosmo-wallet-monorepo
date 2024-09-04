@@ -5,8 +5,9 @@ import { HttpError } from "http-errors";
 // Handles http errors which were intentionally crafted and thrown by controllers
 function handleHttpError(err: HttpError, req: Request, res: Response, next: NextFunction): Response {
 	// temporary
-	return res.status(err.statusCode).json(getErrorJSON(
-		err.statusCode || 500,
+	const httpStatusCode = err.statusCode || 500;
+	return res.status(httpStatusCode).json(getErrorJSON(
+		httpStatusCode,
 		err.message || "Internal server error",
 		err.stack,
 	));
