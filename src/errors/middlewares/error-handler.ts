@@ -16,20 +16,16 @@ import { handleBroadcastTxError, handleTxTimeoutError } from "./tx-error";
 const specificHandlerMapping: Record<string, SpecificHandler> = {
 	[PrismaClientKnownRequestError.name]: handlePrismaClientError, // this is a func
 	[PrismaClientUnknownRequestError.name]: handlePrismaClientError, // this is a func
-	[HttpError.name]: handleHttpError,
 	[BroadcastTxError.name]: handleBroadcastTxError,
 	[TxTimeoutError.name]: handleTxTimeoutError,
 };
 
 function defaultSpecificHandler(err: Error, res: Response): Response {
-	return res.status(500).json(getErrorJSON(
-		500,
-		err.message || "Internal server error",
-		err.stack,
-	));
+	return handleHttpError(err as HttpError, res);
 }
 
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): Response | void {
+	console.error("RAW ERROR: \n", err);
 	if (res.headersSent) {
 		return next(err);
 	}
