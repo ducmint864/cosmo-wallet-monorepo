@@ -20,7 +20,7 @@ async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[
 		} catch (err) {
 			if (err instanceof HttpNodeManagerError &&
 				err.code === HttpNodeManagerErrorCode.ERR_ALREADY_REGISTERED) {
-				console.error(`Skip registered endpoint: ${endpoint}`);
+				console.log(`Skip registered endpoint: ${endpoint}`);
 			} else {
 				console.error(`Trouble registering http node '${endpoint}':`, err);
 				process.exit(1);
