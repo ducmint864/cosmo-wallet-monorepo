@@ -12,6 +12,7 @@ import { pushTxToStream } from "../helpers/tx-stream";
 import { tx_status_enum } from "@prisma/client";
 import { SaveTxPayload, createSaveTxPayload } from "../types/SaveTxPayload";
 import createHttpError from "http-errors";
+import { isValidPassword } from "../../general";
 
 async function sendCoin(
 	req: Request,
@@ -51,6 +52,7 @@ async function sendCoin(
 				crypto_mnemonic: true,
 				crypto_iv: true,
 				crypto_pbkdf2_salt: true,
+				password: true,
 				wallet_accounts: {
 					where: {
 						address: fromAddress,
@@ -60,10 +62,16 @@ async function sendCoin(
 					}
 				}
 			}
-		})
+		});
 
 		if (!userAccount) {
 			throw createHttpError(404, "User account not found/might have been deleted");
+		}
+
+		// check password (although not necessary bcuz user already provided access token, but for security...)
+		const isValidPass: boolean = await isValidPassword(password, userAccount.password);
+		if (!isValidPass) {
+			throw createHttpError(403, "Invalid password");
 		}
 
 		// Extract wallet account	
