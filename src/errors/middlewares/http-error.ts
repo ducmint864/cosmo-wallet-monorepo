@@ -3,8 +3,7 @@ import { getErrorJSON } from "../helpers/error-message";
 import { HttpError } from "http-errors";
 
 // Handles http errors which were intentionally crafted and thrown by controllers
-function handleHttpError(err: HttpError, req: Request, res: Response, next: NextFunction): Response {
-	// temporary
+function handleHttpError(err: HttpError, res: Response): Response {
 	const httpStatusCode = err.statusCode || 500;
 	return res.status(httpStatusCode).json(getErrorJSON(
 		httpStatusCode,
