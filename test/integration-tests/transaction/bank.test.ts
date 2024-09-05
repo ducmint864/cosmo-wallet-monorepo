@@ -332,6 +332,29 @@ describe("sending coins API", () => {
 				expect(res.status).toBe(200);
 				txHashList.push(res.body["txHash"]);
 			});
+
+			// check if all transaction records were saved to db
+			const savedTxCount = await prisma.transactions.count({
+				where: {
+					tx_hash: {
+						in: txHashList
+					}
+				},
+			});
+			
+			expect(savedTxCount).toEqual(txHashList.length);
+
+			// check if all transaction_fees records were saved to db
+			const savedTxFeeCount = await prisma.transaction_fees.count({
+				where: {
+					transactions: {
+						tx_hash: {
+							in: txHashList
+						},
+					},
+				},
+			});
+			expect(savedTxFeeCount).toEqual(txHashList.length);
 		} catch (ignored) {
 			// expect(ignored).toThr
 			throw (ignored);
@@ -381,28 +404,28 @@ describe("sending coins API", () => {
 			// 	})
 			// });
 
-			await prisma.$transaction(async (prismaTrans) => {
-				await prismaTrans.transaction_fees.deleteMany({
-					where: {}
-				});
-				await prismaTrans.transactions.deleteMany({
-					where: {}
-				});
-				await prismaTrans.wallet_accounts.deleteMany({
-					where: {
-						wallet_account_id: {
-							in: Array.from(stateMap.values()).map((account) => account.mainWallet?.walletAccountId!)
-						}
-					}
-				})
-				await prismaTrans.user_accounts.deleteMany({
-					where: {
-						user_account_id: {
-							in: Array.from(stateMap.values()).map((account) => account.userAccountId!)
-						}
-					}
-				})
-			});
+			// await prisma.$transaction(async (prismaTrans) => {
+			// 	await prismaTrans.transaction_fees.deleteMany({
+			// 		where: {}
+			// 	});
+			// 	await prismaTrans.transactions.deleteMany({
+			// 		where: {}
+			// 	});
+			// 	await prismaTrans.wallet_accounts.deleteMany({
+			// 		where: {
+			// 			wallet_account_id: {
+			// 				in: Array.from(stateMap.values()).map((account) => account.mainWallet?.walletAccountId!)
+			// 			}
+			// 		}
+			// 	})
+			// 	await prismaTrans.user_accounts.deleteMany({
+			// 		where: {
+			// 			user_account_id: {
+			// 				in: Array.from(stateMap.values()).map((account) => account.userAccountId!)
+			// 			}
+			// 		}
+			// 	})
+			// });
 		}
 
 	}, 70 * 1000);
