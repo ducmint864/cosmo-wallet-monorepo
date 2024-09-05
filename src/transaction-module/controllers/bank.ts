@@ -143,10 +143,16 @@ async function sendCoin(
 
 		switch (txStatus) {
 			case tx_status_enum.succeed:
-				res.status(200).json({ message: "Transaction execution successful" });
+				res.status(200).json({
+					message: "Transaction execution successful",
+					txHash: txResponse.transactionHash,
+				});
 				break;
 			case tx_status_enum.failed:
-				res.status(400).json({ message: "Transaction execution failed" });
+				res.status(400).json({
+					message: "Transaction execution failed",
+					txHash: txResponse.transactionHash,
+				});
 				break;
 		}
 	} catch (err) {
