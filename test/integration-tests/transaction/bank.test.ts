@@ -1,8 +1,8 @@
 import { describe, expect, test } from '@jest/globals';
 import request from "supertest"
 import { app } from "../../../src/index";
-import "dotenv/config";
 import { prisma } from '../../../src/connections';
+import "dotenv/config";
 
 /**
  * @dev Provide a user account, which have at least 1 wallet account,
