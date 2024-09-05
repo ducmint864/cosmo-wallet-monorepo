@@ -11,18 +11,20 @@ type SpecificHandler = (...args: any[]) => Response;
 const specificHandlerMapping: Record<string, SpecificHandler> = {
 	[PrismaClientKnownRequestError.name]: handlePrismaClientError, // this is a func
 	[PrismaClientUnknownRequestError.name]: handlePrismaClientError, // this is a func
+<<<<<<< HEAD
 	[HttpError.name]: handleHttpError,
+=======
+	[BroadcastTxError.name]: handleBroadcastTxError,
+	[TxTimeoutError.name]: handleTxTimeoutError,
+>>>>>>> 630a729... Simplify error handler by making handleHttpError the default specific handler
 };
 
 function defaultSpecificHandler(err: Error, res: Response): Response {
-	return res.status(500).json(getErrorJSON(
-		500,
-		err.message || "Internal server error",
-		err.stack,
-	));
+	return handleHttpError(err as HttpError, res);
 }
 
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): Response | void {
+	console.error("RAW ERROR: \n", err);
 	if (res.headersSent) {
 		return next(err);
 	}
