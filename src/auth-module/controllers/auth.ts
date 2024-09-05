@@ -10,6 +10,8 @@ import { getDerivedAccount, makeHDPath } from "../../general/helpers/crypto-help
 import { authConfig, cryptoConfig, securityConfig } from "../../config";
 import { randomBytes } from "crypto";
 import { genCsrfToken } from "../../security/helpers/csrf-helper";
+import { WalletAccountDTO } from "thasa-wallet-interface";
+import { pick, mapKeys, camelCase } from "lodash";
 import createHttpError from "http-errors";
 import bcrypt from "bcrypt";
 import "dotenv/config";
@@ -96,7 +98,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 
 		// Derive the default (main) wallet account for the user account
 		const { address: argAddress } = (await wallet.getAccounts())[0];
-		const walletAccount = await prisma.wallet_accounts.create({
+		let walletAccount = await prisma.wallet_accounts.create({
 			data: {
 				address: argAddress,
 				crypto_hd_path: cryptoConfig.bip44.defaultHdPath,
@@ -110,9 +112,15 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
 			throw createHttpError(500, "Failed to create derived account");
 		}
 
+		const mainWallet = <WalletAccountDTO>pick(
+			mapKeys(walletAccount, (_, key) => camelCase(key)),
+			["walletAccountId", "userAccountId", "isMainWallet", "walletOrder", "address", "nickname", "cryptoHdPath"]
+		)
+
 		// Success
 		res.status(201).json({
 			message: "Register successful",
+			mainWallet,
 		});
 
 	} catch (err) {
