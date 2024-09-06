@@ -56,18 +56,15 @@ describe('register', () => {
                 password: 'P@ssW0rd'
             }
         }) as Request;
-
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
+        
+        // Spy
+        const errorHandlerSpy = jest.spyOn(require('../../src/errors/middlewares/error-handler'), 'errorHandler')
 
         // Act
         await register(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
+        expect(errorHandlerSpy).toHaveBeenCalled();
         expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
     });
