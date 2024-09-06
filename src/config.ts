@@ -148,6 +148,32 @@ const txConfig = {
 	},
 }
 
+const logsConfig = {
+	storage: {
+		// directory to store the logs files
+		relativeDir: "logs" // this dir is relative to the project's root dir (which should be the parent dir of the src/ dir)
+	},
+	customLevels: {
+		levels: {
+			fatal: 0,
+			error: 1,
+			warn: 2,
+			info: 3,
+			debug: 4,
+			trace: 5,
+		},
+		colors: {
+			// color codes reference: https://stackoverflow.com/questions/51012150/winston-3-0-colorize-whole-output-on-console
+			fatal: "underline bold black redBG", // red
+			error: "red", // red
+			warn: "yellow", // yellow 
+			info: "cyan", // cyan
+			debug: "green", // green
+			trace: "underline white", // white
+		}
+	}
+}
+
 export {
 	cryptoConfig,
 	authConfig,
@@ -156,4 +182,5 @@ export {
 	securityConfig,
 	codecConfig,
 	txConfig,
+	logsConfig,
 };
