@@ -52,16 +52,17 @@ describe('register', () => {
             }
         }) as Request;
  
-         // Act
-         await register(req, res, mockNext);
+        // Act
+        await register(req, res, mockNext);
  
-         // Assert
-         expect(res.status).toHaveBeenCalledWith(400);
-         expect(res.json).toHaveBeenCalledWith(
-         expect.objectContaining({
-           message: "Missing credentials information",
-           stack: expect.stringContaining("BadRequestError: Missing credentials information")
-         }));
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Missing credentials information",
+                stack: expect.stringContaining("BadRequestError: Missing credentials information")
+            })
+        );
     });
 
     it('should handle an error if missing password', async () => {
@@ -73,19 +74,17 @@ describe('register', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await register(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Missing credentials information",
+                stack: expect.stringContaining("BadRequestError: Missing credentials information")
+            })
+        );
     }); 
 
     it('should handle an error if email input unappropriately', async ()=> {
@@ -102,19 +101,17 @@ describe('register', () => {
             }
         }) as Request;
         
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-        
         // Act 
         await register(req, res, mockNext);
 
          // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ message: "Invalid email" });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Invalid email",
+                stack: expect.stringContaining("BadRequestError: Invalid email")
+            })
+        );
     });
 
     it('should handle an error if password invalid', async () => {
@@ -131,27 +128,21 @@ describe('register', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await register(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            message: expect.stringContaining("Invalid password:")
-        });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: expect.stringContaining("Invalid password")
+            })
+        );
     });
 
     it('should handle error if username is invalid', async () => {
         /**
          * @dev  function checkUsernameAndThrow is being tested in credentials-helper.test.ts
-
          */
 
         // Arrange
@@ -163,21 +154,16 @@ describe('register', () => {
             }
         }) as Request;
         
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-        
         // Act
         await register(req, res, mockNext);
         
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            message: expect.stringContaining("Invalid username:")
-        });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: expect.stringContaining("Invalid username")
+            })
+        );
     });
 
     describe('prisma mocking', () => {
@@ -188,7 +174,7 @@ describe('register', () => {
             jest.clearAllMocks();
         });
         
-        it('should throw unavailable username database error to error handler', async () => {
+        it('should handle database error to internal server error', async () => {
             // Arrange
             const req = ({
                 body: {
@@ -199,7 +185,6 @@ describe('register', () => {
             }) as Request;
     
             // Set up mock
-    
             (prisma.user_accounts.create as jest.Mock)
                 .mockRejectedValueOnce({
                     code: 'P2002',
@@ -208,67 +193,17 @@ describe('register', () => {
                     }
                 });
     
-            const mockHandleError = errorHandler as jest.Mock;
-            mockHandleError.mockImplementation((err, req, res, next) => {
-                res.status(err.statusCode).json({ message: err.message });
-            });
-    
             // Act
-    
             await register(req, res, mockNext);
         
             // Assert
-            expect(mockHandleError).toHaveBeenCalledWith(
-                expect.objectContaining({ code: 'P2002' }),
-                req, 
-                res,
-                mockNext
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "Internal server error",
+                    "stack": ""
+                })
             );
-        });
-
-        it('should handle the database error', async () => {
-            /**
-             * @dev 🔥
-             * @dev we going to re-use the invalid username for this 
-             * @note error-handler was able to receive the prisma error but can not handle it
-             * @todo design a method to convert prisma error to http error so that error handler can work appropriately
-             */
-            
-            // Arrange
-            const req = ({
-                body: {
-                    email: 'coolguy82@example.com',
-                    username: 'coolguy82',
-                    password: 'P@ssw0rd'
-                    }
-            }) as Request;
-        
-            // Set up mock
-            (prisma.user_accounts.create as jest.Mock)
-                .mockRejectedValueOnce({
-                    statusCode: 'P2002',
-                    meta: {
-                        target: ['username']
-                    },
-                    message: "email has been taken"
-                });
-        
-            // const mockHandleError = errorHandler as jest.Mock;
-            // mockHandleError.mockImplementation((err, req, res, next) => {
-            //     res.status(err.statusCode).json({ message: err.message });
-            // });
-        
-            // Act    
-            await register(req, res, mockNext);
-        
-            // Assert
-            // expect(res.json).toHaveBeenCalledWith(
-            //     expect.objectContaining({ message: expect.any(String) })
-            // );
-            expect(res.status).toBe(500);
-            expect(res.json).toHaveBeenCalledWith({
-                message: expect.stringContaining("email has been taken")
-            });
         });
 
         it('should register a new user if all requirements are met', async () => {
@@ -350,9 +285,12 @@ describe('register', () => {
             // Assert
 
             expect(res.status).toHaveBeenCalledWith(500);
-            expect(res.json).toHaveBeenCalledWith({
-                message: "Failed to create derived account"
-            });
+            expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: "Failed to create derived account",
+                    "stack": expect.stringContaining("InternalServerError: Failed to create derived account")
+                })
+            );
         });
         
         describe('using crypto-helper for data testing', () => {
@@ -360,7 +298,6 @@ describe('register', () => {
              * @dev arrange variables for crypto-helper
              */
             const mnemonic: string = "elder advance goddess fabric obtain machine reopen escape nation oppose narrow keep";
-            const bip39Password: string = "onlygodknow";
             const hdPathStrings: string[] = [];
 
             const saltLenght: number = cryptoConfig.pbkdf2.saltLength;
@@ -514,26 +451,19 @@ describe('login', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await login(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Missing credentials information"   
+            })
+        );
     });
 
     it('should handle an error if missing password', async () => {
-        /**
-         * @dev 🔥
-         * @todo fix logic error
-         */
         // Arrange
         const req = ({
             body: {
@@ -542,19 +472,16 @@ describe('login', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await login(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Missing credentials information"   
+            })
+        );
     }); 
 
     it('should handle an error if email input unappropriately', async ()=> {
@@ -571,19 +498,16 @@ describe('login', () => {
             }
         }) as Request;
         
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-        
         // Act 
         await login(req, res, mockNext);
 
          // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ message: "Invalid email" });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: "Invalid email"
+            })
+        );
     });
 
     it('should handle an error if password invalid', async () => {
@@ -599,21 +523,16 @@ describe('login', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await login(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            message: expect.stringContaining("Invalid password:")
-        });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: expect.stringContaining("Invalid password:")
+            })
+        );
     });
 
     it('should handle an error where no email provided and a username is invalid', async () => {
@@ -625,21 +544,16 @@ describe('login', () => {
             }
         }) as Request;
 
-        // Set up mock
-        const mockHandleError = errorHandler as jest.Mock;
-        mockHandleError.mockImplementation((err, req, res, next) => {
-            res.status(err.statusCode).json({ message: err.message });
-        });
-
         // Act
         await login(req, res, mockNext);
 
         // Assert
-        expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({
-            message: expect.stringContaining("Invalid username:")
-            });
+        expect(res.json).toHaveBeenCalledWith(
+            expect.objectContaining({
+                message: expect.stringContaining("Invalid username:")
+            })
+        );
     });
 
     describe('prisma mocking', () => {
@@ -660,20 +574,16 @@ describe('login', () => {
             (prisma.user_accounts.findUnique as jest.Mock)
                 .mockResolvedValue(null);
 
-            const mockHandleError = errorHandler as jest.Mock;
-            mockHandleError.mockImplementation((err, req, res, next) => {
-                res.status(err.statusCode).json({ message: err.message });
-            });
-
             // Act
             await login(req, res, mockNext);
 
             // Assert
-            expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
             expect(res.status).toHaveBeenCalledWith(401);
-            expect(res.json).toHaveBeenCalledWith({
-                message: expect.stringContaining("Invalid login credentials")
-            });
+            expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: expect.stringContaining("Invalid login credentials")
+                })
+            );
         });
 
         it('should throw an error an error if password incorrect', async () => {
@@ -691,21 +601,17 @@ describe('login', () => {
                     email: 'test@example.com',
                     password: 'this_is_the_r1ght_p@ssworD'
             });
-            
-            const mockHandleError = errorHandler as jest.Mock;
-            mockHandleError.mockImplementation((err, req, res, next) => {
-                res.status(err.statusCode).json({ message: err.message });
-            });
     
            // Act
            await login(req, res, mockNext);
     
            // Assert
-           expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
            expect(res.status).toHaveBeenCalledWith(401);
-           expect(res.json).toHaveBeenCalledWith({
-                message: expect.stringContaining("Invalid login credentials")
-            });
+           expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: expect.stringContaining("Invalid login credentials")
+                })
+            );
         });
 
         it('should successfully login the user if satisfied all requirements', async () => {
@@ -736,20 +642,16 @@ describe('login', () => {
                     }
                 });
 
-            const mockHandleError = errorHandler as jest.Mock;
-            mockHandleError.mockImplementation((err, req, res, next) => {
-                res.status(err.statusCode).json({ message: err.message });
-            });
-
             // Act
             await login(req, res, mockNext);
 
             // Assert
-            expect(mockHandleError).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
             expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith({
+            expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
                     message: "Login successful"
-            });
+                })
+            );
         });
     });
 });
