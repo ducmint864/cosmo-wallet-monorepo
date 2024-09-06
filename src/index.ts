@@ -14,6 +14,7 @@ import cors from "cors";
 // init module functions
 import { initTransactionModule } from "./transaction-module/init-module";
 import { initConnectionsModule } from "./connections";
+import { initLogsModule } from "./logs";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -74,6 +75,7 @@ https.createServer(
 async function InitModules(): Promise<void> {
 	await initConnectionsModule();
 	await initTransactionModule();
+	initLogsModule();
 }
 
 InitModules();
