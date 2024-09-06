@@ -14,7 +14,7 @@
         "esModuleInterop": true,
         "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true,
-        "types": ["jest"]
+        "types": ["jest", "node"]
     },
 	"include": ["./src/**/*"]
 }
