@@ -12,11 +12,6 @@ import { cryptoConfig } from '../../src/config';
 import {user_type_enum} from "@prisma/client";
 
 /**
- * @dev error-handler mocking for register test
- */
-jest.mock('../../src/errors/middlewares/error-handler');
-
-/**
  * @dev prisma mock for database related test, preventing test to access actual database
  */
 jest.mock("../../src/connections", () => ({
@@ -56,17 +51,17 @@ describe('register', () => {
                 password: 'P@ssW0rd'
             }
         }) as Request;
-        
-        // Spy
-        const errorHandlerSpy = jest.spyOn(require('../../src/errors/middlewares/error-handler'), 'errorHandler')
-
-        // Act
-        await register(req, res, mockNext);
-
-        // Assert
-        expect(errorHandlerSpy).toHaveBeenCalled();
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
+ 
+         // Act
+         await register(req, res, mockNext);
+ 
+         // Assert
+         expect(res.status).toHaveBeenCalledWith(400);
+         expect(res.json).toHaveBeenCalledWith(
+         expect.objectContaining({
+           message: "Missing credentials information",
+           stack: expect.stringContaining("BadRequestError: Missing credentials information")
+         }));
     });
 
     it('should handle an error if missing password', async () => {

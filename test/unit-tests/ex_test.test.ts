@@ -48,16 +48,15 @@ describe('error-handler need to work appropriately', () => {
            }
        }) as Request; // req missing email
 
-       // Act
-       await register(req, res, mockNext);
+        // Act
+        await register(req, res, mockNext);
 
-       // Assert
-       expect(res.status).toHaveBeenCalledWith(400);
-       expect(res.json).toHaveBeenCalledWith(
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(400);
+        expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           message: "Missing credentials information",
           stack: expect.stringContaining("BadRequestError: Missing credentials information")
-        })
-      );
+        }));
    })
 })
