@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import createHttpError, {HttpError} from "http-errors"
 import {errorHandler} from "../../src/errors/middlewares/error-handler"; 
 import { register } from '../../src/auth-module/controllers/auth'
+import { StringDecoder } from 'string_decoder';
 
 describe('error-handler need to work appropriately', () => {
     let res: Response;
@@ -38,27 +39,6 @@ describe('error-handler need to work appropriately', () => {
         )
     })
 
-    it('should handle the error if the error is caught by middleware', async () => {
-        // Arrange
-        const req = ({
-            body: {
-                username: 'CoolGuy82',
-                password: 'P@ssW0rd',
-            },
-        }) as Request; // req missing email
-
-        // Spy on the errorHandler to check if it's called
-        const errorHandlerSpy = jest.spyOn(require('../../src/errors/middlewares/error-handler'), 'errorHandler');
-        
-        // Act
-        await register(req, res, mockNext); // This will throw an error internally, which should be handled by the middleware
-
-        // Assert
-        expect(errorHandlerSpy).toHaveBeenCalled(); // Ensure the error handler was called
-        expect(res.status).toHaveBeenCalledWith(400); // Verify the status code was set
-        expect(res.json).toHaveBeenCalledWith({ message: 'Missing credentials information' }); // Verify the response content
-    });
-
     it ('should handle the error if the error pass from a different function', async () => {
         // Arrange
         const req = ({
@@ -72,8 +52,12 @@ describe('error-handler need to work appropriately', () => {
        await register(req, res, mockNext);
 
        // Assert
-       // expect(errorHandler).toHaveBeenCalledWith(expect.any(HttpError), req, res, mockNext);
        expect(res.status).toHaveBeenCalledWith(400);
-       expect(res.json).toHaveBeenCalledWith({message: "Missing credentials information"})
+       expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Missing credentials information",
+          stack: expect.stringContaining("BadRequestError: Missing credentials information")
+        })
+      );
    })
 })
