@@ -73,7 +73,8 @@ describe("_genTokenKeyPair", () => {
 			const { privateKey } = _genTokenKeyPair(algo);
 			const payload: UserAccountJwtPayload = {
 				userAccountId: 1,
-				userRole: "normal",
+				// userRole: "normal",
+				userType: "normal",
 			};
 
 			expect(() => genToken(
