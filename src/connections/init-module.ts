@@ -84,14 +84,9 @@ async function getBlockchainApiNodeMan() {
 	return blockchainApiNodeMan;
 }
 
-async function initConnectionsModule() {
-	await initNodeManagers();
-}
-
 // export initialized isntances of node managers
 export {
 	getCometWsManager,
 	getCometHttpNodeMan,
 	getBlockchainApiNodeMan,
-	initConnectionsModule,
 };

@@ -6,7 +6,6 @@ export {
 	getCometWsManager,
 	getCometHttpNodeMan,
 	getBlockchainApiNodeMan,
-	initConnectionsModule,
 } from "./init-module"
 
 export {

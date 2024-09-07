@@ -13,8 +13,6 @@ import cors from "cors";
 
 // init module functions
 import { initTransactionModule } from "./transaction-module/init-module";
-import { initConnectionsModule } from "./connections";
-import { initLogsModule } from "./logs";
 
 // Check environement
 if (!process.env.ACCESS_TOKEN_SECRET) {
@@ -62,6 +60,27 @@ app.get('/', (req, res) => {
 	res.sendFile(join(frontendPath, "index.html"));	 // Serve the front-end GUI
 })
 
+
+// async function InitModules(): Promise<void> {
+// 	await initConnectionsModule();
+// 	await initTransactionModule();
+// 	initLogsModule();
+// }
+
+// InitModules();
+
+let isRunning: boolean = false;
+
+async function RunApp() {
+	if (isRunning) {
+		return;
+	}
+
+	isRunning = true;
+	
+	// init modules
+	await initTransactionModule();
+
 https.createServer(
 	{
 		key: fs.readFileSync("server.key"),
@@ -69,15 +88,10 @@ https.createServer(
 	},
 	app
 ).listen(port, () => {
-	console.log(`Server listening on port ${port}`);
+		appLogger.info(`Server listening on port ${port}`)
 });
-
-async function InitModules(): Promise<void> {
-	await initConnectionsModule();
-	await initTransactionModule();
-	initLogsModule();
 }
 
-InitModules();
+RunApp();
 
 export { app };
