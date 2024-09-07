@@ -11,6 +11,7 @@ import { decompressAndUnmarshal } from '../../general/helpers/compress';
 import { getCometHttpNodeMan, prisma, redisClient } from "../../connections";
 import { isMainThread, parentPort, workerData } from "worker_threads";
 import { deepStrictEqual as assertDeepStrictEqual } from 'assert';
+import { appLogger } from "../../logs";
 
 /**
  * 
@@ -28,7 +29,7 @@ async function consumeTxStream(
 	prismaClient: PrismaClient,
 	stargateClient: StargateClient,
 ): Promise<void> {
-	console.log("LOG:CONSUMING TX STREAM....")
+	parentPort.postMessage("INFO|tx stream is being consumed...");
 	let isPerformingSaveOperation: boolean = false;
 
 	const redisStreamKey: string = txConfig.txStream.redisKey;
@@ -65,7 +66,7 @@ async function consumeTxStream(
 		for (const messageWrapper of txStream.messages) {
 			const compressedPayloadStr: string = messageWrapper.message["data"];
 			const messageId: string = messageWrapper.id;
-			console.log("COMPRESSED PAYLOAD STRING RETRIEVED FROM REDIS:\n", compressedPayloadStr);
+			parentPort.postMessage(`DEBUG|compressed payload string retrieved from redis:\n${compressedPayloadStr}`);
 			compressedPayloadList.push(Buffer.from(compressedPayloadStr, codecConfig.stringReprFormat));
 			messageIdList.push(messageId);
 		}
@@ -79,19 +80,19 @@ async function consumeTxStream(
 			const payload = decompressAndUnmarshal<SaveTxPayload>(compressedPayload);
 
 			// debug log
-			console.log(`decompressed transaction:\n${payload}`)
+			parentPort.postMessage(`DEBUG|decompressed transaction:\n${payload.toString()}`);
 
 			const txBlockHeight: number = payload.txResponse.height;
 			if (!txBlockHeight) {
 				// do sth
-				console.error("LOG:tx payload have not block height");
+				parentPort.postMessage("DEBUG|:tx payload have no block height");
 				break;
 			}
 
 			const txHash: string = payload.txResponse.transactionHash;
 			if (!txHash) {
 				// do sth
-				console.error("LOG:tx payload have no timestamp");
+				parentPort.postMessage("DEBUG|:tx payload have no timestamp");
 				break;
 			}
 
@@ -123,11 +124,7 @@ async function consumeTxStream(
 				lastReadId = messageIdList[index];
 				await redisClient.XDEL(redisStreamKey, lastReadId);
 			} catch (error) {
-				// debug log
-				// console.error(`Error saving tx: ${payload.txResponse.transactionHash}`, error);
-				console.error("LOG: request timed out, error:\n", error)
-				// push tx to stream again
-				// await pushTxToStream(redisClient as RedisClientType, payload);
+				parentPort.postMessage(`ERROR|request timed out, error:\n${error}`);
 			} finally {
 			}
 		};
@@ -136,25 +133,24 @@ async function consumeTxStream(
 }
 
 function setupEventListeners(): void {
-	parentPort.postMessage("LOG: WORKER THREAD IS RUNNING")
 	// handle messages from parent thread (i.e. producer/main thread)
 	parentPort.on("message", (message) => {
 		if (message === "stop") {
 			process.exit(0);
 		}
 	});
-	console.log("LOG:SETUP CONSUMER EVENT LISTENER DONE");
 }
 
 // consumer thread will run this function, then this function calls consumeTxStream()
 async function executeConsumer(): Promise<void> {
-	console.log("LOG: EXECUTING CONSUMER THREAD");
 	setupEventListeners();
+	parentPort.postMessage("INFO|consumer is listening for messages from parent thread...");
 
 	const cometHttpNodeMan = await getCometHttpNodeMan();
 	const cometHttpUrl: string = await cometHttpNodeMan.getNode();
 	const stargateClient: StargateClient = await StargateClient.connect(cometHttpUrl);
 
+	// block operation
 	await consumeTxStream(
 		redisClient as RedisClientType,
 		prisma,
@@ -167,7 +163,7 @@ if (!isMainThread) {
 	const threadNameKey: string = txConfig.txStream.consumerThread.nameKey;
 	const threadNameValue: string = txConfig.txStream.consumerThread.nameValue;
 
-	console.log("LOG:I AM NOT MAIN THREAD");
+	parentPort.postMessage("INFO|consumer's code is being executed");
 	if (workerData[threadNameKey] !== threadNameValue) {
 		process.exit(0);
 	}

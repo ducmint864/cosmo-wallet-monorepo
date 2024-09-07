@@ -1,4 +1,5 @@
 import { createClient } from "redis";
+import { appLogger } from "../../logs";
 
 export const redisClient = createClient();
 
@@ -8,4 +9,4 @@ export const redisClient = createClient();
 }) ();
 
 // For less complex use cases, one redis client is prolly sufficient
-redisClient.on('error', (err) => console.log('Redis Client Error', err));
+redisClient.on('error', (err) => appLogger.error('Redis Client Error', err));

@@ -13,7 +13,6 @@ function getCurveFromSigningAlgo(signingAlgo: Algorithm): string {
 	}
 
 	if (signingAlgo.slice(0, 2) !== "ES") {
-		// console.log("DEBUG: ", signingAlgo.slice(0, 2))
 		return "";
 	}
 

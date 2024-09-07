@@ -6,6 +6,7 @@ import { transactionRouter } from "./transaction-module";
 import { join } from "path";
 import { applyContentSecurityPolicy } from "./security/middlewares/csp";
 import { connectionsRouter } from "./connections";
+import { appLogger} from "./logs";
 import "dotenv/config";
 import https from "https";
 import fs from "fs";
@@ -61,14 +62,6 @@ app.get('/', (req, res) => {
 })
 
 
-// async function InitModules(): Promise<void> {
-// 	await initConnectionsModule();
-// 	await initTransactionModule();
-// 	initLogsModule();
-// }
-
-// InitModules();
-
 let isRunning: boolean = false;
 
 async function RunApp() {
@@ -81,15 +74,15 @@ async function RunApp() {
 	// init modules
 	await initTransactionModule();
 
-https.createServer(
-	{
-		key: fs.readFileSync("server.key"),
-		cert: fs.readFileSync("server.cert"),
-	},
-	app
-).listen(port, () => {
+	https.createServer(
+		{
+			key: fs.readFileSync("server.key"),
+			cert: fs.readFileSync("server.cert"),
+		},
+		app
+	).listen(port, () => {
 		appLogger.info(`Server listening on port ${port}`)
-});
+	});
 }
 
 RunApp();

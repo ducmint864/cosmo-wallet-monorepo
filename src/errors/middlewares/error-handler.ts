@@ -11,6 +11,7 @@ type SpecificHandler = (...args: any[]) => Response;
 import { handlePrismaClientError } from "./prisma-error";
 import { handleHttpError } from "./http-error";
 import { handleBroadcastTxError, handleTxTimeoutError } from "./tx-error";
+import { appLogger } from "../../logs";
 
 // map known types of error class to their specific handler func
 const specificHandlerMapping: Record<string, SpecificHandler> = {
@@ -25,7 +26,7 @@ function defaultSpecificHandler(err: Error, res: Response): Response {
 }
 
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): Response | void {
-	console.error("RAW ERROR: \n", err);
+	appLogger.error(`raw error:\n${err}`);
 	if (res.headersSent) {
 		return next(err);
 	}

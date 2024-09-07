@@ -17,6 +17,7 @@ import bcrypt from "bcrypt";
 import "dotenv/config";
 import * as credentialHelper from "../../general/helpers/credentials-helper";
 import * as cryptoHelper from "../../general/helpers/crypto-helper";
+import { appLogger } from "../../logs";
 
 /**
  * Registers a new user account.
@@ -33,7 +34,7 @@ import * as cryptoHelper from "../../general/helpers/crypto-helper";
  */
 async function register(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
-
+		appLogger.info("received user-registering request");
 		let {
 			// eslint-disable-next-line
 			email: inputEmail,
@@ -143,6 +144,7 @@ async function register(req: Request, res: Response, next: NextFunction): Promis
  */
 async function login(req: Request, res: Response, next: NextFunction): Promise<void> {
 	try {
+		appLogger.info("received user-login request");
 		const {
 			email: inputEmail,
 			username: inputUsername,
@@ -249,6 +251,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
  */
 async function refreshSession(req: Request, res: Response, next: NextFunction): Promise<void> {
 	// Refusal of service when access token is present and still viable
+	appLogger.info("received refresh-session request");
 	const accessToken: string = req.cookies["accessToken"];
 	const accessTokenPayload: UserAccountJwtPayload = decodeAndVerifyToken(accessToken, authConfig.token.accessToken.publicKey);
 	if (accessTokenPayload !== null) {
@@ -394,14 +397,13 @@ async function createWalletAccount(req: Request, res: Response, next: NextFuncti
   http://localhost:3000/api/version/auth/logout
  */
 async function logout(req: Request, res: Response, next: NextFunction): Promise<void> {
+	appLogger.info("received logout request");
 	/** This middelware comes after requireAccessToken(...)
 	 * -> Guarateeed availability of decoded access-token payload
 	 *    Meanwhile, access to refresh-token is not guaranteed
 	 * */
 	let invalidationError: Error;
 	try {
-		console.log(req.cookies["accessToken"]);
-		console.log(req.cookies["refreshToken"]);
 		await _invalidateCurrentTokens(req, res);
 	} catch (err) {
 		invalidationError = err;

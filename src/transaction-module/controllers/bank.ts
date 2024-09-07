@@ -13,6 +13,7 @@ import { tx_status_enum } from "@prisma/client";
 import { SaveTxPayload, createSaveTxPayload } from "../types/SaveTxPayload";
 import createHttpError from "http-errors";
 import { isValidPassword } from "../../general";
+import { appLogger } from "../../logs";
 
 async function sendCoin(
 	req: Request,
@@ -24,10 +25,11 @@ async function sendCoin(
 		fromAddress,
 		toAddress
 	} = getStringsFromRequestBody(req, "password", "fromAddress", "toAddress");
+	appLogger.info("incoming send-coin tx request");
 
 	// Only support single-coin sending, for now
 	const coinToSend = <Coin>getObjectFromRequestBody(req, "coin");
-	console.log(coinToSend);
+	appLogger.debug(`client wants to send denom: ${coinToSend}`)
 
 	try {
 		// Runtime type-checking to see whether coinToSend obj is recognizable as instance of Coin interface
@@ -97,8 +99,6 @@ async function sendCoin(
 			undefined,
 			walletAccount.crypto_hd_path,
 		);
-		const accounts = await signer.getAccounts();
-		console.log(accounts);
 
 		const cometHttpNodeMan = await getCometHttpNodeMan();
 		const cometHttpUrl: string = await cometHttpNodeMan.getNode();
@@ -139,7 +139,8 @@ async function sendCoin(
 		await pushTxToStream(
 			redisClient as RedisClientType,
 			payload,
-		)
+		);
+		appLogger.trace("pushed send-coin tx to stream");
 
 		switch (txStatus) {
 			case tx_status_enum.succeed:

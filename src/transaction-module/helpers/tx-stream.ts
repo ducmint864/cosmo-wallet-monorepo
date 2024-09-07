@@ -3,6 +3,7 @@ import { txConfig } from '../../config';
 import { SaveTxPayload } from '../types/SaveTxPayload';
 import { marshalAndCompress } from "../../general/helpers/compress";
 import { codecConfig } from "../../config";
+import { appLogger } from "../../logs";
 
 /**
  * Push tx to a stream to save to then save to db
@@ -14,7 +15,7 @@ async function pushTxToStream(redisClient: RedisClientType, payload: SaveTxPaylo
 	const compressedPayloadStr: string = marshalAndCompress(payload)
 		.toString(codecConfig.stringReprFormat);
 
-	console.log("ORIGINAL COMPRESSED PAYLOAD STRING:\n", compressedPayloadStr);
+	appLogger.debug(`original tx payload:\n${compressedPayloadStr}`);
 	const streamRedisKey: string = txConfig.txStream.redisKey;
 	await redisClient.XADD(
 		streamRedisKey,

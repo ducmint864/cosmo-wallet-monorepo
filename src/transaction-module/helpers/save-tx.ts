@@ -4,6 +4,7 @@ import { tx_status_enum } from "@prisma/client";
 import { getFeesFromTxResponse } from "./tx-response";
 import { Coin } from "thasa-wallet-interface";
 import createHttpError from "http-errors";
+import { appLogger } from "../../logs";
 
 /**
  * Write transaction record to database with a timeout.
@@ -33,12 +34,8 @@ async function saveTxToDb(
 	// create a database transaction (this is not a blockchain transaction)
 	await prismaClient.$transaction(
 		async (prismaTx) => {
-			// Wait for tx to finish (fail or succeed)
-			console.log(`waiiting for events about transaction ${txResponse.transactionHash}...`);
-			// txstatus = tx_status_enum.pending; // set default status
-			// txStatus = await getTxStatus(txResponse.transactionHash, toAddress, stargateClient, cometWebSocketClient);
-
 			//  Upsert (insert an anonymous wallet account if receiver is not stored in db, otherwise do nothin)
+			appLogger.trace("saveTxToDb: upserting wallet account into db...");
 			try {
 				await prismaClient.wallet_accounts.upsert({
 					where: {
@@ -52,9 +49,12 @@ async function saveTxToDb(
 					}
 				})
 			} catch (upsertE) {
-				throw createHttpError(500, "cannot process receiver wallet account", upsertE);
+				appLogger.trace("saveTxToDb: upsert error!");
+				throw createHttpError(500, "could not process receiver wallet account", upsertE);
 			}
+			
 
+			appLogger.trace("saveTxToDb: inserting tx into db...");
 			const savedTx = await prismaTx.transactions.create({
 				data: {
 					tx_hash: txResponse.transactionHash,
@@ -69,19 +69,24 @@ async function saveTxToDb(
 				}
 			});
 
+			appLogger.trace("saveTxToDb: parsing fees from tx response...");
 			const feeCoins: Coin[] = getFeesFromTxResponse(txResponse)
 			const feeData = feeCoins.map((coin) => ({
 				denom: coin.denom,
 				amount: BigInt(coin.amount),
 				tx_id: savedTx.tx_id
 			}));
+
+			appLogger.trace("saveTxToDb: inserting fees into db...");
 			const batch = await prismaTx.transaction_fees.createMany({
 				data: feeData
 			})
 
 			if (batch.count !== feeData.length) {
-				throw createHttpError(500, "tx finished, unexpected tx fees");
+				appLogger.trace("saveTxToDb: quantity mismatch when inserting fees into db");
+				throw createHttpError(500, "tx finished, unexpected error when saving tx fees");
 			}
+			appLogger.trace("insert finished");
 		},
 		{
 			timeout: prismaTimeoutMilisecs // if prisma db trans. exceeds this timeout, it will be rolled back

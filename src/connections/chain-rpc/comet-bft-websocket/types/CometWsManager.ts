@@ -5,6 +5,7 @@ import {
 	CometWsManagerErrorCode
 } from "./CometWsManagerError";
 import { Selector } from "../../types/Selector";
+import { appLogger } from "../../../../logs";
 
 /**
  * WebSocketClientManager class.
@@ -155,15 +156,15 @@ export class CometWsManager {
 		}
 
 		client.on("open", () => {
-			console.log("WS client init successful");
+			appLogger.debug("WS client init successful");
 		});
 
 		client.on("close", () => {
-			console.log("WS client closed")
+			appLogger.debug("WS client closed")
 		});
 
 		client.on("error", (err) => {
-			console.error("WS client error:", err);
+			appLogger.error(`WS client error: ${err}`);
 		})
 
 		this._clients.push(client);

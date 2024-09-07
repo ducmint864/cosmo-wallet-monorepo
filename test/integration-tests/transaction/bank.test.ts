@@ -3,6 +3,7 @@ import request from "supertest"
 import { app } from "../../../src/index";
 import { prisma } from '../../../src/connections';
 import "dotenv/config";
+import { appLogger } from '../../../src/logs';
 
 /**
  * @dev Provide a user account, which have at least 1 wallet account,
@@ -258,7 +259,7 @@ describe("sending coins API", () => {
 						"email": email,
 						"password": password,
 					});
-				console.log(registerRes.body);
+				appLogger.debug(registerRes.body);
 
 				// save account info 
 				stateMap.set(email, {

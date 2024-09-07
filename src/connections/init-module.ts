@@ -6,6 +6,7 @@ import { BlockchainApiNodeManager } from "./chain-rpc/http/blockchain-app-api/ty
 import { Selector } from "./chain-rpc/types/Selector";
 import { RandomSelector } from "./chain-rpc/types/RandomSelector";
 import { chainRpcConfig } from "../config";
+import { appLogger } from "../logs";
 
 // Define managers
 let selector: Selector;
@@ -20,9 +21,9 @@ async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[
 		} catch (err) {
 			if (err instanceof HttpNodeManagerError &&
 				err.code === HttpNodeManagerErrorCode.ERR_ALREADY_REGISTERED) {
-				console.log(`Skip registered endpoint: ${endpoint}`);
+				appLogger.debug(`Skipped registered http node ${endpoint}`);
 			} else {
-				console.error(`Trouble registering http node '${endpoint}':`, err);
+				appLogger.fatal(`Trouble registering http node '${endpoint}': ${err}`)
 				process.exit(1);
 			}
 		}
@@ -30,6 +31,7 @@ async function registerHttpNodes(manager: HttpNodeManager, ...endpoints: string[
 }
 
 async function initNodeManagers() {
+	appLogger.trace("initNodeModule is called");
 	// Init singleton selector
 	selector = new RandomSelector();
 
@@ -41,7 +43,7 @@ async function initNodeManagers() {
 		try {
 			cometWsManager.addClient(endpoint);
 		} catch (err) {
-			console.error(`Trouble connecting to '${endpoint}': ${err}`);
+			appLogger.fatal(`Trouble connecting to node '${endpoint}': ${err}`);
 			process.exit(1);
 		}
 	}
