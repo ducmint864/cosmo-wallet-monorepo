@@ -10,7 +10,6 @@ import "winston-daily-rotate-file";
 import { join } from "path";
 import { AppLoggerOptions } from "./AppLoggerOptions";
 import { logsConfig } from "../../config";
-import { appLogger, initLogsModule } from "../init-module";
 
 /**
  * This exports a singleton pattern
@@ -68,14 +67,14 @@ export class AppLogger {
 
 	public static init() {
 		if (this._instance) {
-			throw new Error("AppLogger's instance is already initialized");
+			return;
 		}
 		this._instance = new AppLogger();
 	}
 
 	public static get instance(): AppLogger {
 		if (!this._instance) {
-			throw new Error("AppLogger's instance hasn't been initialized");
+			this.init();
 		}
 		return this._instance;
 	}
