@@ -65,7 +65,7 @@ async function isTokenInvalidated(token: string): Promise<boolean> {
 
 async function invalidateToken(token: string, tokenPayload: UserAccountJwtPayload): Promise<void> {
 	// Unix timestamp in seconds
-	let expiryTimestamp: number = tokenPayload.iat;
+	let expiryTimestamp: number = tokenPayload.exp;
 
 	if (!expiryTimestamp) {
 		// Asign expiry to the timestamp of n seconds from now, where n is the duration of refresh token
