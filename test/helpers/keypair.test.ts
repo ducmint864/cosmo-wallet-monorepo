@@ -84,6 +84,14 @@ describe("_genTokenKeyPair", () => {
 				algo
 			)).not.toThrow();
 
+		    const token: string = genToken(
+				payload,
+				privateKey,
+				authConfig.token.accessToken.durationStr,
+				algo
+			)
+			console.log(token);
+
 			expect(() => genToken(
 				payload,
 				privateKey,
