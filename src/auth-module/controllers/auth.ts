@@ -228,7 +228,7 @@ async function login(req: Request, res: Response, next: NextFunction): Promise<v
 		})
 
 		res.status(200).json({
-			message: "Login sucessful"
+			message: "Login successful"
 		});
 	} catch (err) {
 		errorHandler(err, req, res, next);
