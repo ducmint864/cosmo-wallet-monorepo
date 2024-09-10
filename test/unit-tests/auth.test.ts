@@ -628,6 +628,233 @@ describe('login', () => {
             );
         });
     });
+
+    describe('token related tests', () => {
+        it('should throw error if access token is missing', async () => {
+             // Arrange
+            const req = ({
+                body: {
+                email: 'test@example.com',
+                password: 'P@ssW0rd'
+                }
+            }) as Request;
+
+            const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+            // Set up mock for data retrieve
+            (prisma.user_accounts.findUnique as jest.Mock)
+            .mockImplementation((params) => {
+                if (params.where.email === 'test@example.com'){
+                    return {
+                        user_account_id: 1,
+                        email: 'test@example.com',
+                        username: 'Hello_W0rld',
+                        password: hashedPassword,
+                        crypto_mnemonic: expect.any(Buffer),
+                        crypto_pbkdf2_salt: expect.any(Buffer),
+                        crypto_iv: expect.any(Buffer),
+                        user_type: user_type_enum.normal
+                    }
+                }
+            });
+    
+            // Arrange tokens
+            const payload: UserAccountJwtPayload = {
+                userAccountId: 1,
+                userType: user_type_enum.normal
+            };
+
+            const accessToken: string = genToken(
+                payload,
+                _genTokenKeyPair(authConfig.token.accessToken.signingAlgo).privateKey,
+                authConfig.token.accessToken.durationStr,
+                authConfig.token.accessToken.signingAlgo
+            );
+
+            const refreshToken: string = genToken(
+                payload,
+                _genTokenKeyPair(authConfig.token.refreshToken.signingAlgo).privateKey,
+                authConfig.token.refreshToken.durationStr,
+                authConfig.token.refreshToken.signingAlgo
+            );
+
+            const csrfToken: string = genCsrfToken(payload);
+
+            // Set up mock for tokens
+            (genToken as jest.Mock)
+            .mockImplementation((payload, privateKey, durationStr, signingAlgo) => {
+                if(privateKey === authConfig.token.accessToken.privateKey){
+                    return null;
+                } else {
+                    return refreshToken;
+                }
+            });
+
+            (genCsrfToken as jest.Mock)
+            .mockImplementation((payload) => {
+                return csrfToken;
+            });
+
+            // Act
+            await login(req, res, mockNext);
+
+            // Assert
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: "Something must be wrong"        
+            });
+        });
+
+        it('should throw error if refresh token is missing', async () => {
+            // Arrange
+           const req = ({
+               body: {
+               email: 'test@example.com',
+               password: 'P@ssW0rd'
+               }
+           }) as Request;
+
+           const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+           // Set up mock for data retrieve
+           (prisma.user_accounts.findUnique as jest.Mock)
+           .mockImplementation((params) => {
+               if (params.where.email === 'test@example.com'){
+                   return {
+                       user_account_id: 1,
+                       email: 'test@example.com',
+                       username: 'Hello_W0rld',
+                       password: hashedPassword,
+                       crypto_mnemonic: expect.any(Buffer),
+                       crypto_pbkdf2_salt: expect.any(Buffer),
+                       crypto_iv: expect.any(Buffer),
+                       user_type: user_type_enum.normal
+                   }
+               }
+           });
+   
+           // Arrange tokens
+           const payload: UserAccountJwtPayload = {
+               userAccountId: 1,
+               userType: user_type_enum.normal
+           };
+
+           const accessToken: string = genToken(
+               payload,
+               _genTokenKeyPair(authConfig.token.accessToken.signingAlgo).privateKey,
+               authConfig.token.accessToken.durationStr,
+               authConfig.token.accessToken.signingAlgo
+           );
+
+           const refreshToken: string = genToken(
+               payload,
+               _genTokenKeyPair(authConfig.token.refreshToken.signingAlgo).privateKey,
+               authConfig.token.refreshToken.durationStr,
+               authConfig.token.refreshToken.signingAlgo
+           );
+
+           const csrfToken: string = genCsrfToken(payload);
+
+           // Set up mock for tokens
+           (genToken as jest.Mock)
+           .mockImplementation((payload, privateKey, durationStr, signingAlgo) => {
+               if(privateKey === authConfig.token.accessToken.privateKey){
+                   return accessToken;
+               } else {
+                   return null;
+               }
+           });
+
+           (genCsrfToken as jest.Mock)
+           .mockImplementation((payload) => {
+               return csrfToken;
+           });
+
+           // Act
+           await login(req, res, mockNext);
+
+           // Assert
+           expect(res.status).toHaveBeenCalledWith(500);
+           expect(res.json).toHaveBeenCalledWith({
+               message: "Something must be wrong"        
+           });
+       });
+    });
+
+    it('should throw error if csrfToken is missing', async () => {
+        // Arrange
+        const req = ({
+            body: {
+            email: 'test@example.com',
+            password: 'P@ssW0rd'
+            }
+        }) as Request;
+
+        const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+        // Set up mock for data retrieve
+        (prisma.user_accounts.findUnique as jest.Mock)
+        .mockImplementation((params) => {
+            if (params.where.email === 'test@example.com'){
+                return {
+                    user_account_id: 1,
+                    email: 'test@example.com',
+                    username: 'Hello_W0rld',
+                    password: hashedPassword,
+                    crypto_mnemonic: expect.any(Buffer),
+                    crypto_pbkdf2_salt: expect.any(Buffer),
+                    crypto_iv: expect.any(Buffer),
+                    user_type: user_type_enum.normal
+                }
+            }
+        });
+
+        // Arrange tokens
+        const payload: UserAccountJwtPayload = {
+            userAccountId: 1,
+            userType: user_type_enum.normal
+        };
+
+        const accessToken: string = genToken(
+            payload,
+            _genTokenKeyPair(authConfig.token.accessToken.signingAlgo).privateKey,
+            authConfig.token.accessToken.durationStr,
+            authConfig.token.accessToken.signingAlgo
+        );
+
+        const refreshToken: string = genToken(
+            payload,
+            _genTokenKeyPair(authConfig.token.refreshToken.signingAlgo).privateKey,
+            authConfig.token.refreshToken.durationStr,
+            authConfig.token.refreshToken.signingAlgo
+        );
+
+        const csrfToken: string = genCsrfToken(payload);
+
+        // Set up mock for tokens
+        (genToken as jest.Mock)
+        .mockImplementation((payload, privateKey, durationStr, signingAlgo) => {
+            if(privateKey === authConfig.token.accessToken.privateKey){
+                return accessToken;
+            } else {
+                return refreshToken;
+            }
+        });
+
+        (genCsrfToken as jest.Mock)
+        .mockImplementation((payload) => {
+            return null;
+        });
+
+        // Act
+        await login(req, res, mockNext);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(500);
+        expect(res.json).toHaveBeenCalledWith({
+            message: "Something must be wrong"        
+        });
+    });
 });
 
 describe('this test is to make sure everything work well when login', () => {
