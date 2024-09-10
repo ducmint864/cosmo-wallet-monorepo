@@ -13,6 +13,7 @@ import {user_type_enum} from "@prisma/client";
 import { genToken } from '../../src/general/helpers/jwt-helper';
 import { _genTokenKeyPair } from "../helpers/keypair"
 import { UserAccountJwtPayload } from "../../src/types/UserAccountJwtPayload"
+import { genCsrfToken } from '../../src/security/helpers/csrf-helper';
 
 /**
  * @dev prisma mock for database related test, preventing test to access actual database
@@ -32,6 +33,10 @@ jest.mock("../../src/connections", () => ({
 
 jest.mock('../../src/general/helpers/jwt-helper', () => ({
     genToken: jest.fn()
+}));
+
+jest.mock('../../src/security/helpers/csrf-helper', () => ({
+    genCsrfToken: jest.fn()
 }));
 
 describe('register', () => {
@@ -173,7 +178,7 @@ describe('register', () => {
         );
     });
 
-    describe('prisma mocking', () => {
+    describe('prisma related tests', () => {
         /**
          * @dev the wallet and user data has been tested in crypto-helper.test.ts
          */
@@ -445,7 +450,8 @@ describe('login', () => {
         res = 
         {
             status: jest.fn().mockReturnThis(),
-            json: jest.fn()
+            json: jest.fn(),
+            cookie: jest.fn()
         } as unknown as Response;
 
         mockNext = jest.fn();
@@ -564,7 +570,7 @@ describe('login', () => {
         );
     });
 
-    describe('prisma mocking', () => {
+    describe('prisma related tests', () => {
         beforeEach(() => { 
             jest.clearAllMocks();
         })
@@ -634,7 +640,8 @@ describe('this test is to make sure everything work well when login', () => {
         res = 
         {
             status: jest.fn().mockReturnThis(),
-            json: jest.fn()
+            json: jest.fn(),
+            cookie: jest.fn()
         } as unknown as Response;
 
         mockNext = jest.fn();
@@ -651,7 +658,7 @@ describe('this test is to make sure everything work well when login', () => {
 
         const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
 
-        // Set up mock
+        // Set up mock for data retrieve
         (prisma.user_accounts.findUnique as jest.Mock)
             .mockImplementation((params) => {
                 if (params.where.email === 'test@example.com'){
@@ -667,7 +674,8 @@ describe('this test is to make sure everything work well when login', () => {
                     }
                 }
             });
-
+        
+        // Arrange tokens
         const payload: UserAccountJwtPayload = {
             userAccountId: 1,
             userType: user_type_enum.normal
@@ -687,6 +695,9 @@ describe('this test is to make sure everything work well when login', () => {
             authConfig.token.refreshToken.signingAlgo
         );
 
+        const csrfToken: string = genCsrfToken(payload);
+
+        // Set up mock for tokens
         (genToken as jest.Mock)
         .mockImplementation((payload, privateKey, durationStr, signingAlgo) => {
             if(privateKey === authConfig.token.accessToken.privateKey){
@@ -696,15 +707,18 @@ describe('this test is to make sure everything work well when login', () => {
             }
         });
 
+        (genCsrfToken as jest.Mock)
+        .mockImplementation((payload) => {
+            return csrfToken;
+        });
+
         // Act
         await login(req, res, mockNext);
 
         // Assert
         expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({
-                message: "Login successful"
-            })
-        );
+        expect(res.json).toHaveBeenCalledWith({
+                message: "Login sucessful"        
+        });
     });
 });
