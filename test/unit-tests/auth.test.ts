@@ -8,8 +8,11 @@ import {makeHDPath, getDerivedAccount, encrypt, decrypt, getEncryptionKey, getSi
 import { pathToString as hdPathToString, stringToPath as stringToHdPath } from "@cosmjs/crypto";
 import bcrypt from "bcrypt";
 import { randomBytes } from 'crypto';
-import { cryptoConfig } from '../../src/config';
+import { authConfig, cryptoConfig } from '../../src/config';
 import {user_type_enum} from "@prisma/client";
+import { genToken } from '../../src/general/helpers/jwt-helper';
+import { _genTokenKeyPair } from "../helpers/keypair"
+import { UserAccountJwtPayload } from "../../src/types/UserAccountJwtPayload"
 
 /**
  * @dev prisma mock for database related test, preventing test to access actual database
@@ -25,6 +28,10 @@ jest.mock("../../src/connections", () => ({
         create: jest.fn(),
       }
     },
+}));
+
+jest.mock('../../src/general/helpers/jwt-helper', () => ({
+    genToken: jest.fn()
 }));
 
 describe('register', () => {
@@ -427,6 +434,7 @@ describe('register', () => {
     });
 });
 
+
 describe('login', () => {
     let res: Response;
     let mockNext: NextFunction;
@@ -613,45 +621,90 @@ describe('login', () => {
                 })
             );
         });
+    });
+});
 
-        it('should successfully login the user if satisfied all requirements', async () => {
-            // Arrange
-            const req = ({
+describe('this test is to make sure everything work well when login', () => {
+    let res: Response;
+    let mockNext: NextFunction;
+
+    beforeEach(() => { 
+        jest.clearAllMocks();
+
+        res = 
+        {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn()
+        } as unknown as Response;
+
+        mockNext = jest.fn();
+    });
+
+    it('should return 200 and a token when login is successful', async () => {
+        // Arrange
+        const req = ({
                 body: {
-                    email: 'test@example.com',
-                    password: 'P@ssW0rd'
+                email: 'test@example.com',
+                password: 'P@ssW0rd'
+                }
+        }) as Request;
+
+        const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+
+        // Set up mock
+        (prisma.user_accounts.findUnique as jest.Mock)
+            .mockImplementation((params) => {
+                if (params.where.email === 'test@example.com'){
+                    return {
+                        user_account_id: 1,
+                        email: 'test@example.com',
+                        username: 'Hello_W0rld',
+                        password: hashedPassword,
+                        crypto_mnemonic: expect.any(Buffer),
+                        crypto_pbkdf2_salt: expect.any(Buffer),
+                        crypto_iv: expect.any(Buffer),
+                        user_type: user_type_enum.normal
                     }
-            }) as Request;
+                }
+            });
 
-            const hashedPassword: string = await bcrypt.hash(req.body.password, cryptoConfig.bcrypt.saltRounds);
+        const payload: UserAccountJwtPayload = {
+            userAccountId: 1,
+            userType: user_type_enum.normal
+        };
 
-            // Set up mock
-            (prisma.user_accounts.findUnique as jest.Mock)
-                .mockImplementation((params) => {
-                    if (params.where.email === 'test@example.com'){
-                        return {
-                            user_account_id: 1,
-                            email: 'test@example.com',
-                            username: 'Hello_W0rld',
-                            password: hashedPassword,
-                            crypto_mnemonic: expect.any(Buffer),
-                            crypto_pbkdf2_salt: expect.any(Buffer),
-                            crypto_iv: expect.any(Buffer),
-                            user_type: user_type_enum.normal
-                        }
-                    }
-                });
+        const accessToken: string = genToken(
+            payload,
+            _genTokenKeyPair(authConfig.token.accessToken.signingAlgo).privateKey,
+            authConfig.token.accessToken.durationStr,
+			authConfig.token.accessToken.signingAlgo
+        );
 
-            // Act
-            await login(req, res, mockNext);
+        const refreshToken: string = genToken(
+            payload,
+            _genTokenKeyPair(authConfig.token.refreshToken.signingAlgo).privateKey,
+            authConfig.token.refreshToken.durationStr,
+            authConfig.token.refreshToken.signingAlgo
+        );
 
-            // Assert
-            expect(res.status).toHaveBeenCalledWith(200);
-            expect(res.json).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    message: "Login successful"
-                })
-            );
+        (genToken as jest.Mock)
+        .mockImplementation((payload, privateKey, durationStr, signingAlgo) => {
+            if(privateKey === authConfig.token.accessToken.privateKey){
+                return accessToken;
+            } else {
+                return refreshToken;
+            }
         });
+
+        // Act
+        await login(req, res, mockNext);
+
+        // Assert
+        expect(res.status).toHaveBeenCalledWith(200);
+        expect(res.json).toHaveBeenCalledWith(
+                expect.objectContaining({
+                message: "Login successful"
+            })
+        );
     });
 });
