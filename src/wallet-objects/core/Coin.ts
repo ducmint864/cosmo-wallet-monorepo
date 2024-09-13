@@ -1,0 +1,1 @@
+export { Coin } from "@cosmjs/stargate";

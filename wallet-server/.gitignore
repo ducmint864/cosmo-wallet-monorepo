@@ -1,0 +1,5 @@
+# This .gitignore file contains specific git ignore rules that only applies to wallet-server sub-directory
+
+# Ignore server setup key files
+server.cert
+server.key

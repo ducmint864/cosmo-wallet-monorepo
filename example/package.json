@@ -1,0 +1,15 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "rm -rf node_modules/ && npm install"
+  },
+  "dependencies": {
+	"thasa-wallet-interface": "../"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

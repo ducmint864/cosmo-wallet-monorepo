@@ -1,0 +1,44 @@
+{
+  "name": "thasa-wallet-interface",
+  "version": "1.0.0",
+  "description": "A package that consists of a set of shared interfaces/types to foster communication between Thasa wallet adapter and client, or web server",
+  "main": "dist/bundle.js",
+  "source": "src/index.ts",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && webpack",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "./dist"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/axios": "^0.14.0",
+    "@types/eslint": "^8.56.10",
+    "@types/http-errors": "^2.0.4",
+    "@types/node": "^20.14.10",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.0",
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@cosmjs/stargate": "^0.32.4",
+    "axios": "^1.7.4",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "http-errors": "^2.0.0",
+    "https-browserify": "^1.0.0",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.3"
+  }
+}

@@ -1,8 +1,20 @@
-node_modules
-# Keep environment variables out of version control
-.env
-build
-.vscode
-server.key
-server.cert
-/logs
+# Ignore node modules for all projects
+**/node_modules
+
+# Ignore environment files
+**/.env
+
+# Ignore log files
+**/*.log
+
+# Ignore log directories
+**/logs
+
+
+# Ignore build directories
+**/dist
+**/build
+
+# Ignore IDE/editor config files
+**/.vscode/
+**/.idea/
