@@ -67,7 +67,7 @@ function marshalPayload<T>(payload: T): Buffer {
  * @param marshalled The marshalled payload as a Buffer.
  * @returns The unmarshalled payload object.
  */
-function unmarshalPayload<T>(marshalled: Buffer): T {
+function unmarshalPayload<T>(marshalled: Buffer): T | unknown {
 	const unmarshalled = decode(marshalled);
 	return undoMakeSerializable(unmarshalled);
 }

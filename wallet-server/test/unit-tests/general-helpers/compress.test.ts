@@ -6,7 +6,6 @@ import {
 	decompressAndUnmarshal,
 } from "../../../src/general/helpers/compress";
 import { marshalPayload } from '../../../src/general/helpers/codec';
-import { appLogger } from '../../../src/logs';
 
 describe("compress() and decompress()", () => {
 	it("should compress and decompress a Buffer", () => {
@@ -127,7 +126,7 @@ describe("marshalAndCompress() and decompressAndUnmarshal()", () => {
 
 		const orgSize = Buffer.byteLength(marshalled);
 		const compSize = Buffer.byteLength(compressed)
-		appLogger.debug(`compression: original size = ${orgSize} | compressed size = ${compSize}`);
+		console.log(`INSIGHT: original size = ${orgSize} | compressed size = ${compSize}`);
 
 		expect(compSize).toBeLessThanOrEqual(orgSize)
 	})

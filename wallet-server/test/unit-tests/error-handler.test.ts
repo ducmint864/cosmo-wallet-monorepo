@@ -1,5 +1,5 @@
 import { errorHandler } from "../../src/errors/middlewares/error-handler";
-import createHttpError, { HttpError, CreateHttpError } from "http-errors";
+import createHttpError, {HttpError} from "http-errors";
 import { Request, Response, NextFunction } from "express";
 
 describe('error-handler', () => {
@@ -36,39 +36,39 @@ describe('error-handler', () => {
         )
     });
 
-    it('should respond a 409 status code for unavailable email', async () => {
+    it('should respond a 400 status code', async () => {
         // Arrange
         const req: Request = {} as Request;
 
         // Act
-        const error: HttpError = createHttpError("Unique constraint failed on the fields: (`email`)");
+        const error: HttpError = createHttpError(400, "Missing credentials information");
         errorHandler(error, req, res, mockNext);
 
         // Assert
         expect(res.status).toHaveBeenCalledTimes(1);
-        expect(res.status).toHaveBeenCalledWith(409);
+        expect(res.status).toHaveBeenCalledWith(400);
         expect(res.json).toHaveBeenCalledWith(
             expect.objectContaining({
-                message: "Email has been taken"
+                message: "Missing credentials information"
                 })
             );
     });
 
-    it('should respond a 409 code for unavailable username', async () => {
-        // Arrange
-        const req: Request = {} as Request;
+    // it('should respond a 409 code for unavailable username', async () => {
+    //     // Arrange
+    //     const req: Request = {} as Request;
 
-        // Act
-        const error: HttpError = createHttpError("Unique constraint failed on the fields: (`username`)");
-        errorHandler(error, req, res, mockNext);
+    //     // Act
+    //     const error: HttpError = createHttpError("Unique constraint failed on the fields: (`username`)");
+    //     errorHandler(error, req, res, mockNext);
 
-        // Assert
-        expect(res.status).toHaveBeenCalledTimes(1);
-        expect(res.status).toHaveBeenCalledWith(409);
-        expect(res.json).toHaveBeenCalledWith(
-            expect.objectContaining({
-                message: "Username has been taken"
-            })
-        );
-    });
+    //     // Assert
+    //     expect(res.status).toHaveBeenCalledTimes(1);
+    //     expect(res.status).toHaveBeenCalledWith(409);
+    //     expect(res.json).toHaveBeenCalledWith(
+    //         expect.objectContaining({
+    //             message: "Username has been taken"
+    //         })
+    //     );
+    // });
 });

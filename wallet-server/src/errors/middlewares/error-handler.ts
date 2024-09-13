@@ -1,17 +1,13 @@
 import { PrismaClientKnownRequestError, PrismaClientUnknownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response, NextFunction } from "express";
 import { HttpError } from "http-errors";
-import { getErrorJSON } from "../helpers/error-message";
-import { BroadcastTxError, TimeoutError as TxTimeoutError } from "@cosmjs/stargate";
-
-// define type for specific error handler function
-type SpecificHandler = (...args: any[]) => Response;
-
-// import specific erorr handlers
 import { handlePrismaClientError } from "./prisma-error";
 import { handleHttpError } from "./http-error";
-import { handleBroadcastTxError, handleTxTimeoutError } from "./tx-error";
-import { appLogger } from "../../logs";
+import { BroadcastTxError, TimeoutError as TxTimeoutError } from "@cosmjs/stargate";
+import { handleBroadcastTxError } from "./tx-error";
+import { handleTxTimeoutError } from "./tx-error";
+
+type SpecificHandler = (...args: any[]) => Response;
 
 // map known types of error class to their specific handler func
 const specificHandlerMapping: Record<string, SpecificHandler> = {
@@ -26,7 +22,7 @@ function defaultSpecificHandler(err: Error, res: Response): Response {
 }
 
 function errorHandler(err: Error, req: Request, res: Response, next: NextFunction): Response | void {
-	appLogger.error(`raw error:\n${err}`);
+	console.error("RAW ERROR: \n", err);
 	if (res.headersSent) {
 		return next(err);
 	}
