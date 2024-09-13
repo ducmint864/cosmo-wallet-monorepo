@@ -10,7 +10,6 @@
 # Ignore log directories
 **/logs
 
-
 # Ignore build directories
 **/dist
 **/build

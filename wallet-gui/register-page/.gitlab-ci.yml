@@ -1,0 +1,33 @@
+image: node:latest
+
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+  - node_modules/
+
+stages:
+  - install
+  - linting
+  - deploy
+
+install_dependencies:
+  stage: install
+  script:
+    - npm install
+
+lint-commit-msg:
+  stage: linting
+  script:
+    - echo "$CI_COMMIT_MESSAGE" | npx commitlint
+
+lint-code:
+  stage: linting
+  script:
+    - npm run lint
+
+publish-npm:
+  stage: deploy
+  script:
+    - echo "@thasa:registry=https://${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/" > .npmrc
+    - echo "//${CI_SERVER_HOST}/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}" >> .npmrc
+    - npm publish
